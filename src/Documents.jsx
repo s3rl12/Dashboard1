@@ -243,69 +243,6 @@ const DocumentTypeComboBox = () => {
   );
 };
 
-const FolderList = () => {
-  return (
-    <List sx={{ width: '100%', maxWidth: 360, bgcolor: 'background.paper', padding: 0, height: 150 }}>
-      <ListItem sx={{ marginBottom: '0px', paddingBottom: '0px' }}>
-        <ListItemAvatar sx={{ mr: [-2] }}>
-          <Avatar style={{ width: '30px', height: '30px' }}>
-            <BugReportIcon fontSize="inherit" style={{ width: '15px', height: '15px' }} />
-          </Avatar>
-        </ListItemAvatar>
-        <ListItemText primary="Bug" secondary="5 identificados" primaryTypographyProps={{ style: { fontSize: '11px' } }} secondaryTypographyProps={{ style: { fontSize: '10px' } }} />
-      </ListItem>
-      <ListItem sx={{ marginBottom: '0px', paddingTop: '0px', marginTop: '0px', paddingBottom: '0px' }}>
-        <ListItemAvatar sx={{ mr: [-2] }}>
-          <Avatar style={{ width: '30px', height: '30px' }} >
-            <PersonIcon fontSize="inherit" style={{ width: '15px', height: '15px' }} />
-          </Avatar>
-        </ListItemAvatar>
-        <ListItemText primary="New user registered" secondary="59 minutes ago" primaryTypographyProps={{ style: { fontSize: '11px' } }} secondaryTypographyProps={{ style: { fontSize: '10px' } }} />
-      </ListItem>
-      <ListItem sx={{ marginTop: '0px', paddingTop: '0px', marginBottom: '0px' }}>
-        <ListItemAvatar sx={{ mr: [-2] }}>
-          <Avatar style={{ width: '30px', height: '30px' }}>
-            <BugReportIcon fontSize="inherit" style={{ width: '15px', height: '15px' }} />
-          </Avatar>
-        </ListItemAvatar>
-        <ListItemText primary="You fixed a bug" secondary="12 hours ago" primaryTypographyProps={{ style: { fontSize: '11px' } }} secondaryTypographyProps={{ style: { fontSize: '10px' } }} />
-      </ListItem>
-    </List>
-  );
-}
-
-const FolderPersons = () => {
-  return (
-    <List sx={{ width: '100%', maxWidth: 360, bgcolor: 'background.paper', padding: 0, height: 200 }}>
-      <ListItem sx={{ marginBottom: '0px', paddingBottom: '0px' }}>
-        <ListItemAvatar sx={{ mr: [-2] }}>
-          <Avatar style={{ width: '30px', height: '30px' }}>
-            <p className='text-xs font-bold'>Q</p>
-          </Avatar>
-        </ListItemAvatar>
-        <ListItemText primary="QUISPE CORTEGANA DEISY" secondary="Just now" primaryTypographyProps={{ style: { fontSize: '11px' } }} secondaryTypographyProps={{ style: { fontSize: '10px' } }} />
-      </ListItem>
-      <ListItem sx={{ marginBottom: '0px', paddingTop: '0px', marginTop: '0px', paddingBottom: '0px' }}>
-        <ListItemAvatar sx={{ mr: [-2] }}>
-          <Avatar style={{ width: '30px', height: '30px' }} >
-            <p className='text-xs font-bold'>Q</p>
-          </Avatar>
-        </ListItemAvatar>
-        <ListItemText primary="QUISPE CORTEGANA DEISY" secondary="59 minutes ago" primaryTypographyProps={{ style: { fontSize: '11px' } }} secondaryTypographyProps={{ style: { fontSize: '10px' } }} />
-      </ListItem>
-      <ListItem sx={{ marginTop: '0px', paddingTop: '0px', marginBottom: '0px' }}>
-        <ListItemAvatar sx={{ mr: [-2] }}>
-          <Avatar style={{ width: '30px', height: '30px' }}>
-            <p className='text-xs font-bold'>Q</p>
-          </Avatar>
-        </ListItemAvatar>
-        <ListItemText primary="QUISPE CORTEGANA DEISY" secondary="12 hours ago" primaryTypographyProps={{ style: { fontSize: '11px' } }} secondaryTypographyProps={{ style: { fontSize: '10px' } }} />
-      </ListItem>
-    </List>
-  );
-}
-
-
 // Componente principal del documento
 const Documents = () => {
   return (
@@ -324,19 +261,7 @@ const Documents = () => {
           <FullFeaturedCrudGridDocuments />
         </div>
       </div>
-      <div className='flex flex-col w-1/5 gap-4 pr-3'>
-        <div className=' flex-row h-full pt-4 bg-white'>
-          <div>
-            <h2 className='text-start pl-4'>Notification</h2>
-            <FolderList />
-          </div>
-          <div>
-            <h2 className='text-start pl-4'>Activities</h2>
-            <FolderPersons />
-          </div>
-
-        </div>
-      </div>
+      
     </div>
   );
 };

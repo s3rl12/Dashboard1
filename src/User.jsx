@@ -33,7 +33,11 @@ import Checkbox from '@mui/material/Checkbox';
 import Grid from '@mui/material/Grid';
 import SendIcon from '@mui/icons-material/Send';
 import FolderIcon from '@mui/icons-material/Folder';
+import FileUploadButton from './components/FileUploadButton';
 import dayjs from 'dayjs'; // Asegúrate de importar dayjs
+import DraggableAlert from './components/DraggableAlert';
+import DraggableConditionalAlert from './components/DraggableConditionalAlert';
+import LoadingBackdropUser from './components/LoadingBackgropUser';
 import axios from 'axios';
 import {
   FormControl,
@@ -63,6 +67,13 @@ import {
 } from '@mui/x-data-grid';
 
 
+import PropTypes from 'prop-types';
+import Tabs from '@mui/material/Tabs';
+import Tab from '@mui/material/Tab';
+const apiIp = import.meta.env.VITE_API;
+
+const token = localStorage.getItem('token');
+console.log('Token utilizado en la solicitud:', token);
 
 const initialRows = [
   { id: 1, firstName: 'Juan', lastName: 'Pérez', email: 'juan.perez@example.com', role: 'Admin' },
@@ -71,17 +82,68 @@ const initialRows = [
   { id: 4, firstName: 'Lucía', lastName: 'Martínez', email: 'lucia.martinez@example.com', role: 'Admin' },
 ];
 
-const FullFeaturedCrudGrid = ({ rows, setRows }) => {
+const FullFeaturedCrudGrid = ({ rows, setRows, onEdit, loading }) => {
   const [rowModesModel, setRowModesModel] = useState({}); // Estado para los modos de edición
-
+  const containerRef = React.useRef(); // Referencia al contenedor del DataGrid
   const handleRowEditStop = (params, event) => {
     if (params.reason === 'rowFocusOut') {
       event.defaultMuiPrevented = true;
     }
-  };
+  }
 
   const handleEditClick = (id) => () => {
-    setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.Edit } });
+    if (onEdit) {
+      onEdit(id); // Llamar a la función con el ID del usuario
+    }
+  };
+
+  const handleDeleteUser = async (userId) => {
+    // Mostrar el alert con confirmación antes de eliminar
+    DraggableConditionalAlert({
+      title: "¿Estás seguro?",
+      text: "No podrás deshacer esta acción. El usuario será deshabilitado del sistema.",
+      icon: "warning",
+      onConfirm: async () => {
+        try {
+          const response = await fetch(`http://${apiIp}/api/user/${userId}`, {
+            method: 'DELETE',
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+
+          if (response.ok) {
+            // Actualizar el estado del DataGrid eliminando el usuario
+            setRows((prevRows) => prevRows.filter((row) => row.id !== userId));
+            DraggableAlert({
+              title: "Usuario eliminado",
+              text: "El usuario ha sido eliminado exitosamente.",
+              icon: "success",
+            });
+          } else {
+            DraggableAlert({
+              title: "Error",
+              text: "No se pudo eliminar el usuario.",
+              icon: "error",
+            });
+          }
+        } catch (error) {
+          console.error("Error al eliminar usuario:", error);
+          DraggableAlert({
+            title: "Error",
+            text: "Error de conexión con el servidor.",
+            icon: "error",
+          });
+        }
+      },
+      onCancel: () => {
+        DraggableAlert({
+          title: "Cancelado",
+          text: "La acción fue cancelada.",
+          icon: "info",
+        });
+      },
+    });
   };
 
   const handleSaveClick = (id) => () => {
@@ -106,17 +168,10 @@ const FullFeaturedCrudGrid = ({ rows, setRows }) => {
   };
 
   const columns = [
-    { field: 'firstName', headerName: 'Nombre', width: 150, editable: true },
-    { field: 'lastName', headerName: 'Apellido', width: 150, editable: true },
-    { field: 'email', headerName: 'Correo', width: 200, editable: true },
-    {
-      field: 'role',
-      headerName: 'Rol',
-      width: 150,
-      editable: true,
-      type: 'singleSelect',
-      valueOptions: ['Super Admin', 'Admin', 'User'],
-    },
+    { field: 'firstName', headerName: 'Nombre', width: 150, editable: false },
+    { field: 'lastName', headerName: 'Apellido', width: 150, editable: false },
+    { field: 'email', headerName: 'Correo', width: 200, editable: false },
+    { field: 'role', headerName: 'Rol', width: 150, editable: false }, // Verifica que sea legible
     {
       field: 'actions',
       type: 'actions',
@@ -154,7 +209,7 @@ const FullFeaturedCrudGrid = ({ rows, setRows }) => {
           <GridActionsCellItem
             icon={<DeleteIcon />}
             label="Eliminar"
-            onClick={handleDeleteClick(id)}
+            onClick={() => handleDeleteUser(id)}
             color="inherit"
           />,
         ];
@@ -163,7 +218,9 @@ const FullFeaturedCrudGrid = ({ rows, setRows }) => {
   ];
 
   return (
+
     <Box
+
       sx={{
         height: '100%',
         width: 770,
@@ -171,8 +228,12 @@ const FullFeaturedCrudGrid = ({ rows, setRows }) => {
         borderRadius: 3,
         '& .actions': { color: 'text.secondary' },
         '& .textPrimary': { color: 'text.primary' },
+        position: 'relative',
       }}
+      ref={containerRef} // Pasamos la referencia al contenedor
     >
+      <LoadingBackdropUser open={loading} containerRef={containerRef} />
+
       <DataGrid
         sx={{
           borderBottomLeftRadius: '10px',
@@ -231,72 +292,46 @@ const Search = () => {
   );
 };
 
-const FolderList = () => {
-  return (
-    <List sx={{ width: '100%', maxWidth: 360, bgcolor: 'background.paper', padding: 0, height: 150 }}>
-      <ListItem sx={{ marginBottom: '0px', paddingBottom: '0px' }}>
-        <ListItemAvatar sx={{ mr: [-2] }}>
-          <Avatar style={{ width: '30px', height: '30px' }}>
-            <BugReportIcon fontSize="inherit" style={{ width: '15px', height: '15px' }} />
-          </Avatar>
-        </ListItemAvatar>
-        <ListItemText primary="Bug" secondary="5 identificados" primaryTypographyProps={{ style: { fontSize: '11px' } }} secondaryTypographyProps={{ style: { fontSize: '10px' } }} />
-      </ListItem>
-      <ListItem sx={{ marginBottom: '0px', paddingTop: '0px', marginTop: '0px', paddingBottom: '0px' }}>
-        <ListItemAvatar sx={{ mr: [-2] }}>
-          <Avatar style={{ width: '30px', height: '30px' }} >
-            <PersonIcon fontSize="inherit" style={{ width: '15px', height: '15px' }} />
-          </Avatar>
-        </ListItemAvatar>
-        <ListItemText primary="New user registered" secondary="59 minutes ago" primaryTypographyProps={{ style: { fontSize: '11px' } }} secondaryTypographyProps={{ style: { fontSize: '10px' } }} />
-      </ListItem>
-      <ListItem sx={{ marginTop: '0px', paddingTop: '0px', marginBottom: '0px' }}>
-        <ListItemAvatar sx={{ mr: [-2] }}>
-          <Avatar style={{ width: '30px', height: '30px' }}>
-            <BugReportIcon fontSize="inherit" style={{ width: '15px', height: '15px' }} />
-          </Avatar>
-        </ListItemAvatar>
-        <ListItemText primary="You fixed a bug" secondary="12 hours ago" primaryTypographyProps={{ style: { fontSize: '11px' } }} secondaryTypographyProps={{ style: { fontSize: '10px' } }} />
-      </ListItem>
-    </List>
-  );
-}
+function TabPanel(props) {
+  const { children, value, index, ...other } = props;
 
-const FolderPersons = () => {
   return (
-    <List sx={{ width: '100%', maxWidth: 360, bgcolor: 'background.paper', padding: 0, height: 200 }}>
-      <ListItem sx={{ marginBottom: '0px', paddingBottom: '0px' }}>
-        <ListItemAvatar sx={{ mr: [-2] }}>
-          <Avatar style={{ width: '30px', height: '30px' }}>
-            <p className='text-xs font-bold'>Q</p>
-          </Avatar>
-        </ListItemAvatar>
-        <ListItemText primary="QUISPE CORTEGANA DEISY" secondary="Just now" primaryTypographyProps={{ style: { fontSize: '11px' } }} secondaryTypographyProps={{ style: { fontSize: '10px' } }} />
-      </ListItem>
-      <ListItem sx={{ marginBottom: '0px', paddingTop: '0px', marginTop: '0px', paddingBottom: '0px' }}>
-        <ListItemAvatar sx={{ mr: [-2] }}>
-          <Avatar style={{ width: '30px', height: '30px' }} >
-            <p className='text-xs font-bold'>Q</p>
-          </Avatar>
-        </ListItemAvatar>
-        <ListItemText primary="QUISPE CORTEGANA DEISY" secondary="59 minutes ago" primaryTypographyProps={{ style: { fontSize: '11px' } }} secondaryTypographyProps={{ style: { fontSize: '10px' } }} />
-      </ListItem>
-      <ListItem sx={{ marginTop: '0px', paddingTop: '0px', marginBottom: '0px' }}>
-        <ListItemAvatar sx={{ mr: [-2] }}>
-          <Avatar style={{ width: '30px', height: '30px' }}>
-            <p className='text-xs font-bold'>Q</p>
-          </Avatar>
-        </ListItemAvatar>
-        <ListItemText primary="QUISPE CORTEGANA DEISY" secondary="12 hours ago" primaryTypographyProps={{ style: { fontSize: '11px' } }} secondaryTypographyProps={{ style: { fontSize: '10px' } }} />
-      </ListItem>
-    </List>
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`vertical-tabpanel-${index}`}
+      aria-labelledby={`vertical-tab-${index}`}
+      {...other}
+    >
+      {value === index && (
+        <Box sx={{ p: 3 }}>
+          <Typography component="div">{children}</Typography>
+        </Box>
+      )}
+    </div>
   );
 }
 
 
+TabPanel.propTypes = {
+  children: PropTypes.node,
+  index: PropTypes.number.isRequired,
+  value: PropTypes.number.isRequired,
+};
+
+function a11yProps(index) {
+  return {
+    id: `vertical-tab-${index}`,
+    'aria-controls': `vertical-tabpanel-${index}`,
+  };
+}
 
 // Componente del diálogo emergente
-const UserDialog = ({ open, onClose, addRow }) => {
+const UserDialog = ({ open, onClose, addRow, user, onSave }) => {
+  const [value, setValue] = React.useState(0);
+  const handleTabChange = (event, newValue) => {
+    setValue(newValue);
+  };
   const [formValues, setFormValues] = useState({
     firstName: '',
     lastName: '',
@@ -319,6 +354,44 @@ const UserDialog = ({ open, onClose, addRow }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+  // Sincronizar formValues con los datos del usuario seleccionado
+  useEffect(() => {
+    if (open && user) {
+      setFormValues({
+        firstName: user.firstName || '',
+        lastName: user.lastName || '',
+        email: user.email || '',
+        mobile: user.mobile || '',
+        DNI: user.DNI || '',
+        Direccion: user.Direccion || '',
+        Genero: user.Genero || '',
+        fechaNacimiento: user.fechaNacimiento || null,
+        Extencion: user.Extencion || '',
+        TipoFiscal: user.TipoFiscal || '',
+        password: '', // Mantener vacío para seguridad
+        confirmPassword: '', // Mantener vacío para seguridad
+        roles_fk: user.roles_fk || '',
+      });
+    } else if (open && !user) {
+      // Restablecer los campos si no hay usuario seleccionado (modo de creación)
+      setFormValues({
+        firstName: '',
+        lastName: '',
+        email: '',
+        mobile: '',
+        DNI: '',
+        Direccion: '',
+        Genero: '',
+        fechaNacimiento: null,
+        Extencion: '',
+        TipoFiscal: '',
+        password: '',
+        confirmPassword: '',
+        roles_fk: '',
+      });
+    }
+  }, [open, user]);
+
   // Función para alternar la visibilidad de la contraseña
   const handleClickShowPassword = () => setShowPassword((prev) => !prev);
   const handleClickShowConfirmPassword = () => setShowConfirmPassword((prev) => !prev);
@@ -331,9 +404,9 @@ const UserDialog = ({ open, onClose, addRow }) => {
     const fetchRoles = async () => {
       setLoadingRoles(true);
       try {
-        const response = await axios.get('http://192.168.181.96/api/roles', {
+        const response = await axios.get(`http://${apiIp}/api/roles`, {
           headers: {
-            Authorization: 'Bearer 23|a0F5kQI7MCu03y4fQFN9XmelC3YEpcMq3IW8XqnT1b398da7',
+            Authorization: `Bearer ${token}`,
           },
         });
 
@@ -388,250 +461,337 @@ const UserDialog = ({ open, onClose, addRow }) => {
 
     // Validación básica
     if (!nombre || !apellido || !email || !password || !roles_fk) {
-      alert('Por favor completa todos los campos obligatorios.');
+      DraggableAlert({ title: 'Campos incompletos', icon: 'error' });
+      //alert('Por favor completa todos los campos obligatorios.');
       return;
     }
 
     try {
-      const response = await fetch('http://192.168.181.96/api/registrar', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: 'Bearer 23|a0F5kQI7MCu03y4fQFN9XmelC3YEpcMq3IW8XqnT1b398da7',
-        },
-        body: JSON.stringify({
-          nombre,
-          apellido,
-          telefono,
-          email,
-          dni,
-          direccion,
-          sexo: sexo.toLowerCase(),
-          fecha_nacimiento,
-          extencion,
-          tipo_fiscal,
-          activo: true,
-          fecha_ingreso: new Date().toISOString().split('T')[0],
-          password,
-          password_confirmation,
-          estado: true,
-          fiscalia_fk: null,
-          roles_fk: parseInt(roles_fk, 10),
-        }),
-      });
+      // Si existe el usuario, es una edición
+      if (user) {
+        const response = await fetch(`http://${apiIp}/api/user/${user.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            nombre,
+            apellido,
+            telefono,
+            email,
+            dni,
+            direccion,
+            sexo: sexo.toLowerCase(),
+            fecha_nacimiento,
+            extencion,
+            tipo_fiscal,
+            roles_fk: parseInt(roles_fk, 10),
+          }),
+        });
 
-      if (!response.ok) {
-        const error = await response.json();
-        alert(`Error: ${error.message || 'No se pudo registrar el usuario.'}`);
-        return;
-      }
+        if (response.ok) {
+          const updatedUser = await response.json();
+          const updatedRoleName = roles.find((role) => role.id === parseInt(roles_fk, 10))?.name || 'N/A'; // new aplicar 
 
-      const newUser = await response.json();
-      alert('Usuario registrado exitosamente.');
 
-      // Agregar al DataGrid (si es necesario)
-      addRow({
-        id: newUser.id || Math.random().toString(36).substr(2, 9),
-        firstName: nombre,
-        lastName: apellido,
-        email,
-        role: roles.find((role) => role.id === parseInt(roles_fk, 10))?.name || 'N/A',
-      });
+          // Actualizar los datos en el DataGrid
+          onSave({
+            //...formValues,
+            id: user.id,
+            firstName: nombre,
+            lastName: apellido,
+            email,
+            role: updatedRoleName, // Actualizamos el nombre del rol aquí
 
-      onClose();
+          });
+          DraggableAlert({ title: 'Actualizado', text: 'Usuario actualizado correctamente.', icon: 'success' });
+        } else {
+          DraggableAlert({ title: 'Error', text: 'No se pudo actualizar el usuario.', icon: 'error' });
+        }
+      } 
     } catch (error) {
-      console.error('Error al registrar usuario:', error);
-      alert('Error al registrar usuario.');
+      console.error('Error al actualizar el usuario:', error);
+      DraggableAlert({ title: 'Error', text: 'Error de conexión con el servidor.', icon: 'error' });
+    }
+
+    // Modo de edición o creación
+    if (user) {
+      onSave({ ...formValues, id: user.id }); // Editar usuario existente
+    } else {
+      try {
+        const response = await fetch(`http://${apiIp}/api/registrar`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            nombre,
+            apellido,
+            telefono,
+            email,
+            dni,
+            direccion,
+            sexo: sexo.toLowerCase(),
+            fecha_nacimiento,
+            extencion,
+            tipo_fiscal,
+            activo: true,
+            fecha_ingreso: new Date().toISOString().split('T')[0],
+            password,
+            password_confirmation,
+            estado: true,
+            fiscalia_fk: null,
+            roles_fk: parseInt(roles_fk, 10),
+          }),
+        });
+        /*
+        if (!response.ok) {
+          const error = await response.json();
+          alert(Error: ${error.message || 'No se pudo registrar el usuario.'});
+          return;
+        }
+        */
+        if (response.ok) {
+          onClose();
+          DraggableAlert({ title: 'Registrado!', text: 'Su usuario fue registrado', icon: 'success' }); // Llama a la función
+          
+        } else {
+          onClose();
+          DraggableAlert({ title: 'Error!', text: 'Su usuario no fue registrado', icon: 'error' }); // Llama a la función
+        }
+        const newUser = await response.json();
+        //alert('Usuario registrado exitosamente.');
+
+        // Agregar al DataGrid (si es necesario)
+        addRow({
+          id: newUser.id || Math.random().toString(36).substr(2, 9),
+          firstName: nombre,
+          lastName: apellido,
+          email,
+          role: roles.find((role) => role.id === parseInt(roles_fk, 10))?.name || 'N/A',
+        });
+
+        onClose();
+      } catch (error) {
+        console.error('Error al registrar usuario:', error);
+        //alert('Error al registrar usuario.');
+        DraggableAlert({ title: 'Error en el servidor', icon: 'error' });
+      }
     }
   };
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth={false} sx={{ '& .MuiDialog-paper': { width: '70%', maxWidth: '900px' } }}>
       <DialogTitle>Agregar Nuevo Usuario</DialogTitle>
       <DialogContent>
         <DialogContentText>
           Completa todos los campos obligatorios para registrar un nuevo usuario.
         </DialogContentText>
-        <div className="flex flex-col gap-4 mt-4">
-          {/* Nombre y Apellido */}
-          <div className="flex gap-4">
-            <TextField
-              label="Nombre *"
-              name="firstName"
-              size="small"
-              value={formValues.firstName}
-              onChange={handleChange}
-              className="flex-1"
-            />
-            <TextField
-              label="Apellido *"
-              name="lastName"
-              size="small"
-              value={formValues.lastName}
-              onChange={handleChange}
-              className="flex-1"
-            />
-          </div>
-
-          {/* Teléfono, Correo y DNI */}
-          <div className="flex gap-4">
-            <TextField
-              label="Teléfono *"
-              name="mobile"
-              size="small"
-              value={formValues.mobile}
-              onChange={handleChange}
-              className="flex-1"
-            />
-            <TextField
-              label="Correo *"
-              name="email"
-              size="small"
-              value={formValues.email}
-              onChange={handleChange}
-              className="flex-1"
-            />
-            <TextField
-              label="DNI *"
-              name="DNI"
-              size="small"
-              value={formValues.DNI}
-              onChange={handleChange}
-              className="flex-1"
-            />
-          </div>
-
-          {/* Dirección */}
-          <div>
-            <TextField
-              label="Dirección *"
-              name="Direccion"
-              size="small"
-              value={formValues.Direccion}
-              onChange={handleChange}
-              fullWidth
-            />
-          </div>
-
-          {/* Género y Fecha de nacimiento */}
-          <div className="flex gap-4">
-            <AsynchronousAutocomplete
-              options={Gener}
-              labelDimac="Género *"
-              name="Genero"
-              value={formValues.Genero}
-              onChange={handleChange}
-              className="flex-1"
-            />
-            <CustomPropsOpeningButton
-              name="fechaNacimiento"
-              value={formValues.fechaNacimiento}
-              onChange={handleChange}
-              className="flex-1"
-            />
-          </div>
-
-          {/* Extensión, Rol y Tipo Fiscal */}
-          <div className="flex gap-4">
-            <TextField
-              label="Extensión *"
-              name="Extencion"
-              size="small"
-              value={formValues.Extencion}
-              onChange={handleChange}
-              className="flex-[1_1_100%]"
-            />
-            <Autocomplete
-              options={roles} // Array procesado de roles
-              getOptionLabel={(option) => option.name || ''} // Mostrará el campo "name" (anteriormente "roles")
-              loading={loadingRoles}
-              isOptionEqualToValue={(option, value) => option.id === value.id} // Compara las opciones por "id"
-              onChange={(event, value) =>
-                setFormValues({ ...formValues, roles_fk: value ? value.id : '' })
-              }
-              renderInput={(params) => (
+        <Box sx={{ display: 'flex', bgcolor: 'background.paper', height: '100%', marginTop: '10px' }}>
+          <Tabs
+            orientation="vertical"
+            variant="scrollable"
+            value={value}
+            onChange={handleTabChange}
+            aria-label="Opciones de usuario"
+            sx={{ borderRight: 1, borderColor: 'divider' }}
+          >
+            <Tab label="Registro" {...a11yProps(0)} />
+            <Tab label="Opciones Avanzadas" {...a11yProps(1)} />
+            <Tab label="Configuraciones" {...a11yProps(2)} />
+          </Tabs>
+          <TabPanel value={value} index={0}>
+            <div className="flex flex-col gap-4">
+              {/* Nombre y Apellido */}
+              <div className="flex gap-4">
                 <TextField
-                  {...params}
-                  label="Rol *"
-                  fullWidth
+                  label="Nombre *"
+                  name="firstName"
                   size="small"
-                  InputProps={{
-                    ...params.InputProps,
-                    endAdornment: (
-                      <>
-                        {loadingRoles ? <CircularProgress size={20} /> : null}
-                        {params.InputProps.endAdornment}
-                      </>
-                    ),
-                  }}
+                  value={formValues.firstName}
+                  onChange={handleChange}
+                  className="flex-1"
                 />
-              )}
-              className="flex-[1_1_100%]"
-            />
-            <AsynchronousAutocomplete
-              options={TipoFiscal}
-              labelDimac="Tipo Fiscal *"
-              name="TipoFiscal"
-              value={formValues.TipoFiscal}
-              onChange={handleChange}
-              className="flex-[1_1_100%]"
-            />
-          </div>
+                <TextField
+                  label="Apellido *"
+                  name="lastName"
+                  size="small"
+                  value={formValues.lastName}
+                  onChange={handleChange}
+                  className="flex-1"
+                />
+              </div>
 
-          {/* Contraseña y Confirmación */}
-          <div className="flex gap-4">
-            <FormControl fullWidth variant="outlined" className="flex-1">
-              <InputLabel htmlFor="outlined-adornment-password" size="small">Password</InputLabel>
-              <OutlinedInput
-                id="outlined-adornment-password"
-                name="password"
-                type={showPassword ? 'text' : 'password'}
-                size="small"
-                value={formValues.password}
-                onChange={handleChange}
-                endAdornment={
-                  <InputAdornment position="end">
-                    <IconButton
-                      onClick={handleClickShowPassword}
-                      onMouseDown={handleMouseDownPassword}
-                      edge="end"
-                      sx={{ fontSize: '20px' }}
-                    >
-                      {showPassword ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
-                    </IconButton>
-                  </InputAdornment>
-                }
-                label="Password"
-              />
-            </FormControl>
-            <FormControl fullWidth variant="outlined" className="flex-1">
-              <InputLabel htmlFor="outlined-adornment-confirm-password" size="small">
-                Confirm Password
-              </InputLabel>
-              <OutlinedInput
-                id="outlined-adornment-confirm-password"
-                name="confirmPassword"
-                type={showConfirmPassword ? 'text' : 'password'}
-                size="small"
-                value={formValues.confirmPassword}
-                onChange={handleChange}
-                endAdornment={
-                  <InputAdornment position="end">
-                    <IconButton
-                      onClick={handleClickShowConfirmPassword}
-                      onMouseDown={handleMouseDownPassword}
-                      edge="end"
-                      sx={{ fontSize: '20px' }}
-                    >
-                      {showConfirmPassword ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
-                    </IconButton>
-                  </InputAdornment>
-                }
-                label="Confirm Password"
-              />
-            </FormControl>
-          </div>
-        </div>
+              {/* Teléfono, Correo y DNI */}
+              <div className="flex gap-4">
+                <TextField
+                  label="Teléfono *"
+                  name="mobile"
+                  size="small"
+                  value={formValues.mobile}
+                  onChange={handleChange}
+                  className="flex-1"
+                />
+                <TextField
+                  label="Correo *"
+                  name="email"
+                  size="small"
+                  value={formValues.email}
+                  onChange={handleChange}
+                  className="flex-1"
+                />
+                <TextField
+                  label="DNI *"
+                  name="DNI"
+                  size="small"
+                  value={formValues.DNI}
+                  onChange={handleChange}
+                  className="flex-1"
+                />
+              </div>
+
+              {/* Dirección */}
+              <div>
+                <TextField
+                  label="Dirección *"
+                  name="Direccion"
+                  size="small"
+                  value={formValues.Direccion}
+                  onChange={handleChange}
+                  fullWidth
+                />
+              </div>
+
+              {/* Género y Fecha de nacimiento */}
+              <div className="flex gap-4">
+                <AsynchronousAutocomplete
+                  options={Gener}
+                  labelDimac="Género *"
+                  name="Genero"
+                  value={formValues.Genero}
+                  onChange={handleChange}
+                  className="flex-1"
+                />
+                <CustomPropsOpeningButton
+                  name="fechaNacimiento"
+                  value={formValues.fechaNacimiento}
+                  onChange={handleChange}
+                  className="flex-1"
+                />
+              </div>
+
+              {/* Extensión, Rol y Tipo Fiscal */}
+              <div className="flex gap-4">
+                <TextField
+                  label="Extensión *"
+                  name="Extencion"
+                  size="small"
+                  value={formValues.Extencion}
+                  onChange={handleChange}
+                  className="flex-[1_1_100%]"
+                />
+                <Autocomplete
+                  options={roles} // Array procesado de roles
+                  getOptionLabel={(option) => option.name || ''} // Mostrará el campo "name" (anteriormente "roles")
+                  loading={loadingRoles}
+                  isOptionEqualToValue={(option, value) => option.id === value.id} // Compara las opciones por "id"
+                  onChange={(event, value) =>
+                    setFormValues({ ...formValues, roles_fk: value ? value.id : '' })
+                  }
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Rol *"
+                      fullWidth
+                      size="small"
+                      InputProps={{
+                        ...params.InputProps,
+                        endAdornment: (
+                          <>
+                            {loadingRoles ? <CircularProgress size={20} /> : null}
+                            {params.InputProps.endAdornment}
+                          </>
+                        ),
+                      }}
+                    />
+                  )}
+                  className="flex-[1_1_100%]"
+                />
+                <AsynchronousAutocomplete
+                  options={TipoFiscal}
+                  labelDimac="Tipo Fiscal *"
+                  name="TipoFiscal"
+                  value={formValues.TipoFiscal}
+                  onChange={handleChange}
+                  className="flex-[1_1_100%]"
+                />
+              </div>
+
+              {/* Contraseña y Confirmación */}
+              <div className="flex gap-4">
+                <FormControl fullWidth variant="outlined" className="flex-1">
+                  <InputLabel htmlFor="outlined-adornment-password" size="small">Password</InputLabel>
+                  <OutlinedInput
+                    id="outlined-adornment-password"
+                    name="password"
+                    type={showPassword ? 'text' : 'password'}
+                    size="small"
+                    value={formValues.password}
+                    onChange={handleChange}
+                    endAdornment={
+                      <InputAdornment position="end">
+                        <IconButton
+                          onClick={handleClickShowPassword}
+                          onMouseDown={handleMouseDownPassword}
+                          edge="end"
+                          sx={{ fontSize: '20px' }}
+                        >
+                          {showPassword ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
+                        </IconButton>
+                      </InputAdornment>
+                    }
+                    label="Password"
+                  />
+                </FormControl>
+                <FormControl fullWidth variant="outlined" className="flex-1">
+                  <InputLabel htmlFor="outlined-adornment-confirm-password" size="small">
+                    Confirm Password
+                  </InputLabel>
+                  <OutlinedInput
+                    id="outlined-adornment-confirm-password"
+                    name="confirmPassword"
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    size="small"
+                    value={formValues.confirmPassword}
+                    onChange={handleChange}
+                    endAdornment={
+                      <InputAdornment position="end">
+                        <IconButton
+                          onClick={handleClickShowConfirmPassword}
+                          onMouseDown={handleMouseDownPassword}
+                          edge="end"
+                          sx={{ fontSize: '20px' }}
+                        >
+                          {showConfirmPassword ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
+                        </IconButton>
+                      </InputAdornment>
+                    }
+                    label="Confirm Password"
+                  />
+                </FormControl>
+              </div>
+            </div>
+          </TabPanel>
+          <TabPanel value={value} index={1}>
+            Opciones avanzadas en construcción...
+          </TabPanel>
+          <TabPanel value={value} index={2}>
+            Configuraciones adicionales.
+          </TabPanel>
+        </Box>
+
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} variant="outlined" className='bottom-2'>
@@ -753,14 +913,89 @@ const CustomPropsOpeningButton = ({ name, value, onChange }) => {
 
 
 const User = () => {
-
-  const [isDialogOpen, setDialogOpen] = useState(false);
-  const [rows, setRows] = useState(initialRows);
-
-  const handleOpenDialog = () => setDialogOpen(true);
-  const handleCloseDialog = () => setDialogOpen(false);
+  const [loading, setLoading] = useState(false); // Estado para controlar la carga
+  const [isDialogOpen, setIsDialogOpen] = useState(false); // Controla el estado del diálogo
+  const [rows, setRows] = useState([]); // Almacena los usuarios
+  const [selectedUser, setSelectedUser] = useState(null); // Usuario seleccionado para edición
 
   const addRow = (newRow) => setRows((prev) => [...prev, newRow]);
+
+  // Manejar la apertura del diálogo al editar
+  const handleEdit = (userId) => {
+    const userToEdit = rows.find((row) => row.id === userId); // Buscar el usuario en rows
+    if (userToEdit) {
+      setSelectedUser(userToEdit); // Establecer el usuario seleccionado
+      setIsDialogOpen(true); // Abrir el diálogo
+    }
+  };
+
+  // Manejar el cierre del diálogo
+  const handleCloseDialog = () => {
+    setIsDialogOpen(false);
+    setSelectedUser(null); // Limpia los datos del usuario seleccionado
+  };
+
+  // Actualizar el usuario después de la edición
+  const handleUpdateUser = (updatedUser) => {
+    setRows((prevRows) =>
+      prevRows.map((row) =>
+        row.id === updatedUser.id
+          ? { ...row, ...updatedUser }
+          : row
+      )
+    );
+    handleCloseDialog(); // Cierra el diálogo
+  };
+
+  // Función para transformar los datos devueltos por la API
+  const transformData = (data) => {
+    return data.map((user) => ({
+      id: user.id,
+      firstName: user.nombre,
+      lastName: user.apellido,
+      email: user.email,
+      mobile: user.telefono,
+      DNI: user.dni,
+      Direccion: user.direccion,
+      Genero: user.sexo,
+      fechaNacimiento: user.fecha_nacimiento,
+      Extencion: user.extencion,
+      TipoFiscal: user.tipo_fiscal,
+      role: user.roles_fk?.roles || 'N/A',
+    }));
+  };
+  // Función para obtener los usuarios desde la API
+  const fetchUsers = async () => {
+    try {
+      setLoading(true); // Empieza la carga
+      const response = await axios.get(`http://${apiIp}/api/user`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.status === 200) {
+        const data = Array.isArray(response.data) ? response.data : response.data.data; // Ajusta según estructura
+        if (Array.isArray(data)) {
+          const transformedData = transformData(data);
+          setRows(transformedData);
+        } else {
+          console.error('Error: La API no devolvió un arreglo.');
+        }
+      } else {
+        console.error(`Error: Código de estado inesperado (${response.status}).`);
+      }
+    } catch (error) {
+      console.error('Error al obtener los datos de la API:', error.message || error);
+    } finally {
+      setLoading(false); // Finaliza la carga
+    }
+  };
+
+  // Hook useEffect para cargar los datos al montar el componente
+  useEffect(() => {
+    fetchUsers();
+  }, []);
 
   return (
     <>
@@ -771,7 +1006,7 @@ const User = () => {
             <div className='flex flex-row gap-0'>
               <Search />
               <Button variant="contained" endIcon={<AddIcon />}
-                onClick={handleOpenDialog}
+                onClick={() => setIsDialogOpen(true)}
                 sx={{
                   color: '#FFFFFF',
                   backgroundColor: '#152B52',
@@ -781,6 +1016,7 @@ const User = () => {
                 }}>
                 Add user
               </Button>
+              <FileUploadButton/>
             </div>
 
           </div>
@@ -802,25 +1038,17 @@ const User = () => {
               <p className='text-[#222B45] font-bold text-xl'>614</p>
             </div>
           </div>
-          <div className='flex h-full flex-grow'>
-            <FullFeaturedCrudGrid rows={rows} setRows={setRows} />
-          </div>
-        </div>
-        <div className='flex flex-col w-1/5 gap-4 pr-3'>
-          <div className=' flex-row h-full pt-4 bg-white'>
-            <div>
-              <h2 className='text-start pl-4'>Notification</h2>
-              <FolderList />
-            </div>
-            <div>
-              <h2 className='text-start pl-4'>Activities</h2>
-              <FolderPersons />
-            </div>
 
+          <div className='flex h-full flex-grow'>
+            <FullFeaturedCrudGrid rows={rows} setRows={setRows} onEdit={handleEdit} loading={loading} />
           </div>
         </div>
+
       </div>
-      <UserDialog open={isDialogOpen} onClose={handleCloseDialog} addRow={addRow} />
+      {isDialogOpen && (
+        <UserDialog open={isDialogOpen} onClose={handleCloseDialog} addRow={addRow} user={selectedUser} onSave={handleUpdateUser} />
+      )}
+
     </>
   )
 }

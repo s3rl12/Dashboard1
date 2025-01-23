@@ -10,7 +10,9 @@
 }
 
 
-
+.css-23htwk{
+    background: rgb(245 245 244);
+}
 
 
 
@@ -63,8 +65,7 @@
     -ms-user-select: none;
     user-select: none;
     vertical-align: middle;
-    -moz-appearance: none;
-    -webkit-appearance: none;
+   
     -webkit-text-decoration: none;
     text-decoration: none;
     color: inherit;

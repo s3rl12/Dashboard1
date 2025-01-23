@@ -12,10 +12,11 @@ import '@ag-grid-community/styles/ag-theme-quartz.css'; // Incluimos el tema
 import { ClientSideRowModelModule } from '@ag-grid-community/client-side-row-model';
 import { ModuleRegistry } from '@ag-grid-community/core';
 import ReactApexChart from 'react-apexcharts'
+import PropTypes from 'prop-types';
 import '/src/index.css';
 
 
-const Reports = () => {
+const Reports = ({ navigate }) => {
     const [series] = useState([
         {
             name: "Casos Resultos",
@@ -262,7 +263,7 @@ const Reports = () => {
 
 
     return (
-        <div className='flex flex-col gap-4 pt-3 mt-0'>
+        <div className='flex flex-col gap-4 pt-3 mt-0 px-3'>
             <div className='flex flex-row gap-4 w-full justify-between'> {/* Div Padre 1 */}
                 <div className='flex flex-row border-[#A4A4A4] shadow-[0px_4px_4px_rgba(0,0,0,0.1)] rounded-r-lg bg-white'>
                     <div>
@@ -343,5 +344,7 @@ const Reports = () => {
         </div>
     );
 };
-
+Reports.propTypes = {
+    navigate: PropTypes.func.isRequired,
+};
 export default Reports;
