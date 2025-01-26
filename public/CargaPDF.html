@@ -34,7 +34,7 @@
         const month = urlParams.get('month');
         console.log('Datos recibidos:', { dependencias, year, month });
         document.getElementById("btnVerReporte").addEventListener("click", function () {
-            var url = `http://192.168.1.12/api/reporte-carga-fiscal/${dependencias}/${month}/${year}/e2d79274-5400-460a-a0e3-6f5730cdd93f`; // URL de la API
+            var url = `http://192.168.65.96/api/reporte-carga-fiscal/${dependencias}/${month}/${year}/e2d79274-5400-460a-a0e3-6f5730cdd93f`; // URL de la API
             var iframe = document.getElementById("pdfIframe");
             var spinner = document.getElementById("loadingSpinner");
             var pdfContainer = document.getElementById("pdf-container");

@@ -48,9 +48,32 @@ const NAVIGATION = [
     //{ segment: 'reportmanagement', title: 'Report Management', icon: <DescriptionIcon /> },
     { segment: 'documentmanager', title: 'Administrador de documentos', icon: <DescriptionIcon /> },
     { segment: 'rolespermissions', title: 'Roles y permisos', icon: <LayersIcon /> },
-    { segment: 'registerareas', title: 'Registro de áreas', icon: <LayersIcon /> },
+    //{ segment: 'registerareas', title: 'Registro de áreas', icon: <LayersIcon /> },
     { segment: 'userprofile', title: 'Perfil de usuario', icon: <PersonIcon /> },
     { segment: 'usermanagement', title: 'Gestión de usuarios', icon: <PersonIcon /> },
+    {
+        segment: 'gestion',
+        title: 'Gestión de Áreas',
+        icon: <LayersIcon />,
+        children: [
+            {
+                segment: 'lista-areas',
+                title: 'Lista de Áreas',
+                icon: <DescriptionIcon />,
+            },
+            {
+                segment: 'Listas-de-fiscales',
+                title: 'Listas de fiscales',
+                icon: <DescriptionIcon />,
+            },
+            {
+                segment: 'logistica',
+                title: 'Logística',
+                icon: <DescriptionIcon />,
+            },
+            
+        ],
+    },
 ];
 
 const demoTheme = createTheme({
@@ -121,8 +144,14 @@ function DemoPageContent({ pathname, navigate }) {
         case '/rolespermissions': // Nuevo caso
             content = <RolesPermissions />;
             break;
-        case '/registerareas':
+        case '/gestion/lista-areas': // Nuevo caso
             content = <RegisterAreas />;
+            break;
+        case '/gestion/Listas-de-fiscales': // Nuevo caso
+            content = <Typography>Contenido por defecto para Listas de fiscales</Typography>;
+            break;
+        case '/gestion/logistica': // Nuevo caso
+            content = <Typography>Contenido por defecto para Logística</Typography>;
             break;
         case '/userprofile': // Caso para UserProfile
             content = <UserProfile />;
