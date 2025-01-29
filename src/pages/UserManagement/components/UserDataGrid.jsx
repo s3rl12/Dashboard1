@@ -185,7 +185,7 @@ export default function UserDataGrid({ columnsConfig = [], title = "Lista de usu
         />
       </Box>
 
-      {/* Mostrar el componente de eliminación si se seleccionó un usuario para eliminar */}
+      {/* Mostrar el componente de eliminGación si se seleccionó un usuario para eliminar */}
       {userToDelete && (
         <DeleteUser
           userId={userToDelete.id}

@@ -24,9 +24,9 @@ export default function DeleteUser({ userId, onUserDeleted }) {
     }
   };
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     // Llamamos a la función que ejecutará la eliminación después de la confirmación de la alerta
-    handleDelete();
+    await handleDelete();
     setAlertVisible(false);  // Después de confirmar, deshabilitamos la alerta
   };
 
