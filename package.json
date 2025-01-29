@@ -25,6 +25,7 @@
     "@mui/x-date-pickers-pro": "^7.22.2",
     "@react-pdf-viewer/core": "^3.12.0",
     "@react-pdf-viewer/default-layout": "^3.12.0",
+    "@react-pdf/renderer": "^4.1.6",
     "@toolpad/core": "^0.9.0",
     "@toolpad/studio-components": "^0.9.0",
     "@toolpad/studio-runtime": "^0.9.0",

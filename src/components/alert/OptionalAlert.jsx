@@ -1,29 +1,55 @@
-import React from 'react';
-import Swal from 'sweetalert2';
-//import '../../assets/styles/OptionalAlert.css';
+import React from "react";
+import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
+
 const MySwal = withReactContent(Swal);
-const OptionalAlert = ({ title, text, onConfirm }) => {
-    MySwal.fire({
-        title: title || "¿Estás seguro?",  // Usar prop 'title' o valor por defecto
-        text: text || "¡No podrás revertir esto!",  // Usar prop 'text' o valor por defecto
-        icon: "warning",
-        draggable: true,
-        showCancelButton: true,
-        confirmButtonText: "Yes, confirm it!",
-        cancelButtonText: "Cancel",
-        confirmButtonColor: "#3085d6",
-        cancelButtonColor: "#d33",
-    }).then((result) => {
+
+const OptionalAlert = async ({ title, text, onConfirm }) => {
+    try {
+        const result = await MySwal.fire({
+            title: title || "¿Estás seguro?",
+            text: text || "¡No podrás revertir esto!",
+            icon: "warning",
+            draggable: true,
+            showCancelButton: true,
+            confirmButtonText: "Yes, confirm it!",
+            cancelButtonText: "Cancel",
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+        });
+
         if (result.isConfirmed) {
-            onConfirm();  // Llama a la función onConfirm cuando el usuario confirma
-            Swal.fire({
-                title: "¡Eliminado!",
-                text: "El usuario ha sido eliminado.",
-                icon: "success",
+            const loadingAlert = Swal.fire({
+                title: "Procesando...",
+                html: "Eliminando sede, por favor espera...",
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading(),
             });
+
+            try {
+                await onConfirm(); // Llamar a la función de eliminación
+                loadingAlert.close(); // Cerrar alerta de carga
+                await MySwal.fire({
+                    title: "¡Eliminado!",
+                    text: "Se ha sido eliminada con éxito.",
+                    icon: "success",
+                });
+            } catch (error) {
+                loadingAlert.close(); // Cerrar alerta de carga
+                console.error("Error en OptionalAlert:", error);
+
+                // Mostrar mensaje de error personalizado
+                const errorMessage = error.response?.data?.message || error.message || "Ocurrió un problema al intentar eliminar.";
+                await MySwal.fire({
+                    title: "Error",
+                    text: errorMessage,
+                    icon: "error",
+                });
+            }
         }
-    });
+    } catch (error) {
+        console.error("Error en OptionalAlert:", error);
+    }
 };
 
 export default OptionalAlert;
