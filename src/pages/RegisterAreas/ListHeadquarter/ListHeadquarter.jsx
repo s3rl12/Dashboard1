@@ -6,39 +6,47 @@ const ListHeadquarter = () => {
     const [headquarters, setHeadquarters] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    // Definimos la configuración de las columnas
     const columnsConfig = [
-        { field: 'nombre', headerName: 'Nombre Sede', flex: 1 },  // Cambié 'name' a 'nombre'
-        { field: 'provincia', headerName: 'Provincia', flex: 1 },  // Cambié 'province' a 'provincia'
-        { field: 'distrito_fiscal', headerName: 'Distrito Fiscal', flex: 1 },  // 'distrito_fiscal' ya está bien
-        { field: 'codigo_postal', headerName: 'Código Postal', flex: 1 },  // Cambié 'postalCode' a 'codigo_postal'
+        { field: 'nombre', headerName: 'Nombre Sede', flex: 1 },
+        { field: 'provincia', headerName: 'Provincia', flex: 1 },
+        { field: 'distrito_fiscal', headerName: 'Distrito Fiscal', flex: 1 },
+        { field: 'codigo_postal', headerName: 'Código Postal', flex: 1 },
     ];
 
-    // Usamos useEffect para cargar las sedes al montar el componente
     useEffect(() => {
         const fetchHeadquarters = async () => {
             try {
-                const sedeData = await sedeService.getAllSedes(); // Obtenemos las sedes desde la API
-                console.log('Datos obtenidos de sedes:', sedeData);  // Verifica los datos
-                // Asignamos los datos a 'headquarters', asegurándonos de acceder a 'data' (y no 'rows')
-                setHeadquarters(sedeData.data || []);  // Usamos 'data' en lugar de 'rows'
+                const sedeData = await sedeService.getAllSedes();
+                setHeadquarters(sedeData.data || []);
             } catch (error) {
                 console.error('Error al obtener las sedes:', error);
             } finally {
-                setLoading(false); // Terminamos de cargar
+                setLoading(false);
             }
         };
 
         fetchHeadquarters();
-    }, []);  // Se ejecuta una sola vez al montar el componente
+    }, []);
+
+    const handleDeleteSede = async (id) => {
+        console.log("ID para eliminar:", id); // Verificar valor de id
+        try {
+            await sedeService.deleteSede(id);
+            setHeadquarters((prev) => prev.filter((sede) => sede.id !== id));
+        } catch (error) {
+            console.error('Error al eliminar la sede:', error.response?.data || error.message);
+        }
+    };
+
 
     return (
         <div>
             <RegisterAreasDataGrid
                 columnsConfig={columnsConfig}
                 title="Lista de Sedes"
-                rows={headquarters} // Pasamos las sedes obtenidas a la tabla
-                loading={loading} // Pasamos el estado de carga
+                rows={headquarters}
+                loading={loading}
+                onDeleteRow={handleDeleteSede} // Pasamos la función como prop
             />
         </div>
     );

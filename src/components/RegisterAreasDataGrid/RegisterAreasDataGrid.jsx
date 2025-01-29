@@ -1,17 +1,16 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { DataGrid } from '@mui/x-data-grid';
-import { Box, Button, Popover, Typography } from '@mui/material';
-import { GridRowModes, GridActionsCellItem, GridRowEditStopReasons } from '@mui/x-data-grid';
+import { Box, Typography } from '@mui/material';
+import { GridRowModes, GridActionsCellItem } from '@mui/x-data-grid';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/DeleteOutlined';
-import SaveIcon from '@mui/icons-material/Save';
-import CancelIcon from '@mui/icons-material/Close';
-import QuickFilter from '../DocumentDataGrid/components/QuickFilter';  // Asegúrate de importar el componente QuickFilter
+import QuickFilter from '../DocumentDataGrid/components/QuickFilter';
+import OptionalAlert from '../../components/alert/OptionalAlert'; // Importamos OptionalAlert
 
 const BUTTON_SIZE = { width: 105, height: 38 };
 const ICON_SIZE = { width: 20, height: 20 };
 
-export default function RegisterAreasDataGrid({ columnsConfig = [], title = "Default Title", rows = [] }) {
+export default function RegisterAreasDataGrid({ columnsConfig = [], title = "Default Title", rows = [], onDeleteRow }) {
   const [filterModel, setFilterModel] = useState({ field: '', operator: 'contains', value: '' });
   const [anchorEl, setAnchorEl] = useState(null);
   const [rowModesModel, setRowModesModel] = useState({});
@@ -24,51 +23,31 @@ export default function RegisterAreasDataGrid({ columnsConfig = [], title = "Def
         headerName: 'Actions',
         type: 'actions',
         width: 100,
-        getActions: ({ id }) => {
-          const isInEditMode = rowModesModel[id]?.mode === GridRowModes.Edit;
-
-          if (isInEditMode) {
-            return [
-              <GridActionsCellItem
-                icon={<SaveIcon />}
-                label="Save"
-                onClick={handleSaveClick(id)}
-              />,
-              <GridActionsCellItem
-                icon={<CancelIcon />}
-                label="Cancel"
-                onClick={handleCancelClick(id)}
-              />,
-            ];
-          }
-
-          return [
-            <GridActionsCellItem
-              icon={<EditIcon />}
-              label="Edit"
-              onClick={handleEditClick(id)}
-            />,
-            <GridActionsCellItem
-              icon={<DeleteIcon />}
-              label="Delete"
-              onClick={handleDeleteClick(id)}
-            />,
-          ];
-        },
+        getActions: ({ id }) => [
+          <GridActionsCellItem
+            icon={<EditIcon />}
+            label="Edit"
+            onClick={handleEditClick(id)}
+          />,
+          <GridActionsCellItem
+            icon={<DeleteIcon />}
+            label="Delete"
+            onClick={() => handleDeleteClick(id)} // Usamos handleDeleteClick
+          />,
+        ],
       }];
 
     return {
       columns,
       rows: rows || [], // Usar las filas pasadas desde ListHeadquarter
     };
-  }, [columnsConfig, rowModesModel, rows]);
+  }, [columnsConfig, rows]);
 
   const filteredRows = useMemo(() => {
     if (!Array.isArray(data.rows)) return [];  // Asegura que data.rows sea un array
     return data.rows.filter((row) => {
       const { operator, value } = filterModel;
       if (!value) return true; // No filtrar si no hay valor
-      // Filtrar dinámicamente basado en el valor proporcionado
       return data.columns.some((col) => {
         const cellValue = row[col.field]?.toString().toLowerCase() || '';
         return operator === 'contains' && cellValue.includes(value.toLowerCase());
@@ -92,24 +71,19 @@ export default function RegisterAreasDataGrid({ columnsConfig = [], title = "Def
     setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.Edit } });
   };
 
-  const handleSaveClick = (id) => () => {
-    setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.View } });
-  };
-
-  const handleDeleteClick = (id) => () => {
-    data.rows = data.rows.filter((row) => row.id !== id);
-  };
-
-  const handleCancelClick = (id) => () => {
-    setRowModesModel({
-      ...rowModesModel,
-      [id]: { mode: GridRowModes.View, ignoreModifications: true },
+  const handleDeleteClick = (id) => {
+    OptionalAlert({
+      title: "Confirmación de eliminación",
+      text: "¿Estás seguro de que deseas eliminar?",
+      onConfirm: async () => {
+        try {
+          await onDeleteRow?.(id); // Llamamos a la función de eliminación
+        } catch (error) {
+          // Si ocurre un error, OptionalAlert se encarga de mostrarlo
+          throw new Error(error.message || 'Ocurrió un error inesperado al intentar eliminar.');
+        }
+      },
     });
-
-    const editedRow = data.rows.find((row) => row.id === id);
-    if (editedRow.isNew) {
-      data.rows = data.rows.filter((row) => row.id !== id);
-    }
   };
 
   const open = Boolean(anchorEl);
