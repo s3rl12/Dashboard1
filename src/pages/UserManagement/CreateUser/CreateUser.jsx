@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, Typography, Button, CircularProgress } from '@mui/material';
+import { Button, CircularProgress } from '@mui/material';
 import VerticalTabs from '../../../components/Tabs/VerticalTabs';
 import { useAuth } from '../../../context/AuthContext'; // Importar el contexto
 import userListService from '../../../services/api/user-list/userListService'; // Importar el servicio de usuario
@@ -10,17 +10,13 @@ const CreateUser = () => {
     const [error, setError] = useState(null); // Estado para manejar errores
     const [success, setSuccess] = useState(false); // Estado para manejar éxito
 
-    
-
     const handleSave = async () => {
         setLoading(true); // Activar la carga
         setError(null); // Limpiar cualquier error previo
         setSuccess(false); // Limpiar el estado de éxito
         console.log('los datos recopilados son:', userData);
         try {
-            
             const response = await userListService.createUser(userData); // Llamar a la API para crear el usuario
-            
             setSuccess(true); // Si la creación es exitosa, actualizar el estado de éxito
             console.log('Usuario creado con éxito:', response);
         } catch (error) {
@@ -32,41 +28,40 @@ const CreateUser = () => {
     };
 
     return (
-        <Box className="flex flex-col w-full gap-4 px-6 py-6 bg-white shadow-md" sx={{ flex: 1 }}>
-            <Typography variant="h4" component="h1" gutterBottom fontWeight="bold" sx={{ textAlign: 'start' }}>
-                Agregar nuevo usuario
-            </Typography>
-            <Box className="flex" sx={{ flex: 1 }}>
+        <div className="flex flex-col font-teko w-full gap-4 px-6 py-6 bg-white shadow-md">
+            <h1 className="text-xl font-semibold text-start mb-4">Agregar nuevo usuario</h1>
+            
+            <div className="flex w-full">
                 <VerticalTabs />
-            </Box>
+            </div>
 
             {/* Mensaje de éxito o error */}
             {error && (
-                <Box sx={{ marginTop: 2, color: 'red', textAlign: 'center' }}>
-                    <Typography variant="body1">{error}</Typography>
-                </Box>
+                <div className="mt-2 text-red-500 text-center">
+                    <p>{error}</p>
+                </div>
             )}
             {success && (
-                <Box sx={{ marginTop: 2, color: 'green', textAlign: 'center' }}>
-                    <Typography variant="body1">Usuario creado con éxito!</Typography>
-                </Box>
+                <div className="mt-2 text-green-500 text-center">
+                    <p>Usuario creado con éxito!</p>
+                </div>
             )}
 
-            <Box className="flex justify-end gap-4 mt-6">
-                <Button variant="outlined" sx={{ width: '120px' }}>
+            <div className="flex justify-end gap-4 mt-6">
+                <Button variant="outlined" style={{ width: '120px' }}>
                     Cancelar
                 </Button>
                 <Button
                     variant="contained"
                     color="primary"
-                    sx={{ width: '120px' }}
+                    style={{ width: '120px' }}
                     onClick={handleSave} // Al hacer clic en "Guardar", ejecuta la función handleSave
                     disabled={loading} // Desactivar el botón mientras se está cargando
                 >
                     {loading ? <CircularProgress size={24} color="inherit" /> : 'Guardar'}
                 </Button>
-            </Box>
-        </Box>
+            </div>
+        </div>
     );
 };
 

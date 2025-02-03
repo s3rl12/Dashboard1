@@ -5,7 +5,7 @@ const apiIp = import.meta.env.VITE_API;
 console.log('API IP:', apiIp);
 
 const apiRoles = axios.create({
-    baseURL: `http://${apiIp}/api/roles`, // Se establece la base URL específica para /roles
+    baseURL: `http://${apiIp}/api/ges_user/roles`, // Se establece la base URL específica para /roles
     timeout: 60000,
     headers: {
         'Content-Type': 'application/json',

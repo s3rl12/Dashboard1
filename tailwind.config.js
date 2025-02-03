@@ -7,7 +7,12 @@ export default {
     './componentes/**/.{html,js}',
   ],
   theme: {
-    extend: {},
+    extend: {
+      fontFamily: {
+        khand: ["Khand", "sans-serif"],
+        teko: ["Teko", "sans-serif"],
+      },
+    },
   },
   plugins: [],
 }

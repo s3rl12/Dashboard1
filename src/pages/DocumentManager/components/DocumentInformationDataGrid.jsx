@@ -8,11 +8,10 @@ import ExportDocument from '../../../components/DocumentDataGrid/components/Expo
 import FileUpload from '../../../components/DocumentDataGrid/components/FileUpload';
 
 export default function DocumentInformationDataGrid({ rows }) {
-    const [displayedRows, setDisplayedRows] = useState(rows); // Estado para manejar los datos mostrados
+    const [displayedRows, setDisplayedRows] = useState(rows);
 
-    // Actualizar las filas mostradas si las filas iniciales cambian
     useEffect(() => {
-        setDisplayedRows(rows); // Actualiza las filas mostradas si las filas iniciales cambian
+        setDisplayedRows(rows);
     }, [rows]);
 
     const handleEdit = (row) => {
@@ -23,12 +22,11 @@ export default function DocumentInformationDataGrid({ rows }) {
         alert(`Eliminar documento con ID: ${id}`);
     };
 
-    const handleFilterChange = (field, operator, value) => {
-        // Lógica para filtrar las filas
+    const handleFilterChange = (value) => {
         const filteredRows = rows.filter((row) =>
-            String(row[field]).toLowerCase().includes(String(value).toLowerCase())
+            String(row.file_name).toLowerCase().includes(String(value).toLowerCase())
         );
-        setDisplayedRows(filteredRows); // Actualiza las filas filtradas
+        setDisplayedRows(filteredRows);
     };
 
     const handleExport = () => {
@@ -36,20 +34,20 @@ export default function DocumentInformationDataGrid({ rows }) {
     };
 
     const columns = useMemo(() => [
-        { field: 'id', headerName: 'ID', hide: true },
-        { field: 'documentName', headerName: 'Nombre del Documento', flex: 1 },
-        { field: 'author', headerName: 'Autor', flex: 1 },
+        { field: 'id', headerName: 'ID', hide: true, sortable: false },
+        { field: 'file_name', headerName: 'File Name', flex: 1, sortable: false },
+        { field: 'file_type', headerName: 'File Type', flex: 1, sortable: false },
         {
-            field: 'date',
-            headerName: 'Fecha',
+            field: 'created_at',
+            headerName: 'Creation Date',
             type: 'date',
             flex: 1,
-            valueGetter: ({ row }) => (row?.date ? new Date(row.date) : null),
+            valueGetter: ({ row }) => (row?.created_at ? new Date(row.created_at) : null),
+            sortable: false
         },
-        { field: 'status', headerName: 'Estado', flex: 1 },
         {
             field: 'actions',
-            headerName: 'Acciones',
+            headerName: 'Actions',
             type: 'actions',
             width: 150,
             getActions: ({ row }) => [
@@ -69,16 +67,14 @@ export default function DocumentInformationDataGrid({ rows }) {
 
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%' }}>
-            {/* Barra de herramientas */}
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 1, marginBottom: 2 }}>
-                <QuickFilter onChange={(value) => handleFilterChange('documentName', 'contains', value)} />
+                <QuickFilter onChange={(value) => handleFilterChange(value)} />
                 <Box sx={{ display: 'flex', gap: 2 }}>
                     <ExportDocument onExport={handleExport} />
                     <FileUpload />
                 </Box>
             </Box>
 
-            {/* Tabla de datos */}
             <Box sx={{ flex: 1, overflow: 'auto' }}>
                 <DataGrid
                     rows={displayedRows}
@@ -88,6 +84,7 @@ export default function DocumentInformationDataGrid({ rows }) {
                     disableColumnFilter
                     disableColumnSelector
                     disableDensitySelector
+                    disableColumnMenu
                 />
             </Box>
         </Box>

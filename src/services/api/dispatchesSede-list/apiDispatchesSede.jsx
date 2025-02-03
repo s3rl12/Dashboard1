@@ -5,7 +5,7 @@ const apiIp = import.meta.env.VITE_API;
 console.log('API IP:', apiIp);
 
 const apiDispatchesSede = axios.create({
-    baseURL: `http://${apiIp}/api/sede`, // Base URL específica para /sede
+    baseURL: `http://${apiIp}/api/ges_areas/sede`, // Base URL específica para /sede
     timeout: 60000,
     headers: {
         'Content-Type': 'application/json',

@@ -12,7 +12,20 @@ const userListService = {
   },
 
   createUser: async (userData) => {
-    const response = await apiClient.post('/user', userData);
+    // Convertir el objeto userData a FormData
+    const formData = new FormData();
+    Object.keys(userData).forEach(key => {
+      // Se agregan solo los campos que tienen valor (no nulos o undefined)
+      if (userData[key] !== null && userData[key] !== undefined) {
+        formData.append(key, userData[key]);
+      }
+    });
+
+    const response = await apiClient.post('/user', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
     return response.data;
   },
 

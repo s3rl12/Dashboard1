@@ -1,45 +1,16 @@
-import React from 'react';
-import { Box, Typography } from '@mui/material';
-import { createTheme, ThemeProvider } from '@mui/material/styles';  // Asegúrate de importar ThemeProvider y createTheme
-import UserGeneralInfo from './components/UserGeneralInfo';
-import UserIconTabs from '../../components/Tabs/UserIconTabs';
-
-// Define tu tema
-const theme = createTheme({
-    palette: {
-        primary: {
-            main: '#1976d2', // Color principal
-        },
-        secondary: {
-            main: '#dc004e', // Color secundario
-        },
-    },
-    typography: {
-        fontFamily: 'Roboto, Arial, sans-serif',
-        h4: {
-            fontWeight: 'bold',  // Estilo para el h4
-        },
-    },
-});
+import React from "react";
+import UserGeneralInfo from "./components/UserGeneralInfo";
+import UserIconTabs from "../../components/Tabs/UserIconTabs";
 
 const UserManagement = () => {
-    return (
-        <ThemeProvider theme={theme}>  {/* Asegúrate de envolverlo con ThemeProvider */}
-            <Box className="flex flex-col h-full w-full items-start p-5 gap-4" sx={{
-                flexGrow: 1, // Permite que ocupe todo el espacio disponible
-                transition: 'all 0.3s ease-in-out', // Transición suave
-            }}>
-                <Typography variant="h4" component="h1" gutterBottom fontWeight="bold">
-                    Gestión de usuarios - usuarios
-                </Typography>
-                <Box className="flex flex-col h-full w-full">
-                    <UserGeneralInfo />
-                    <UserIconTabs />
-                </Box>
-
-            </Box>
-        </ThemeProvider>
-    );
+  return (
+    <div className="flex flex-col h-full w-full items-start p-5 gap-4 font-teko transition-all duration-300">
+      <h1 className="text-2xl font-medium">Gestión de usuarios - Usuarios</h1>
+      <div className="flex flex-col h-full w-full">
+        <UserGeneralInfo />
+        <UserIconTabs />
+      </div>
+    </div>
+  );
 };
-
 export default UserManagement;

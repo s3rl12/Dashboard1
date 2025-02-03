@@ -6,7 +6,6 @@ import Dashboard from './dashboard.jsx';
 import ControlPanel from './pages/ControlPanel/ControlPanel';
 import PrivateRoute from './routes/PrivateRoute';    // Ruta protegida
 import { AuthProvider } from './context/AuthContext'; // Ajusta la ruta según tu estructura
-import { BrowserRouter } from 'react-router-dom'
 import './index.css'
 
 

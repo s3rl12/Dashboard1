@@ -1,49 +1,48 @@
 import React, { useState, useEffect } from 'react';
-import dependencyService from '../../../services/api/dependency-list/dependencyService';  // Importar el servicio
+import dependencyService from '../../../services/api/dependency-list/dependencyService';  // Servicio para dependencias
 import RegisterAreasDataGrid from '../../../components/RegisterAreasDataGrid/RegisterAreasDataGrid';
 
-const ListDependencyData = () => {
-    const [dependencies, setDependencies] = useState([]);  // Estado para almacenar las dependencias
-    const [loading, setLoading] = useState(true);  // Estado para controlar la carga
+const ListDependencyData = ({ onEditRow, onDeleteRow }) => {
+    const [dependencies, setDependencies] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-    // Definimos la configuración de las columnas para la tabla
+    // Configuración de las columnas para la data grid
     const columnsConfig = [
         { field: 'fiscalia', headerName: 'Fiscalía', flex: 1 },
         { field: 'nombre_fiscalia', headerName: 'Nombre Fiscalía', flex: 1 },
-        { field: 'nombre_sede', headerName: 'Sede', flex: 1 },  // Campo actualizado para mostrar el nombre de la sede
+        { field: 'nombre_sede', headerName: 'Sede', flex: 1 },
     ];
 
-    // Usamos useEffect para cargar las dependencias al montar el componente
     useEffect(() => {
         const fetchDependencies = async () => {
             try {
-                const dependencyData = await dependencyService.getAllDependencies();  // Obtener las dependencias desde la API
+                const dependencyData = await dependencyService.getAllDependencies();
                 console.log('Datos obtenidos de dependencias:', dependencyData);
-
-                // Mapear los datos para extraer el nombre de la sede
+                // Mapear los datos para agregar el nombre de la sede
                 const processedDependencies = dependencyData.data.map(dependency => ({
                     ...dependency,
-                    nombre_sede: dependency.sede_fk?.nombre || 'Sin nombre',  // Extraer el nombre de la sede o usar un valor predeterminado
+                    nombre_sede: dependency.sede_fk?.nombre || 'Sin nombre',
                 }));
-
-                setDependencies(processedDependencies);  // Asignar los datos procesados al estado
+                setDependencies(processedDependencies);
             } catch (error) {
                 console.error('Error al obtener las dependencias:', error);
             } finally {
-                setLoading(false);  // Cuando termine la carga, actualizamos el estado de loading
+                setLoading(false);
             }
         };
 
         fetchDependencies();
-    }, []);  // El useEffect solo se ejecutará una vez cuando se monte el componente
+    }, []);
 
     return (
         <div>
             <RegisterAreasDataGrid
                 columnsConfig={columnsConfig}
                 title="Lista de Dependencias"
-                rows={dependencies}  // Pasamos las dependencias obtenidas a la tabla
-                loading={loading}  // Indicamos si se está cargando la información
+                rows={dependencies}
+                loading={loading}
+                onEditRow={onEditRow}
+                onDeleteRow={onDeleteRow}
             />
         </div>
     );

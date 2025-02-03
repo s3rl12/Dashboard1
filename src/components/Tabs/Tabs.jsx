@@ -64,18 +64,21 @@ export default function RegisterAreas() {
                 <Tabs
                     value={value}
                     onChange={handleChange}
-                    indicatorColor="primary"
-                    textColor="primary"
+                    //indicatorColor="primary"
+                    //textColor="primary"
                     variant="fullWidth"
                     aria-label="Registro de Áreas"
+                    
                     sx={{
                         backgroundColor: 'white',
                         borderRadius: '15px',
+                        
+                        
                     }}
                 >
-                    <Tab label="Crear Área" {...a11yProps(0)} />
-                    <Tab label="Importar Área" {...a11yProps(1)}  />
-                    <Tab label="EXPORTAR SUCURSALES" {...a11yProps(2)} />
+                    <Tab sx={{fontFamily: 'Teko, sans-serif', fontWeight: '600', fontSize: '18px'}} label="Crear Área" {...a11yProps(0)} />
+                    <Tab sx={{fontFamily: 'Teko, sans-serif', fontWeight: '600', fontSize: '18px'}} label="Importar Área" {...a11yProps(1)}  />
+                    <Tab sx={{fontFamily: 'Teko, sans-serif', fontWeight: '600', fontSize: '18px'}} label="EXPORTAR SUCURSALES" {...a11yProps(2)} />
                 </Tabs>
             </AppBar>
             <TabPanel value={value} index={0} dir={theme.direction}>

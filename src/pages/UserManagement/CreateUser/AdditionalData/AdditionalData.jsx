@@ -91,7 +91,7 @@ const AdditionalData = () => {
   }
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, padding: '10px' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
       {cardData.map((data, index) => (
         <OptionListCard
           key={index}

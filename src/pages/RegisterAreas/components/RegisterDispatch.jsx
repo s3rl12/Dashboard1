@@ -1,29 +1,34 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, Typography, TextField, Button, FormControl, InputLabel, Select, MenuItem, CircularProgress } from '@mui/material';
 import RegisterAreasDataGrid from '../../../components/RegisterAreasDataGrid/RegisterAreasDataGrid';
 import ListDependencies from '../DependencyData/ListDependencies';
 import CreateDispatch from '../DispatchData/CreateDispatch';
 import ListDispatchData from '../DispatchData/ListDispatchData';
+import dispatchesService from '../../../services/api/dispatches-list/dispatchesService'; // Se asume que existe este servicio
 
 const RegisterDispatch = () => {
-    // Configuración de columnas específicas para la opción "Despachos"
+    // Configuración de columnas para la data grid (usada en ListDispatchData)
     const columnsConfig = [
-        { field: 'name', headerName: 'Nombre despacho', flex: 1 },
-        { field: 'Dependence', headerName: 'Dependencia', flex: 1 },
+        { field: 'nombre_despacho', headerName: 'Nombre despacho', flex: 1 },
+        { field: 'fiscalia', headerName: 'Dependencia', flex: 1 },
     ];
 
-    // Estado para el despacho y la dependencia seleccionada
+    // Estado para el formulario de despacho
     const [dispatchData, setDispatchData] = useState({
+        id: null,        // Se usará en modo edición
+        code: '',        // cod_despa
         name: '',
-        code: '',
         phone: '',
         ruc: '',
-        dependence: '', // ID de la dependencia seleccionada
+        dependence: '',  // ID de la dependencia seleccionada
     });
+    // Estado para saber si se está en modo edición
+    const [editing, setEditing] = useState(false);
 
+    // Estados para la lista de dependencias (para el Select)
+    // Se obtiene mediante ListDependencies; en este ejemplo se invoca la función y se extraen los datos
     const { dependencies, loading } = ListDependencies();
 
-    // Manejar cambios en los campos de texto
     const handleInputChange = (event) => {
         const { name, value } = event.target;
         setDispatchData((prevData) => ({
@@ -32,7 +37,6 @@ const RegisterDispatch = () => {
         }));
     };
 
-    // Manejar selección de dependencia
     const handleDependenceChange = (event) => {
         setDispatchData((prevData) => ({
             ...prevData,
@@ -40,47 +44,85 @@ const RegisterDispatch = () => {
         }));
     };
 
-    // Función para manejar el envío del formulario
+    // Función para enviar el formulario (crear o actualizar despacho)
     const handleSubmit = async () => {
         try {
-            // Asegúrate de que los nombres de los campos coincidan con la API
-            const response = await CreateDispatch({
-                cod_despa: dispatchData.code, // Mapeo de 'code' a 'cod_despa'
-                nombre_despacho: dispatchData.name, // Mapeo de 'name' a 'nombre_despacho'
-                telefono: dispatchData.phone, // Mapeo de 'phone' a 'telefono'
-                ruc: dispatchData.ruc, // 'ruc' sin cambios
-                dependencia_fk: dispatchData.dependence, // 'dependence' debe ser el ID de la dependencia
-            });
-
-            if (response) {
-                // Si la creación fue exitosa, puedes manejar la respuesta (mostrar mensaje, limpiar formulario, etc.)
+            if (editing && dispatchData.id) {
+                // Modo edición: se actualiza el despacho sin enviar "id" ni "cod_despa"
+                const payload = {
+                    nombre_despacho: dispatchData.name,
+                    telefono: dispatchData.phone,
+                    ruc: dispatchData.ruc,
+                    dependencia_fk: dispatchData.dependence,
+                };
+                console.log('Payload de actualización:', payload);
+                await dispatchesService.updateDispatch(dispatchData.id, payload);
+                alert('Despacho actualizado exitosamente');
+            } else {
+                // Modo creación: se crea el despacho con el código ingresado
+                const payload = {
+                    cod_despa: dispatchData.code,
+                    nombre_despacho: dispatchData.name,
+                    telefono: dispatchData.phone,
+                    ruc: dispatchData.ruc,
+                    dependencia_fk: dispatchData.dependence,
+                };
+                console.log('Payload de creación:', payload);
+                const response = await CreateDispatch(payload);
+                console.log('Respuesta del servidor:', response);
                 alert('Despacho creado exitosamente');
-                setDispatchData({
-                    name: '',
-                    code: '',
-                    phone: '',
-                    ruc: '',
-                    dependence: '',
-                });
             }
+            // Limpiar formulario y salir del modo edición
+            setDispatchData({
+                id: null,
+                code: '',
+                name: '',
+                phone: '',
+                ruc: '',
+                dependence: '',
+            });
+            setEditing(false);
         } catch (error) {
             console.error('Error al guardar el despacho:', error);
-            alert('Hubo un error al crear el despacho');
+            alert('Hubo un error al guardar el despacho');
         }
     };
 
+    // Callback para editar: se invoca desde el listado
+    const handleEditDispatch = (data) => {
+        setDispatchData({
+            id: data.id,
+            code: data.cod_despa, // Se carga el código original (para visualización, pero no se modificará)
+            name: data.nombre_despacho,
+            phone: data.telefono,
+            ruc: data.ruc,
+            dependence: data.dependencia_fk?.id ? data.dependencia_fk.id : data.dependencia_fk,
+        });
+        setEditing(true);
+    };
+
+    // Callback para eliminar: se invoca desde el listado
+    const handleDeleteDispatch = async (id) => {
+        try {
+            await dispatchesService.deleteDispatch(id);
+            alert('Despacho eliminado exitosamente');
+            // Se recomienda refrescar la lista o notificar al componente listado para que haga un nuevo fetch
+        } catch (error) {
+            console.error('Error al eliminar el despacho:', error);
+            alert('Hubo un error al eliminar el despacho');
+        }
+    };
 
     return (
-        <Box className="flex flex-col w-full pt-8 gap-8">
-            {/* Sección Registrar Despacho */}
-            <Box className="flex flex-col w-full bg-white rounded-2xl gap-6" sx={{ p: 5, boxShadow: 2 }}>
+        <Box className="flex flex-col w-full gap-6">
+            {/* Sección del formulario de registro/edición */}
+            <Box className="flex flex-col w-full bg-white rounded-2xl gap-4 shadow-md" sx={{ p: 5, boxShadow: 2 }}>
                 <Box className="flex items-start">
-                    <Typography variant="h6" component="h1" fontWeight="bold" color="textPrimary">
-                        REGISTRAR DESPACHO
+                    <Typography variant="h6" component="h1" fontWeight="semibold" fontFamily={'Teko, sans-serif'}>
+                        {editing ? 'EDITAR DESPACHO' : 'REGISTRAR DESPACHO'}
                     </Typography>
                 </Box>
 
-                {/* Campos para registrar despacho */}
                 <Box>
                     <TextField
                         label="Nombre despacho*"
@@ -101,6 +143,7 @@ const RegisterDispatch = () => {
                         name="code"
                         value={dispatchData.code}
                         onChange={handleInputChange}
+                        disabled={editing}  // En modo edición, no se permite cambiar el código
                     />
                     <TextField
                         label="Teléfono*"
@@ -121,14 +164,12 @@ const RegisterDispatch = () => {
                         onChange={handleInputChange}
                     />
                 </Box>
-
-                {/* Campo Select para Dependencia */}
                 <Box>
                     <FormControl fullWidth>
                         <InputLabel id="dependence-select-label" size="small">Dependencia*</InputLabel>
                         <Select
                             labelId="dependence-select-label"
-                            id="headquarter-select"
+                            id="dependence-select"
                             value={dispatchData.dependence}
                             onChange={handleDependenceChange}
                             size="small"
@@ -141,7 +182,7 @@ const RegisterDispatch = () => {
                             ) : (
                                 dependencies.map((dependency) => (
                                     <MenuItem key={dependency.id} value={dependency.id}>
-                                        {dependency.fiscalia}  {/* Se muestra el nombre de la dependencia */}
+                                        {dependency.fiscalia}
                                     </MenuItem>
                                 ))
                             )}
@@ -149,25 +190,19 @@ const RegisterDispatch = () => {
                     </FormControl>
                 </Box>
 
-                {/* Botones de Cancelar y Guardar */}
                 <Box className="flex justify-end gap-4 mt-6">
-                    <Button variant="outlined" sx={{ width: '120px' }}>
+                    <Button variant="outlined" sx={{ width: '120px', borderColor: '#183466', color: '#183466' }}>
                         Cancelar
                     </Button>
-                    <Button
-                        variant="contained"
-                        color="primary"
-                        sx={{ width: '120px' }}
-                        onClick={handleSubmit}  // Llamar a handleSubmit para guardar
-                    >
+                    <Button variant="contained" color="primary" sx={{ width: '120px', backgroundColor: '#183466' }} onClick={handleSubmit}>
                         Guardar
                     </Button>
                 </Box>
             </Box>
 
-            {/* Tabla para mostrar los datos */}
-            <Box className="bg-white rounded-2xl" sx={{ p: 5, boxShadow: 2 }}>
-                <ListDispatchData />
+            {/* Sección del listado */}
+            <Box className="bg-white rounded-2xl shadow-md" sx={{ p: 5, boxShadow: 2 }}>
+                <ListDispatchData onEditRow={handleEditDispatch} onDeleteRow={handleDeleteDispatch} />
             </Box>
         </Box>
     );

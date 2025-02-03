@@ -5,7 +5,7 @@ const apiIp = import.meta.env.VITE_API;
 console.log('API IP:', apiIp);
 
 const apiDependency = axios.create({
-    baseURL: `http://${apiIp}/api/dependencia`, // Base URL específica para /dependencia
+    baseURL: `http://${apiIp}/api/ges_areas/dependencia`, // Base URL específica para /dependencia
     timeout: 60000,
     headers: {
         'Content-Type': 'application/json',

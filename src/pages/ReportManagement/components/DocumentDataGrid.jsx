@@ -103,6 +103,7 @@ export default function DocumentDataGrid() {
           disableColumnFilter
           disableColumnSelector
           disableDensitySelector
+          disableColumnMenu
           pageSize={5}
           components={{
             Toolbar: () => (

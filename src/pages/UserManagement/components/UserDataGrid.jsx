@@ -1,48 +1,50 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
-import { DataGrid } from '@mui/x-data-grid';
-import { Box, Typography } from '@mui/material';
-import { GridRowModes, GridActionsCellItem } from '@mui/x-data-grid';
+import { DataGrid, GridActionsCellItem, GridRowModes } from '@mui/x-data-grid';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/DeleteOutlined';
 import SaveIcon from '@mui/icons-material/Save';
 import CancelIcon from '@mui/icons-material/Close';
 import CustomFilterUser from '../../../components/UserManagement/CustomFilterUser';
 import QuickFilter from '../../../components/DocumentDataGrid/components/QuickFilter';
-import userListService from '../../../services/api/user-list/userListService';  // Asegúrate de importar tu servicio de la API
+import userListService from '../../../services/api/user-list/userListService';
 import DeleteUser from '../DeleteUser/DeleteUser';
+import CustomNoRowsOverlay from '../../../components/CustomNoRowsOverlay/CustomNoRowsOverlay';
 
 export default function UserDataGrid({ columnsConfig = [], title = "Lista de usuarios" }) {
   const [filterModel, setFilterModel] = useState({
     role: '',
     office: '',
     status: '',
-    user: '', // Se añade el filtro para 'user'
+    user: '', // Filtro para 'user'
   });
 
   const [rowModesModel, setRowModesModel] = useState({});
-  const [users, setUsers] = useState([]); // Estado para los usuarios obtenidos de la API
-  const [userToDelete, setUserToDelete] = useState(null);  // Estado para almacenar el usuario que será eliminado
+  const [users, setUsers] = useState([]);
+  const [userToDelete, setUserToDelete] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // Cargar los datos de la API cuando el componente se monte
   useEffect(() => {
     const fetchData = async () => {
+      setLoading(true);
       try {
-        const response = await userListService.getAllUsers(); // Asegúrate de que el servicio esté correctamente configurado
-        setUsers(response.data); // Ajusta según la estructura de la respuesta de tu API
+        const response = await userListService.getAllUsers();
+        setUsers(response.data);
       } catch (error) {
         console.error('Error al obtener los usuarios:', error);
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchData();
-  }, []); // Solo se ejecuta al montar el componente
+  }, []);
 
   const data = useMemo(() => {
     const columns = [
-      { field: 'user', headerName: 'Usuario', flex: 1 },
-      { field: 'role', headerName: 'Rol', flex: 1 },
-      { field: 'office', headerName: 'Despacho', flex: 1 },
-      { field: 'status', headerName: 'Estado', flex: 1 },
+      { field: 'user', headerName: 'Usuario', flex: 1, sortable: false },
+      { field: 'role', headerName: 'Rol', flex: 1, sortable: false },
+      { field: 'office', headerName: 'Despacho', flex: 1, sortable: false },
+      { field: 'status', headerName: 'Estado', flex: 1, sortable: false },
       {
         field: 'actions',
         headerName: 'Acciones',
@@ -53,42 +55,45 @@ export default function UserDataGrid({ columnsConfig = [], title = "Lista de usu
 
           if (isInEditMode) {
             return [
-              <GridActionsCellItem
-                icon={<SaveIcon />}
-                label="Guardar"
-                onClick={handleSaveClick(id)}
+              <GridActionsCellItem 
+                key="save" 
+                icon={<SaveIcon />} 
+                label="Guardar" 
+                onClick={handleSaveClick(id)} 
               />,
-              <GridActionsCellItem
-                icon={<CancelIcon />}
-                label="Cancelar"
-                onClick={handleCancelClick(id)}
+              <GridActionsCellItem 
+                key="cancel" 
+                icon={<CancelIcon />} 
+                label="Cancelar" 
+                onClick={handleCancelClick(id)} 
               />,
             ];
           }
 
           return [
-            <GridActionsCellItem
-              icon={<EditIcon />}
-              label="Editar"
-              onClick={handleEditClick(id)}
+            <GridActionsCellItem 
+              key="edit" 
+              icon={<EditIcon />} 
+              label="Editar" 
+              onClick={handleEditClick(id)} 
             />,
-            <GridActionsCellItem
-              icon={<DeleteIcon />}
-              label="Eliminar"
-              onClick={handleDeleteClick(id)}
+            <GridActionsCellItem 
+              key="delete" 
+              icon={<DeleteIcon />} 
+              label="Eliminar" 
+              onClick={handleDeleteClick(id)} 
             />,
           ];
         },
       }
     ];
 
-    // Mapear los datos de la API para adaptarlos a la estructura que necesita el DataGrid
     const rows = users.map(user => ({
-      id: user.id,              // Asigna un ID único para cada usuario
-      user: `${user.nombre} ${user.apellido}`, // Concatenar el nombre y apellido
-      role: user.roles_fk?.roles || 'Sin rol', // Asigna el rol del usuario (ajusta según la respuesta de la API)
-      office: user.despacho_fk || 'Sin despacho', // Asigna el despacho
-      status: user.estado === 1 ? 'Activo' : 'Inactivo', // Convertir el estado numérico a texto
+      id: user.id,
+      user: `${user.nombre} ${user.apellido}`,
+      role: user.roles_fk?.roles || 'Sin rol',
+      office: user.despacho_fk || 'Sin despacho',
+      status: user.estado === 1 ? 'Activo' : 'Inactivo',
     }));
 
     return { columns, rows };
@@ -96,12 +101,11 @@ export default function UserDataGrid({ columnsConfig = [], title = "Lista de usu
 
   const filteredRows = useMemo(() => {
     return data.rows.filter((row) => {
-      // Evalúa cada filtro activo
       return (
         (!filterModel.role || row.role === filterModel.role) &&
         (!filterModel.office || row.office === filterModel.office) &&
         (!filterModel.status || row.status === filterModel.status) &&
-        (!filterModel.user || row.user.toLowerCase().includes(filterModel.user.toLowerCase())) // Filtro solo por 'user'
+        (!filterModel.user || row.user.toLowerCase().includes(filterModel.user.toLowerCase()))
       );
     });
   }, [filterModel, data.rows]);
@@ -116,6 +120,7 @@ export default function UserDataGrid({ columnsConfig = [], title = "Lista de usu
 
   const handleSaveClick = (id) => () => {
     setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.View } });
+    // Aquí puedes agregar la lógica para enviar los cambios al backend
   };
 
   const handleCancelClick = (id) => () => {
@@ -133,45 +138,49 @@ export default function UserDataGrid({ columnsConfig = [], title = "Lista de usu
   const handleDeleteClick = (id) => () => {
     const user = users.find((user) => user.id === id);
     if (user) {
-      setUserToDelete(user);  // Establecer el usuario que se eliminará
+      setUserToDelete(user);  // Se guarda el usuario a eliminar
     }
   };
 
   const handleUserDeleted = (id) => {
-    setUsers(users.filter((user) => user.id !== id)); // Eliminar el usuario de la lista
-    setUserToDelete(null);  // Limpiar el usuario a eliminar para evitar que el alert vuelva a aparecer
+    setUsers(prevUsers => prevUsers.filter((user) => user.id !== id)); 
+    setUserToDelete(null);
   };
 
-
-
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      {/* Primera fila: CustomFilterUser */}
-      <Box sx={{ mb: 2 }}>
+    <div className="flex flex-col h-full font-teko">
+      <div className="mb-2">
         <CustomFilterUser onFilterChange={handleFilterChange} />
-      </Box>
+      </div>
 
-      {/* Segunda fila: Título y QuickFilter */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-        <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-          {title}
-        </Typography>
-        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+      <div className="flex justify-between items-center mb-2">
+        <h2 className="text-xl font-semibold">{title}</h2>
+        <div className="flex flex-col items-end">
           <QuickFilter
-            onChange={(value) => setFilterModel({ ...filterModel, user: value })} // Filtro solo la columna 'user'
+            onChange={(value) => setFilterModel({ ...filterModel, user: value })}
           />
-        </Box>
-      </Box>
+        </div>
+      </div>
 
-      {/* DataGrid */}
-      <Box sx={{ flex: 1, overflow: 'auto' }}>
+      <div className="flex-1 overflow-auto">
         <DataGrid
           rows={filteredRows}
           columns={data.columns}
           disableColumnFilter
           disableColumnSelector
           disableDensitySelector
+          disableColumnMenu
           pageSize={5}
+          loading={loading}
+          slotProps={{
+            loadingOverlay: {
+              variant: 'skeleton',
+              noRowsVariant: 'skeleton',
+            },
+          }}
+          components={{
+            NoRowsOverlay: CustomNoRowsOverlay,
+          }}
           sx={{
             height: '100%',
             '& .MuiDataGrid-footer': {
@@ -183,16 +192,14 @@ export default function UserDataGrid({ columnsConfig = [], title = "Lista de usu
             },
           }}
         />
-      </Box>
+      </div>
 
-      {/* Mostrar el componente de eliminación si se seleccionó un usuario para eliminar */}
       {userToDelete && (
         <DeleteUser
           userId={userToDelete.id}
           onUserDeleted={handleUserDeleted}
         />
       )}
-
-    </Box>
+    </div>
   );
 }

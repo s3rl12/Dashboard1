@@ -31,7 +31,7 @@ const RoleInformation = () => {
   };
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, padding: '10px' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
       <OptionListCard
         icon={sedeSVG}
         primaryText="SELECCIONE ROL"

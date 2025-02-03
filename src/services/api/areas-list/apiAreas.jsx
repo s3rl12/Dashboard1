@@ -5,7 +5,7 @@ const apiIp = import.meta.env.VITE_API;
 console.log('API IP:', apiIp);
 
 const apiAreas = axios.create({
-    baseURL: `http://${apiIp}/api/lista-areas`, // Base URL específica para /lista-areas
+    baseURL: `http://${apiIp}/api/ges_areas/lista-areas`, // Base URL específica para /lista-areas
     timeout: 60000,
     headers: {
         'Content-Type': 'application/json',

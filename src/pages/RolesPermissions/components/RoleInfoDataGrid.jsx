@@ -4,12 +4,12 @@ import { Box } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/DeleteOutlined';
 
-const RoleInfoDataGrid = ({ rows, onEdit, onDelete }) => {
+const RoleInfoDataGrid = ({ rows, onEdit, onDelete, loading }) => {
     const columns = [
-        { field: 'id', headerName: 'ID', flex: 0.5 },
-        { field: 'roles', headerName: 'Roles', flex: 1 },
-        { field: 'descripcion', headerName: 'Descripción', flex: 1.5 },
-        { field: 'correoVinculados', headerName: 'Correos Vinculados', flex: 1 },
+        { field: 'id', headerName: 'ID', flex: 0.5, sortable: false },
+        { field: 'roles', headerName: 'Roles', flex: 1, sortable: false },
+        { field: 'descripcion', headerName: 'Descripción', flex: 1.5, sortable: false },
+        { field: 'permisos_descripcion', headerName: 'Permisos', flex: 1.5, sortable: false }, // Se usa el texto descriptivo
         {
             field: 'actions',
             headerName: 'Acciones',
@@ -40,6 +40,14 @@ const RoleInfoDataGrid = ({ rows, onEdit, onDelete }) => {
                 disableColumnFilter
                 disableColumnSelector
                 disableDensitySelector
+                disableColumnMenu
+                loading={loading}
+                slotProps={{
+                    loadingOverlay: {
+                      variant: 'skeleton',
+                      noRowsVariant: 'skeleton',
+                    }
+                  }}
                 autoHeight
             />
         </Box>

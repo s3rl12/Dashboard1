@@ -203,10 +203,10 @@ const FileUpload = () => {
     <div>
       <Button
         variant="contained"
-        color="primary"
+        
         startIcon={<SaveAltIcon />}
         onClick={openDialog}
-        sx={{ height: 38 }}
+        sx={{ height: 38, backgroundColor: '#183466' }}
       >
         Guardar
       </Button>

@@ -1,73 +1,86 @@
-import React, { useState } from 'react';
-import { Box, Typography } from '@mui/material';
+import React, { useState, useEffect } from 'react';
 import DocumentCard from './DocumentCard';
-import CreateFolder from './CreateFolder';
 import DocumentInformationDataGrid from './DocumentInformationDataGrid';
+import folderService from '../../../services/api/folder-list/folderService';
+import fileFolderService from '../../../services/api/fileFolder-list/fileFolderService';
+import CreateFolder from '../../DocumentManager/components/CreateFolder';
 
 const Documentfolders = () => {
-    // Inicializa dataGridRows con todos los documentos
-    const [dataGridRows, setDataGridRows] = useState([
-        { id: 1, documentName: 'Reporte Semanal', author: 'Carlos García', date: '2025-01-10', status: 'Aprobado', folder: 'Carga laboral' },
-        { id: 2, documentName: 'Informe de Avance', author: 'María Díaz', date: '2025-01-11', status: 'Pendiente', folder: 'Carga laboral' },
-        { id: 3, documentName: 'Planificación Mensual', author: 'Luis Gómez', date: '2025-01-12', status: 'En revisión', folder: 'Control de Plazos' },
-        { id: 4, documentName: 'Reporte Criminal', author: 'Ana López', date: '2025-01-13', status: 'Aprobado', folder: 'Delitos con Incidencia' },
-    ]);
+    const [folders, setFolders] = useState([]);
+    const [dataGridRows, setDataGridRows] = useState([]);
 
-    // Definimos los documentos de las carpetas
-    const documentCards = [
-        {
-            Nombre_carpeta: 'Carga laboral',
-            Codigo_carpeta: 'RF123',
-            cantidad_archivos: 45,
-            documentos: [
-                { id: 1, documentName: 'Reporte Semanal', author: 'Carlos García', date: '2025-01-10', status: 'Aprobado' },
-                { id: 2, documentName: 'Informe de Avance', author: 'María Díaz', date: '2025-01-11', status: 'Pendiente' },
-            ],
-        },
-        {
-            Nombre_carpeta: 'Control de Plazos',
-            Codigo_carpeta: 'RA456',
-            cantidad_archivos: 60,
-            documentos: [
-                { id: 3, documentName: 'Planificación Mensual', author: 'Luis Gómez', date: '2025-01-12', status: 'En revisión' },
-            ],
-        },
-        {
-            Nombre_carpeta: 'Delitos con Incidencia',
-            Codigo_carpeta: 'EE789',
-            cantidad_archivos: 30,
-            documentos: [
-                { id: 4, documentName: 'Reporte Criminal', author: 'Ana López', date: '2025-01-13', status: 'Aprobado' },
-            ],
-        },
-    ];
+    // Fetch folders on mount
+    useEffect(() => {
+        const fetchFolders = async () => {
+            try {
+                const response = await folderService.getFolder();
+                if (response.data && Array.isArray(response.data)) {
+                    setFolders(response.data);
+                    console.log("Datos registrados:", response.data);
+                } else {
+                    console.error('Invalid folder structure:', response);
+                    setFolders([]);
+                }
+            } catch (error) {
+                console.error('Error fetching folders:', error);
+                setFolders([]);
+            }
+        };
+        fetchFolders();
+    }, []);
 
-    // Actualizar los documentos del DataGrid según el clic en la tarjeta de la carpeta
-    const handleCardClick = (documentos) => {
-        setDataGridRows(documentos); // Establecer los documentos seleccionados de la carpeta
+    // Handle folder click
+    const handleCardClick = async (folderCode) => {
+        try {
+            const response = await fileFolderService.getFiles();
+            // Filtramos por folderCode y luego mapeamos los archivos correctamente
+            const mappedFiles = response.data
+                .filter(folder => folder.codigo_carp === folderCode) // Filtramos las carpetas por el código
+                .flatMap(folder => folder.archivos.map(file => ({
+                    id: file.id,
+                    nombre_carp: folder.nombre_carp, // Añadimos el nombre de la carpeta
+                    file_name: file.nombre, // Accedemos correctamente a la propiedad 'nombre'
+                    file_type: file.tipo_arch, // Accedemos correctamente a la propiedad 'tipo_arch'
+                    created_at: new Date(file.created_at).toLocaleDateString(), // Formateamos la fecha de creación
+                })));
+            console.log("Datos capturados:", mappedFiles);
+            setDataGridRows(mappedFiles);
+        } catch (error) {
+            console.error('Error fetching files:', error);
+            setDataGridRows([]);
+        }
     };
+    
 
     return (
-        <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', gap: 3, textAlign: 'start' }}>
-            <Typography variant="h6" component="h2" fontWeight="bold">
-                Mis Documentos
-            </Typography>
-            <Box sx={{ display: 'flex', flexDirection: 'row', gap: 4, flexWrap: 'wrap', justifyContent: 'flex-start' }}>
-                {documentCards.map((card, index) => (
+        <div className="flex flex-col w-full gap-3 text-start font-teko">
+            <h2 className="text-xl font-medium">Mis Documentos</h2>
+
+            <div className="flex flex-wrap gap-4 justify-start">
+                {folders.map((folder) => (
                     <DocumentCard
-                        key={index}
-                        Nombre_carpeta={card.Nombre_carpeta}
-                        Codigo_carpeta={card.Codigo_carpeta}
-                        cantidad_archivos={card.cantidad_archivos}
-                        onClick={() => handleCardClick(card.documentos)} // Pasar los documentos al DataGrid
+                        key={folder.codigo_carp}
+                        file_name={folder.nombre_carp}
+                        file_code={folder.codigo_carp}
+                        file_quantity={folder.cant_archivos}
+                        onClick={() => handleCardClick(folder.codigo_carp)}
                     />
                 ))}
                 <CreateFolder />
-            </Box>
-            <Box sx={{ display: 'flex', borderRadius: '12px', backgroundColor: 'white', padding: 3, boxShadow: 3 }}>
-                <DocumentInformationDataGrid rows={dataGridRows} /> {/* Pasar los documentos seleccionados al DataGrid */}
-            </Box>
-        </Box>
+            </div>
+
+            <div className="flex rounded-xl bg-white p-6 shadow-lg">
+                <DocumentInformationDataGrid 
+                    rows={dataGridRows}
+                    columns={[
+                        { field: 'id', headerName: 'ID', width: 90 },
+                        { field: 'file_name', headerName: 'File Name', flex: 1 },
+                        { field: 'file_type', headerName: 'File Type', flex: 1 },
+                        { field: 'created_at', headerName: 'Creation Date', flex: 1 }
+                    ]}
+                />
+            </div>
+        </div>
     );
 };
 

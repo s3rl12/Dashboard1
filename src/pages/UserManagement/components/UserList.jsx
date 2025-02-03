@@ -5,7 +5,6 @@ import UserDataGrid from './UserDataGrid';
 const UserList = () => {
     return (
         <Box className="flex flex-col h-full w-full gap-4" sx={{ flex: 1 }}>
-            
             <UserCount />
             <Box className="flex bg-white rounded-xl px-5 py-4 shadow-md"
                 sx={{

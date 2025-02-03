@@ -1,30 +1,24 @@
 // src/Dashboard.jsx
-import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import { useNavigate } from 'react-router-dom'; // Importar useNavigate
-import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
+import { useNavigate } from 'react-router-dom';
+import { motion } from "framer-motion";
 import IconButton from '@mui/material/IconButton';
 import TextField from '@mui/material/TextField';
+import MenuIcon from '@mui/icons-material/Menu';
 import Tooltip from '@mui/material/Tooltip';
 import SearchIcon from '@mui/icons-material/Search';
-import { createTheme } from '@mui/material/styles';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import DescriptionIcon from '@mui/icons-material/Description';
 import PersonIcon from '@mui/icons-material/Person';
-import LayersIcon from '@mui/icons-material/Layers';
 import BarChartIcon from '@mui/icons-material/BarChart';
-import { AppProvider } from '@toolpad/core/AppProvider';
-import { DashboardLayout } from '@toolpad/core/DashboardLayout';
-import Reports from './Reports';  // Importa el componente Reports
-import Documents from './Documents';
-import User from './User';
-import DashboardAdmin from './dashboardAdmin';
+import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
+import SupervisorAccountIcon from '@mui/icons-material/SupervisorAccount';
+import ApartmentIcon from '@mui/icons-material/Apartment';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { useAuth } from "./context/AuthContext";
-import ReportGE from './ReportGE';
-import CustomAccordion from './Cargalaboral'; // Importa el componente CustomAccordion
 import RegisterAreas from './pages/RegisterAreas/RegisterAreas';
-import ReportManagement from './pages/ReportManagement/ReportManagement';
 import UserProfile from './pages/UserProfile/UserProfile';
 import UserManagement from './pages/UserManagement/UserManagement';
 import StatisticalReports from './pages/StatisticalReports/StatisticalReports';
@@ -33,174 +27,90 @@ import CrimesHighestIncidence from './pages/StatisticalFunctions/CrimesHighestIn
 import RolesPermissions from './pages/RolesPermissions/RolesPermissions';
 import ControlPanel from './pages/ControlPanel/ControlPanel';
 import WorkLoad from './pages/StatisticalFunctions/WorkLoad/WorkLoad';
-
-const apiIp = import.meta.env.VITE_API;
-const token = localStorage.getItem('token');
-
+import mpSVG from './assets/icons/mp.svg';
 import './index.css';
 
-
+// Definir la navegación con íconos pequeños y títulos reducidos
 const NAVIGATION = [
-    { segment: 'dashboard', title: 'Panel de control', icon: <DashboardIcon /> },
-    //{ segment: 'workload', title: 'Work Load', icon: <LayersIcon /> },
-    //{ segment: 'crimeshighestincidence', title: 'Reporte CMI', icon: <BarChartIcon /> },
-    { segment: 'statisticalreports', title: 'Informes estadísticos', icon: <BarChartIcon /> },
-    //{ segment: 'reportmanagement', title: 'Report Management', icon: <DescriptionIcon /> },
-    { segment: 'documentmanager', title: 'Administrador de documentos', icon: <DescriptionIcon /> },
-    { segment: 'rolespermissions', title: 'Roles y permisos', icon: <LayersIcon /> },
-    //{ segment: 'registerareas', title: 'Registro de áreas', icon: <LayersIcon /> },
-    { segment: 'userprofile', title: 'Perfil de usuario', icon: <PersonIcon /> },
-    { segment: 'usermanagement', title: 'Gestión de usuarios', icon: <PersonIcon /> },
+    { segment: 'dashboard', title: 'Panel', icon: <DashboardIcon fontSize="small" /> },
+    { segment: 'statisticalreports', title: 'Informes', icon: <BarChartIcon fontSize="small" /> },
+    { segment: 'documentmanager', title: 'Docs', icon: <DescriptionIcon fontSize="small" /> },
+    { segment: 'rolespermissions', title: 'Roles', icon: <AdminPanelSettingsIcon fontSize="small" /> },
+    { segment: 'userprofile', title: 'Perfil', icon: <PersonIcon fontSize="small" /> },
+    { segment: 'usermanagement', title: 'Usuarios', icon: <SupervisorAccountIcon fontSize="small" /> },
     {
         segment: 'gestion',
-        title: 'Gestión de Áreas',
-        icon: <LayersIcon />,
+        title: 'Gestión',
+        icon: <ApartmentIcon fontSize="small" />,
         children: [
-            {
-                segment: 'lista-areas',
-                title: 'Lista de Áreas',
-                icon: <DescriptionIcon />,
-            },
-            {
-                segment: 'Listas-de-fiscales',
-                title: 'Listas de fiscales',
-                icon: <DescriptionIcon />,
-            },
-            {
-                segment: 'logistica',
-                title: 'Logística',
-                icon: <DescriptionIcon />,
-            },
-            
+            { segment: 'lista-areas', title: 'Áreas', icon: <DescriptionIcon fontSize="small" /> },
+            { segment: 'Listas-de-fiscales', title: 'Fiscales', icon: <DescriptionIcon fontSize="small" /> },
+            { segment: 'logistica', title: 'Logística', icon: <DescriptionIcon fontSize="small" /> },
         ],
     },
 ];
 
-const demoTheme = createTheme({
-    palette: {
-        mode: 'light', // Aseguramos que el tema esté en modo claro
-        primary: {
-            main: '#152B52', // Azul principal
-        },
-        secondary: {
-            main: '#ff4081', // Color secundario
-        },
-        background: {
-            default: '#f5f5f5', // Fondo claro
-            paper: '#ffffff', // Fondo de los componentes
-        },
-        text: {
-            primary: '#000000', // Texto principal negro
-            secondary: '#666666', // Texto secundario gris
-        },
-        checkbox: {
-            main: '#1976d2', // Azul claro personalizado
-            checked: '#152B52', // Color al estar seleccionado
-            hover: '#1e88e5', // Color al pasar el cursor
-        },
-    },
-    typography: {
-        fontFamily: 'Roboto, Arial, sans-serif',
-    },
-    cssVariables: {
-        colorSchemeSelector: 'data-toolpad-color-scheme', // Permite cambiar entre esquemas de color
-    },
-    breakpoints: {
-        values: {
-            xs: 0,
-            sm: 600,
-            md: 960,
-            lg: 1280,
-            xl: 1920,
-        },
-    },
-});
-
-
 function DemoPageContent({ pathname, navigate }) {
     let content;
-
     switch (pathname) {
         case '/dashboard':
             content = <ControlPanel />;
             break;
-        case '/workload':  // Nuevo caso para WorkLoad
-            content = <WorkLoad />;  // Este es el componente que se renderiza cuando se navega a 'workload'
+        case '/workload':
+            content = <WorkLoad />;
             break;
-        case '/crimeshighestincidence': // Nuevo caso
+        case '/crimeshighestincidence':
             content = <CrimesHighestIncidence />;
             break;
-        case '/statisticalreports':  // Nueva ruta para StatisticalReports
+        case '/statisticalreports':
             content = <StatisticalReports navigate={navigate} />;
             break;
-        /*
-            case '/reportmanagement':
-            content = <ReportManagement />;
-            break;
-        */
         case '/documentmanager':
             content = <DocumentManager />;
             break;
-        case '/rolespermissions': // Nuevo caso
+        case '/rolespermissions':
             content = <RolesPermissions />;
             break;
-        case '/gestion/lista-areas': // Nuevo caso
+        case '/gestion/lista-areas':
             content = <RegisterAreas />;
             break;
-        case '/gestion/Listas-de-fiscales': // Nuevo caso
-            content = <Typography>Contenido por defecto para Listas de fiscales</Typography>;
+        case '/gestion/Listas-de-fiscales':
+            content = <div className="text-center text-sm">Contenido por defecto para Fiscales</div>;
             break;
-        case '/gestion/logistica': // Nuevo caso
-            content = <Typography>Contenido por defecto para Logística</Typography>;
+        case '/gestion/logistica':
+            content = <div className="text-center text-sm">Contenido por defecto para Logística</div>;
             break;
-        case '/userprofile': // Caso para UserProfile
+        case '/userprofile':
             content = <UserProfile />;
             break;
-        case '/usermanagement':  // Nuevo caso para UserManagement
+        case '/usermanagement':
             content = <UserManagement />;
             break;
-        case '/reports': // Renderiza Reports.jsx sin incluir en NAVIGATION
+        case '/reports':
             content = <Reports navigate={navigate} />;
             break;
         default:
-            content = <Typography>Welcome to the Dashboard</Typography>;
+            content = <div className="text-center text-xl font-teko">Welcome to the Dashboard</div>;
     }
-
     return (
-        <Box
-            sx={{
-                py: 2,
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                textAlign: 'center',
-                background: 'rgb(245 245 244)',
-            }}
-        >
+        <div className="py-2 flex flex-col items-center text-center bg-gray-100">
             {content}
-        </Box>
+        </div>
     );
 }
 
-
 DemoPageContent.propTypes = {
     pathname: PropTypes.string.isRequired,
+    navigate: PropTypes.func.isRequired,
 };
 
 function Search() {
     return (
-        <React.Fragment>
+        <div className="flex items-center gap-4">
             <Tooltip title="Search" enterDelay={1000}>
                 <div>
-                    <IconButton
-                        type="button"
-                        aria-label="search"
-                        sx={{
-                            display: { xs: 'inline', md: 'none' },
-                            color: '#666666', // Cambia el color del ícono en la vista móvil
-                        }}
-                    >
-                        <SearchIcon />
+                    <IconButton type="button" aria-label="search" className="inline md:hidden text-gray-500">
+                        <SearchIcon fontSize="small" />
                     </IconButton>
                 </div>
             </Tooltip>
@@ -208,58 +118,58 @@ function Search() {
                 label="Search"
                 variant="outlined"
                 size="small"
-                InputLabelProps={{
-                    style: { color: '#fff' }, // Cambia el color del texto del label
-                }}
+                InputLabelProps={{ style: { color: '#fff' } }}
                 InputProps={{
                     style: {
-                        color: '#fff', // Cambia el color del texto dentro del input
-                        backgroundColor: '#15315C', // Cambia el color de fondo del input
-                        borderRadius: '15px', // Aplica el border-radius
+                        color: '#fff',
+                        backgroundColor: '#15315C',
+                        borderRadius: '15px',
                     },
                     endAdornment: (
-                        <IconButton
-                            type="button"
-                            aria-label="search"
-                            size="small"
-                            sx={{
-                                color: '#fff', // Cambia el color del ícono de búsqueda
-                            }}
-                        >
-                            <SearchIcon />
+                        <IconButton type="button" aria-label="search" size="small" className="text-white">
+                            <SearchIcon fontSize="small" />
                         </IconButton>
                     ),
                 }}
-                sx={{
-                    '& .MuiOutlinedInput-root': {
-                        backgroundColor: '#1976d2', // Fondo blanco para todo el input
-                        borderRadius: '15px', // Border-radius del contenedor principal
-                        '& fieldset': {
-                            borderColor: '#15315C', // Cambia el color del borde
-                            borderRadius: '15px', // Border-radius del borde
-                        },
-                        '&:hover fieldset': {
-                            borderColor: '#15315C', // Cambia el borde al pasar el mouse
-                        },
-                        '&.Mui-focused fieldset': {
-                            borderColor: '#15315C', // Cambia el borde al hacer foco
-                        },
-                    },
-                    display: { xs: 'none', md: 'inline-block' },
-                    mr: 1,
-                }}
+                className="hidden md:inline-block mr-1"
             />
-        </React.Fragment>
+        </div>
     );
 }
 
-
-
 function Dashboard() {
     const [pathname, setPathname] = useState('/dashboard');
-    const navigate = useNavigate(); // Usar useNavigate directamente
-    // Extrae `logout` del contexto de autenticación
+    const navigate = useNavigate();
     const { logout } = useAuth();
+    const [isExpanded, setIsExpanded] = useState(true);
+    const [windowWidth, setWindowWidth] = useState(window.innerWidth); //nuevo
+    const [openMenus, setOpenMenus] = useState({});
+
+    const toggleSidebar = () => {
+        setIsExpanded(!isExpanded);
+    };
+
+    useEffect(() => {
+        const handleResize = () => setWindowWidth(window.innerWidth);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    useEffect(() => {
+        if (windowWidth < 768) {
+            setIsExpanded(false);
+        }
+    }, [windowWidth]);
+
+    const toggleMenu = (segment, children) => {
+        if (!isExpanded) {
+            setPathname(`/gestion/${children[0].segment}`);
+        } else {
+            setOpenMenus(prev => ({ ...prev, [segment]: !prev[segment] }));
+        }
+    };
+
+    // Actualizamos el estado 'pathname' para la navegación
     const router = useMemo(() => ({
         pathname,
         navigate: setPathname,
@@ -267,9 +177,8 @@ function Dashboard() {
     }), [pathname]);
 
     const [session, setSession] = useState(() => {
-        // Cargar datos del usuario desde localStorage al inicializar
         const storedUser = localStorage.getItem('user');
-        return storedUser ? { user: JSON.parse(storedUser) } : null; // Cambiar a null si no existe
+        return storedUser ? { user: JSON.parse(storedUser) } : null;
     });
 
     const authentication = useMemo(() => ({
@@ -278,7 +187,6 @@ function Dashboard() {
                 ...userData,
                 image: 'https://avatars.githubusercontent.com/u/19550456',
             };
-
             localStorage.setItem('user', JSON.stringify(userWithImage));
             setSession({ user: userWithImage });
         },
@@ -288,7 +196,6 @@ function Dashboard() {
                 if (!storedToken) {
                     throw new Error('No token found for logout');
                 }
-
                 const response = await fetch(`http://${apiIp}/api/logout`, {
                     method: 'POST',
                     headers: {
@@ -296,66 +203,50 @@ function Dashboard() {
                         Authorization: `Bearer ${storedToken}`,
                     },
                 });
-
                 if (!response.ok) {
                     console.warn('Error during API logout');
                 }
             } catch (error) {
                 console.error('Logout error:', error);
             } finally {
-                logout(); // Limpieza centralizada
-                navigate('/'); // Redirige al login tras cerrar sesión
+                logout();
+                navigate('/');
             }
         },
     }), [logout, navigate]);
 
-
-
-    // Redirigir al login si la sesión es nula
     useEffect(() => {
         if (!session) {
-            navigate('/'); // Redirige al login
+            navigate('/');
         }
     }, [session, navigate]);
 
-    // Validar si la sesión es nula antes de intentar acceder a sus propiedades
     const userRole = session?.user?.rol?.roles || null;
-    // Obtener roles desde localStorage
     const storedRoles = useMemo(() => {
         const roles = localStorage.getItem('roles');
         return roles ? JSON.parse(roles) : [];
     }, []);
 
-    // Filtrar las rutas disponibles según el rol del usuario y roles almacenados
     const getNavigation = () => {
-        if (!session) {
-            return []; // Si la sesión es nula, no muestra rutas
-        }
+        if (!session) return [];
         if (!storedRoles.length) {
             console.warn('No se encontraron roles en localStorage.');
-            return []; // Si no hay roles, no muestra rutas
+            return [];
         }
-
-        // Normaliza los nombres de roles devueltos por la API
         const availableRoles = storedRoles.map(role => role.roles.toLowerCase().trim());
-
-        // Normaliza el rol del usuario para la comparación
         const normalizedUserRole = userRole?.toLowerCase().trim();
-
         if (!availableRoles.includes(normalizedUserRole)) {
             console.warn(`El rol del usuario (${userRole}) no coincide con los roles disponibles.`);
-            return []; // Si el rol del usuario no está en la lista, devuelve vacío
+            return [];
         }
-
-        // Filtra las rutas según el rol normalizado
         switch (normalizedUserRole) {
             case 'administrador':
-                return NAVIGATION; // Acceso completo
+                return NAVIGATION;
             case 'sub administrador':
                 return NAVIGATION.filter(item =>
                     ['dashboard', 'ReportGE', 'ReportManagement', 'user'].includes(item.segment)
                 );
-            case 'usuario estadístico': // Usuario estadístico tiene acceso limitado
+            case 'usuario estadístico':
                 return NAVIGATION.filter(item =>
                     ['dashboard', 'ReportGE', 'ReportManagement'].includes(item.segment)
                 );
@@ -365,36 +256,79 @@ function Dashboard() {
                 );
             default:
                 console.warn('Rol desconocido:', normalizedUserRole);
-                return []; // Rol desconocido
+                return [];
         }
     };
 
-    const navigation = getNavigation(); // Rutas disponibles según el rol
+    const navigation = getNavigation();
 
     if (!session) {
-        return null; // No renderiza nada si la sesión no está inicializada
+        return null;
     }
 
     return (
-        <AppProvider session={session} authentication={authentication} navigation={navigation} router={router} theme={demoTheme}>
-            <DashboardLayout
-                slots={{
-                    toolbarActions: () => (
-                        <div
-                            style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '16px',
-                            }}
-                        >
-                            <Search />
-                        </div>
-                    ),
-                }}
-            >
-                <DemoPageContent pathname={pathname} navigate={router.navigate} />
-            </DashboardLayout>
-        </AppProvider>
+        <div className="font-teko h-screen flex flex-col">
+            {/* Barra superior */}
+            <div className="fixed top-0 left-0 z-50 flex items-center gap-4 py-2 px-4 bg-[#183466] shadow-md w-full">
+                <IconButton onClick={toggleSidebar} className="text-white">
+                    <MenuIcon style={{ color: '#FFFFFF' }} />
+                </IconButton>
+                <img src={mpSVG} alt="Logo" className="h-12 w-auto" />
+            </div>
+
+            <div className="flex flex-1">
+                <motion.div
+                    initial={{ width: isExpanded ? 208 : 66.5 }}
+                    animate={{ width: isExpanded ? 208 : 66.5 }}
+                    transition={{ duration: 0.3, ease: "easeInOut" }}
+                    className="fixed left-0 z-40 bg-[#183466] p-4 shadow-md overflow-y-auto"
+                    style={{ 
+                        top: '64px', // Height of the top bar (4rem = 64px)
+                        height: 'calc(100vh - 64px)', // Full height minus top bar
+                    }}
+                >
+                    <ul className="space-y-2">
+                        {NAVIGATION.map((item, index) => {
+                            const isSelected = `/${item.segment}` === pathname;
+                            return (
+                                <li key={index} className="text-white">
+                                    <div
+                                        className={`flex items-center px-2 py-1 rounded cursor-pointer ${isSelected ? 'bg-[#1F3F77]' : 'hover:bg-[#1F3F77]'}`}
+                                        onClick={() => item.children ? toggleMenu(item.segment, item.children) : setPathname('/' + item.segment)}
+                                    >
+                                        <div>{item.icon}</div>
+                                        {isExpanded && <span className="font-teko text-lg font-extralight ml-2">{item.title}</span>}
+                                        {item.children && isExpanded && (
+                                            <div className="ml-auto"> {/* Esto empuja el icono a la derecha */}
+                                                {openMenus[item.segment] ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                                            </div>
+                                        )}
+                                    </div>
+                                    {item.children && openMenus[item.segment] && isExpanded && (
+                                        <ul className="pl-6 space-y-1">
+                                            {item.children.map((subItem, subIndex) => (
+                                                <li key={subIndex} className="text-white cursor-pointer hover:bg-[#1F3F77] px-2 py-1 rounded" onClick={() => setPathname(`/gestion/${subItem.segment}`)}>
+                                                    {subItem.icon} <span className="ml-2">{subItem.title}</span>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    )}
+                                </li>
+
+                            );
+                        })}
+                    </ul>
+                </motion.div>
+                {/* Contenido principal */}
+                <div className="flex-1 overflow-y-auto" style={{ 
+    marginTop: '64px', // Avoid top bar overlap
+    marginLeft: isExpanded ? '208px' : '66.5px', // Avoid sidebar overlap
+    height: 'calc(100vh - 64px)', // Fill remaining vertical space
+  }}>
+                    <DemoPageContent pathname={pathname} navigate={navigate} />
+                </div>
+            </div>
+        </div>
     );
 }
 
@@ -402,6 +336,5 @@ DemoPageContent.propTypes = {
     pathname: PropTypes.string.isRequired,
     navigate: PropTypes.func.isRequired,
 };
-
 
 export default Dashboard;

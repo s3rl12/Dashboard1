@@ -8,9 +8,9 @@ const ICON_SIZE = { width: 20, height: 20 };
 const ExportDocument = ({ onExport }) => (
   <Button
     variant="contained"
-    color="primary"
+    //color="primary"
     onClick={onExport}
-    sx={{ ...BUTTON_SIZE, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: 0 }}
+    sx={{ ...BUTTON_SIZE, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: 0, backgroundColor: '#183466' }}
   >
     <IosShareIcon sx={ICON_SIZE} />
   </Button>

@@ -1,24 +1,21 @@
-import React from 'react';
-import { Box, Typography, TextField, Button } from '@mui/material';
+import React from "react";
 
 const UserGeneralInfo = () => {
-    const fileCount = 100;
-    return (
-        <Box className="flex flex-col w-full gap-8 rounded-2xl bg-white">
-            <Box className="flex flex-col h-full w-full gap-3">
-                {/* Información general */}
-                <Box className="flex flex-col bg-white p-5 items-start rounded-xl shadow-md">
-                    <Typography variant="h6" component="h2" fontWeight="bold">
-                        Gestión de Usuarios
-                    </Typography>
+  const fileCount = 100;
 
-                    <Typography variant="body1" color="textSecondary">
-                        Gestión de usuarios / Archivos / <span>{fileCount}</span> Usuarios
-                    </Typography>
-                </Box>
-            </Box>
-        </Box>
-    );
+  return (
+    <div className="flex flex-col w-full gap-8 rounded-2xl bg-white font-teko">
+      <div className="flex flex-col h-full w-full gap-3">
+        {/* Información general */}
+        <div className="flex flex-col bg-white p-5 items-start rounded-xl shadow-md">
+          <h2 className="text-xl font-medium">Gestión de Usuarios</h2>
+          <p className="text-gray-600">
+            Gestión de usuarios / Archivos / <span>{fileCount}</span> Usuarios
+          </p>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default UserGeneralInfo;

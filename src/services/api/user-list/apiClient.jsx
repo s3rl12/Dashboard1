@@ -4,7 +4,7 @@ const apiIp = import.meta.env.VITE_API;
 
 const apiClient = axios.create({
   baseURL: `http://${apiIp}/api/ges_user`,
-  timeout: 10000,
+  timeout: 60000,
   headers: {
     'Content-Type': 'application/json',
   },

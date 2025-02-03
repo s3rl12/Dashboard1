@@ -1,52 +1,49 @@
 import React, { useState, useEffect } from 'react';
-import dispatchesService from '../../../services/api/dispatches-list/dispatchesService'; // Importar el servicio
-import RegisterAreasDataGrid from '../../../components/RegisterAreasDataGrid/RegisterAreasDataGrid'; // Componente para la tabla
+import dispatchesService from '../../../services/api/dispatches-list/dispatchesService'; // Servicio para despachos
+import RegisterAreasDataGrid from '../../../components/RegisterAreasDataGrid/RegisterAreasDataGrid';
 
-const ListDispatchData = () => {
-    const [dispatches, setDispatches] = useState([]);  // Estado para almacenar los despachos
-    const [loading, setLoading] = useState(true);  // Estado para controlar la carga
+const ListDispatchData = ({ onEditRow, onDeleteRow }) => {
+    const [dispatches, setDispatches] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-    // Definimos la configuración de las columnas para la tabla
+    // Configuración de columnas para la data grid
     const columnsConfig = [
         { field: 'nombre_despacho', headerName: 'Nombre despacho', flex: 1 },
-        { field: 'fiscalia', headerName: 'Dependencia', flex: 1 }, // Mostrar el nombre de la fiscalía (dependencia)
+        { field: 'fiscalia', headerName: 'Dependencia', flex: 1 },
     ];
 
-    // Usamos useEffect para cargar los despachos al montar el componente
     useEffect(() => {
         const fetchDispatches = async () => {
             try {
                 const dispatchData = await dispatchesService.getAllDispatches();
-                // Verificar que la respuesta tenga la propiedad 'data' y que sea un array
-                const dispatchesArray = Array.isArray(dispatchData.data) ? dispatchData.data : [];
-                
-                console.log('Datos obtenidos de despachos:', dispatchData);
-
-                // Procesamos los datos para extraer el nombre de la dependencia
-                const processedDispatches = dispatchesArray.map(dispatch => ({
-                    ...dispatch,
-                    fiscalia: dispatch.dependencia_fk?.fiscalia || 'Sin nombre', // Extraer el nombre de la fiscalía (dependencia)
-                }));
-
-                setDispatches(processedDispatches);  // Asignamos los datos procesados al estado
+                // Se procesa la data para, por ejemplo, extraer datos de la dependencia
+                // En este caso, asumimos que el campo "fiscalia" se extrae de dependencia_fk.fiscalia
+                const processedDispatches = Array.isArray(dispatchData.data)
+                    ? dispatchData.data.map(dispatch => ({
+                          ...dispatch,
+                          fiscalia: dispatch.dependencia_fk?.fiscalia || 'Sin dependencia',
+                      }))
+                    : [];
+                setDispatches(processedDispatches);
             } catch (error) {
                 console.error('Error al obtener los despachos:', error);
             } finally {
-                setLoading(false);  // Cuando termine la carga, actualizamos el estado de loading
+                setLoading(false);
             }
         };
 
         fetchDispatches();
-    }, []);  // El useEffect solo se ejecutará una vez cuando se monte el componente
-
+    }, []);
 
     return (
         <div>
             <RegisterAreasDataGrid
                 columnsConfig={columnsConfig}
                 title="Lista de Despachos"
-                rows={dispatches}  // Pasamos los despachos obtenidos a la tabla
-                loading={loading}  // Indicamos si se está cargando la información
+                rows={dispatches}
+                loading={loading}
+                onEditRow={onEditRow}
+                onDeleteRow={onDeleteRow}
             />
         </div>
     );

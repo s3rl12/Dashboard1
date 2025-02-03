@@ -157,11 +157,11 @@ function App() {
         </div>
         <div className="flex flex-row bg-white rounded-3xl shadow-md w-5/6 h-5/6 mx-auto items-center justify-center">
           <div className="flex flex-col items-center rounded-l-2xl justify-center bg-[#152B52] w-1/2 h-full text-white px-8 py-16">
-            <h1 className="text-9xl font-semibold mb-6 text-[#ACC8FA]">SIEF</h1>
-            <h3 className="text-2xl font-semibold mb-4 text-center">
+            <h1 className="font-khand text-9xl font-semibold text-[#ACC8FA]">SIEF</h1>
+            <h3 className="font-teko text-2xl font-semibold mb-4 text-center">
               Sistema de Información <br />Estadística Fiscal (SIEF)
             </h3>
-            <p className="text-center leading-relaxed max-w-sm text-xs">
+            <p className="font-teko text-center font-light leading-relaxed max-w-sm text-base">
               El Sistema de Información y Estadística Fiscal (SIEF) es una herramienta desarrollada para el análisis y
               seguimiento del desempeño en la fiscalía. Facilita la generación de reportes detallados y rankings que
               permiten evaluar el rendimiento de fiscales, despachos y dependencias.
@@ -174,8 +174,8 @@ function App() {
             </div>
             <div className="login-content flex flex-col items-center justify-center w-full">
               <form onSubmit={handleLogin} action="" method="get" className="w-full max-w-xs">
-                <h2 className="text-2xl font-inter font-semibold mb-4 text-center text-[#616161]">Iniciar sesión</h2>
-                <p className="font-inter mb-4 text-sm text-center text-[#616161]">Por favor, ingrese sus credenciales correctamente para acceder al sistema.</p>
+                <h2 className="font-teko text-3xl font-medium text-center text-[#616161]">Iniciar sesión</h2>
+                <p className="font-teko text-base font-light text-center text-[#616161]">Por favor, ingrese sus credenciales correctamente para acceder al sistema.</p>
 
                 <div className="flex items-center justify-center mb-2 p-2 rounded-2xl w-full">
                   <Box

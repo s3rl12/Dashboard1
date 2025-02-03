@@ -4,25 +4,34 @@ import { InputLabel, FormControl, Select, MenuItem } from '@mui/material';
 import RegisterAreasDataGrid from '../../../components/RegisterAreasDataGrid/RegisterAreasDataGrid';
 import sedeService from '../../../services/api/sede-list/sedeService';
 import CreateDependency from '../DependencyData/CreateDependency';
+import dependencyService from '../../../services/api/dependency-list/dependencyService'; // Servicio para dependencias
 import ListDependencyData from '../DependencyData/ListDependencyData';
 
 const RegisterDependencies = () => {
     const columnsConfig = [
-        { field: 'Dependencies', headerName: 'Dependencias', flex: 1 },
-        { field: 'name', headerName: 'Nombre fiscalía', flex: 1 },
-        { field: 'Headquarters', headerName: 'Sede', flex: 1 },
+        { field: 'fiscalia', headerName: 'Dependencia', flex: 1 },
+        { field: 'nombre_fiscalia', headerName: 'Nombre fiscalía', flex: 1 },
+        { field: 'nombre_sede', headerName: 'Sede', flex: 1 },
     ];
 
-    const [headquarters, setHeadquarters] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [selectedHeadquarter, setSelectedHeadquarter] = useState('');
+    // Estados para el formulario de dependencia
     const [dependencyData, setDependencyData] = useState({
+        id: null,
         fiscalia: '',
         tipoFiscalia: '',
         nombreFiscalia: '',
         ruc: '',
-        telefono: '', // Nuevo campo
+        telefono: '',
     });
+    // Estado para almacenar los valores originales (por ejemplo, el ruc)
+    const [originalDependencyData, setOriginalDependencyData] = useState(null);
+    // Estado para controlar si estamos en modo edición
+    const [editing, setEditing] = useState(false);
+
+    // Estado para las sedes disponibles y la sede seleccionada
+    const [headquarters, setHeadquarters] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [selectedHeadquarter, setSelectedHeadquarter] = useState('');
 
     const handleInputChange = (event) => {
         const { name, value } = event.target;
@@ -33,6 +42,7 @@ const RegisterDependencies = () => {
         setSelectedHeadquarter(event.target.value);
     };
 
+    // Cargar las sedes disponibles
     useEffect(() => {
         const fetchHeadquarters = async () => {
             try {
@@ -48,50 +58,110 @@ const RegisterDependencies = () => {
         fetchHeadquarters();
     }, []);
 
+    // Función para guardar (crear o actualizar) una dependencia
     const handleSave = async () => {
         if (!selectedHeadquarter) {
             alert('Por favor, seleccione una sede.');
             return;
         }
 
-        const newDependency = {
-            cod_depen: "R001-SC001-1FPPCT", // Se asigna el valor estático "CD"
-            fiscalia: dependencyData.fiscalia,
-            tipo_fiscalia: dependencyData.tipoFiscalia,
-            nombre_fiscalia: dependencyData.nombreFiscalia,
-            ruc: dependencyData.ruc,
-            telefono: dependencyData.telefono, // Incluir teléfono
-            sede_fk: selectedHeadquarter, // Este campo es correcto
-        };
+        // Construir el payload que se enviará a la API.
+        // Para creación se incluye el campo "cod_depen" con valor estático.
+        // Para edición, se omite "cod_depen" y "id" (que se pasan por otros medios) y se actualizan solo los campos modificados.
+        if (editing && dependencyData.id) {
+            const payload = {
+                fiscalia: dependencyData.fiscalia,
+                tipo_fiscalia: dependencyData.tipoFiscalia,
+                nombre_fiscalia: dependencyData.nombreFiscalia,
+                // Incluir "ruc" solo si se modificó
+                ...( !originalDependencyData || dependencyData.ruc !== originalDependencyData.ruc ? { ruc: dependencyData.ruc } : {} ),
+                telefono: dependencyData.telefono,
+                sede_fk: selectedHeadquarter,
+            };
 
-        console.log(newDependency);
+            console.log('Payload de actualización:', payload);
+            try {
+                await dependencyService.updateDependency(dependencyData.id, payload);
+                alert('Dependencia actualizada exitosamente.');
+            } catch (error) {
+                console.error('Error al actualizar la dependencia:', error);
+                alert('Ocurrió un error al actualizar la dependencia. Intente nuevamente.');
+                return;
+            }
+        } else {
+            const payload = {
+                cod_depen: "R001-SC001-1FPPCT", // Valor estático para creación
+                fiscalia: dependencyData.fiscalia,
+                tipo_fiscalia: dependencyData.tipoFiscalia,
+                nombre_fiscalia: dependencyData.nombreFiscalia,
+                ruc: dependencyData.ruc,
+                telefono: dependencyData.telefono,
+                sede_fk: selectedHeadquarter,
+            };
 
+            console.log('Payload de creación:', payload);
+            try {
+                const response = await CreateDependency(payload);
+                console.log('Respuesta del servidor:', response);
+                alert('Dependencia registrada exitosamente.');
+            } catch (error) {
+                console.error('Error al registrar la dependencia:', error);
+                alert('Ocurrió un error al registrar la dependencia. Intente nuevamente.');
+                return;
+            }
+        }
+
+        // Limpiar el formulario y salir del modo edición
+        setDependencyData({
+            id: null,
+            fiscalia: '',
+            tipoFiscalia: '',
+            nombreFiscalia: '',
+            ruc: '',
+            telefono: '',
+        });
+        setOriginalDependencyData(null);
+        setSelectedHeadquarter('');
+        setEditing(false);
+    };
+
+    // Callback para editar: se invoca cuando se hace clic en "Edit" en el listado.
+    const handleEditDependency = (data) => {
+        setDependencyData({
+            id: data.id,
+            fiscalia: data.fiscalia || '',
+            tipoFiscalia: data.tipo_fiscalia || '',
+            nombreFiscalia: data.nombre_fiscalia || '',
+            ruc: data.ruc || '',
+            telefono: data.telefono || '',
+        });
+        setOriginalDependencyData({
+            ruc: data.ruc || '',
+        });
+        // Suponiendo que el objeto "data" tiene "sede_fk" y que éste es un id o un objeto con id
+        setSelectedHeadquarter(data.sede_fk?.id ? data.sede_fk.id : data.sede_fk);
+        setEditing(true);
+    };
+
+    // Callback para eliminar: se invoca desde el listado.
+    const handleDeleteDependency = async (id) => {
         try {
-            const response = await CreateDependency(newDependency);
-            console.log('Respuesta del servidor:', response);
-
-            alert('Dependencia registrada exitosamente.');
-
-            setDependencyData({
-                fiscalia: '',
-                tipoFiscalia: '',
-                nombreFiscalia: '',
-                ruc: '',
-                telefono: '', // Resetear campo teléfono
-            });
-            setSelectedHeadquarter('');
+            await dependencyService.deleteDependency(id);
+            alert('Dependencia eliminada exitosamente.');
+            // Se podría refrescar la lista de dependencias si se eleva el estado,
+            // o se notifica al componente listado para que realice un nuevo fetch.
         } catch (error) {
-            console.error('Error al registrar la dependencia:', error);
-            alert('Ocurrió un error al registrar la dependencia. Intente nuevamente.');
+            console.error('Error al eliminar la dependencia:', error);
+            alert('Ocurrió un error al eliminar la dependencia. Intente nuevamente.');
         }
     };
 
     return (
-        <Box className="flex flex-col w-full pt-8 gap-8">
-            <Box className="flex flex-col w-full bg-white rounded-2xl gap-6 shadow-md" sx={{ p: 5, boxShadow: 2 }}>
+        <Box className="flex flex-col w-full gap-6">
+            <Box className="flex flex-col w-full bg-white rounded-2xl gap-4 shadow-md" sx={{ p: 5, boxShadow: 2 }}>
                 <Box className="flex items-start">
-                    <Typography variant="h6" component="h1" fontWeight="bold" color="textPrimary">
-                        REGISTRAR DEPENDENCIAS
+                    <Typography variant="h6" component="h1" fontWeight="semibold" fontFamily={'Teko, sans-serif'}>
+                        {editing ? 'EDITAR DEPENDENCIA' : 'REGISTRAR DEPENDENCIAS'}
                     </Typography>
                 </Box>
 
@@ -171,18 +241,18 @@ const RegisterDependencies = () => {
                 </Box>
 
                 <Box className="flex justify-end gap-4 mt-6">
-                    <Button variant="outlined" sx={{ width: '120px' }}>
+                    <Button variant="outlined" sx={{ width: '120px', borderColor: '#183466', color: '#183466' }}>
                         Cancelar
                     </Button>
-                    <Button variant="contained" color="primary" sx={{ width: '120px' }} onClick={handleSave}>
+                    <Button variant="contained" sx={{ width: '120px', backgroundColor: '#183466' }} onClick={handleSave}>
                         Guardar
                     </Button>
                 </Box>
             </Box>
 
             <Box className="bg-white rounded-2xl shadow-md" sx={{ p: 5, boxShadow: 2 }}>
-                {/* Aquí se inserta el componente ListDependencyData */}
-                <ListDependencyData />
+                {/* Se pasan los callbacks de edición y eliminación al listado */}
+                <ListDependencyData onEditRow={handleEditDependency} onDeleteRow={handleDeleteDependency} />
             </Box>
         </Box>
     );

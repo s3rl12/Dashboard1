@@ -11,7 +11,6 @@ import rolSVG from '../../assets/icons/rol.svg';
 import permisoSVG from '../../assets/icons/permiso.svg';
 import RoleManagement from '../../pages/RolesPermissions/components/RoleManagement';
 
-
 const TabsIconRP = () => {
   const [value, setValue] = useState('1');
 
@@ -20,70 +19,72 @@ const TabsIconRP = () => {
   };
 
   return (
-    <Box sx={{ width: '100%', typography: 'body1', mt: 2 }}>
+    <div className="w-full mt-2 font-teko">
       <TabContext value={value}>
-        <Box sx={{ borderColor: 'divider' }}>
+        <div className="border-b border-gray-200">
           <TabList onChange={handleChange} aria-label="Opciones de Áreas">
-            <Tab 
+            <Tab
               sx={{
                 backgroundColor: 'white',
                 borderRadius: '10px',
-                paddingLeft: '50px',
-                paddingRight: '50px',
-                paddingTop: '40px',
-                paddingBottom: '40px',
-                marginRight: '20px', // Separación en el eje X
+                padding: '20px',
+                marginRight: '20px',
+                maxWidth: '200px',
+                minWidth: '200px',
+                textAlign: 'center',
+                fontFamily: 'Teko, sans-serif',  // Font Teko
               }}
-              icon={<img src={rolSVG} alt="Sedes Icon" style={{ width: '5rem', height: '5rem' }} />} 
-              label={<p style={{ fontWeight: '600', fontSize: '18px' }}>
-                SEDES<br />
-                <span style={{ fontWeight: '500', fontSize: '12px', color: 'gray' }} >
-                  <span>05</span> sedes
-                </span>
-              </p>} 
-              value="1" 
+              icon={<img src={rolSVG} alt="Icono de Rol" className="w-20 h-20 mx-auto" />}
+              label={
+                <div className="text-center">
+                  <p className="text-lg font-semibold">ROLES</p>
+                  <p className="text-sm text-gray-500">05 ROLES</p>
+                </div>
+              }
+              value="1"
             />
-            <Tab 
+            <Tab
               sx={{
                 backgroundColor: 'white',
                 borderRadius: '10px',
-                paddingLeft: '50px',
-                paddingRight: '50px',
-                paddingTop: '40px',
-                paddingBottom: '40px',
-                marginLeft: '20px',  // Separación en el eje X
-                marginRight: '20px', // Separación en el eje X
+                padding: '20px',
+                marginRight: '20px',
+                maxWidth: '200px',
+                minWidth: '200px',
+                textAlign: 'center',
+                fontFamily: 'Teko, sans-serif',  // Font Teko
               }}
-              icon={<img src={permisoSVG} alt="Dependencias Icon" style={{ width: '5rem', height: '5rem' }} />} 
-              label={<p style={{ fontWeight: '600', fontSize: '18px' }}>
-                DEPENDENCIAS<br />
-                <span style={{ fontWeight: '500', fontSize: '12px', color: 'gray' }} >
-                  <span>09</span> DEPENDENCIAS
-                </span>
-              </p>} 
-              value="2" 
+              icon={<img src={permisoSVG} alt="Icono de Permiso" className="w-20 h-20 mx-auto" />}
+              label={
+                <div className="text-center">
+                  <p className="text-lg font-semibold">PERMISOS</p>
+                  <p className="text-sm text-gray-500">09 PERMISOS</p>
+                </div>
+              }
+              value="2"
             />
-            <Tab 
+            <Tab
               sx={{
                 backgroundColor: 'white',
                 borderRadius: '10px',
-                paddingLeft: '50px',
-                paddingRight: '50px',
-                paddingTop: '40px',
-                paddingBottom: '40px',
-                marginLeft: '20px',  // Separación en el eje X
+                padding: '20px',
+                marginRight: '20px',
+                maxWidth: '200px',
+                minWidth: '200px',
+                textAlign: 'center',
+                fontFamily: 'Teko, sans-serif',  // Font Teko
               }}
-              icon={<img src={despachosSVG} alt="Despachos Icon" style={{ width: '5rem', height: '5rem' }} />} 
-              label={<p style={{ fontWeight: '600', fontSize: '18px' }}>
-                DESPACHOS<br />
-                <span style={{ fontWeight: '500', fontSize: '12px', color: 'gray' }} >
-                  <span>15</span> DESPACHOS
-                </span>
-              </p>} 
-              value="3" 
+              icon={<img src={despachosSVG} alt="Icono de Despachos" className="w-20 h-20 mx-auto" />}
+              label={
+                <div className="text-center">
+                  <p className="text-lg font-semibold">AVANZADO</p>
+                  <p className="text-sm text-gray-500">15 AVANZADO</p>
+                </div>
+              }
+              value="3"
             />
           </TabList>
-        </Box>
+        </div>
         <TabPanel value="1">
           <RoleManagement />
         </TabPanel>
@@ -94,8 +95,8 @@ const TabsIconRP = () => {
           <h2>Hola Mundo - DESPACHOS</h2>
         </TabPanel>
       </TabContext>
-    </Box>
+    </div>
   );
-}
+};
 
 export default TabsIconRP;
