@@ -1,5 +1,6 @@
 import React from "react";
 import userSVG from "../../../assets/icons/user.svg";
+import { Button } from "@mui/material";
 
 const VerifiedBadge = ({ activo }) => {
   return (
@@ -8,9 +9,7 @@ const VerifiedBadge = ({ activo }) => {
       role="status"
     >
       <div
-        className={`w-3 h-3 rounded-full mr-2 ${
-          activo === 1 ? "bg-green-700" : "bg-red-700"
-        }`}
+        className={`w-3 h-3 rounded-full mr-2 ${activo === 1 ? "bg-green-700" : "bg-red-700"}`}
       ></div>
       <p className="font-teko text-base">
         {activo === 1 ? "Perfil verificado" : "Perfil no verificado"}
@@ -24,6 +23,7 @@ const Profile = ({
   userRole = "Usuario Estadístico",
   fechaIngreso = "",
   activo = 0,
+  onEdit,  // Callback para activar el modo edición
 }) => {
   return (
     <section className="flex flex-col w-full p-6 bg-white rounded-2xl shadow-lg gap-4">
@@ -59,12 +59,13 @@ const Profile = ({
         </figcaption>
       </figure>
 
-      {/* Botón de Edición */}
+      {/* Botón de Edición */}  
       <div className="flex justify-center mt-4">
         <button
-          type="submit"
-          className="flex font-teko text-base bg-[#183466] text-white rounded-md shadow-md hover:bg-[#152B52] px-4 py-1 transition duration-300"
+          type="button"
+          className="flex font-teko text-lg bg-[#183466] text-white rounded-lg shadow-md hover:bg-[#152B52] px-4 py-2 transition duration-300"
           aria-label="Editar perfil de usuario"
+          onClick={onEdit}  // Activa el modo edición al hacer clic
         >
           Editar perfil
         </button>

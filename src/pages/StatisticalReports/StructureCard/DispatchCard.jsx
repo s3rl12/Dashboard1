@@ -1,14 +1,12 @@
 import React, { useState } from 'react';
 import AccountTreeIcon from '@mui/icons-material/AccountTree';
 import { Box, Button, Typography } from '@mui/material';
-import DispatchStructure from './DispatchStructure'; // Importamos el componente
+import DispatchStructure from './DispatchStructure';
 
+const DispatchCard = ({ dispatch, navigate }) => {
+  const [openDialog, setOpenDialog] = useState(false);
+  const { title, value, despachos } = dispatch; // Aquí "value" es el dependencyId
 
-
-const DispatchCard = ({ dispatch, dependencyId, navigate }) => { // Recibimos navigate como prop
-  const { title, value } = dispatch;
-  const [openDialog, setOpenDialog] = useState(false); // Estado para controlar el diálogo
-  
   // Funciones para manejar el diálogo
   const handleOpenDialog = () => setOpenDialog(true);
   const handleCloseDialog = () => setOpenDialog(false);
@@ -40,12 +38,13 @@ const DispatchCard = ({ dispatch, dependencyId, navigate }) => { // Recibimos na
         </Button>
       </Box>
 
-      {/* Diálogo DispatchStructure */}
+      {/* Diálogo DispatchStructure con la prop dependencyId */}
       <DispatchStructure
         open={openDialog}
         onClose={handleCloseDialog}
-        dependencyId={dependencyId} // Pasamos el id de la dependencia
-        navigate={navigate} // Pasamos navigate al componente DispatchStructure
+        despachos={despachos}
+        navigate={navigate}
+        dependencyId={value} // Se pasa el dependencyId
       />
     </Box>
   );

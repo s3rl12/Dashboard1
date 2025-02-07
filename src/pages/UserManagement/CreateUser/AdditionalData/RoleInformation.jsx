@@ -6,7 +6,7 @@ import rolesService from '../../../../services/api/roles-list/rolesService';
 import { useAuth } from '../../../../context/AuthContext';
 
 const RoleInformation = () => {
-  const { userData, setUserData } = useAuth(); // Usar el contexto
+  const { userFormData, setUserFormData } = useAuth();
   const [roles, setRoles] = useState([]);
 
   useEffect(() => {
@@ -27,7 +27,7 @@ const RoleInformation = () => {
   }, []);
 
   const handleRoleChange = (value) => {
-    setUserData({ ...userData, roles_fk: value }); // Actualizado para almacenar en roles_fk
+    setUserFormData({ ...userFormData, roles_fk: value }); // Actualizado para almacenar en roles_fk
   };
 
   return (

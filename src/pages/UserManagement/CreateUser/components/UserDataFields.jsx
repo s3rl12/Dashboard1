@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Box, Typography, TextField, Button } from '@mui/material';
 import { useDropzone } from 'react-dropzone';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
@@ -9,9 +9,10 @@ import { useAuth } from '../../../../context/AuthContext';
 import { parseISO, format } from 'date-fns';
 
 const UserDataFields = () => {
-    const { userData, setUserData } = useAuth();
-    const [file, setFile] = useState(null);
-    const [error, setError] = useState(null);
+    // Usar el estado del contexto en lugar de crear uno local
+    const { userFormData, setUserFormData } = useAuth();
+    const [file, setFile] = React.useState(null);
+    const [error, setError] = React.useState(null);
 
     const onDrop = (acceptedFiles, rejectedFiles) => {
         if (acceptedFiles.length > 0) {
@@ -24,7 +25,8 @@ const UserDataFields = () => {
                 status: 'success',
             });
             setError(null);
-            setUserData({ ...userData, foto_perfil: file });
+            // Actualizamos el estado del usuario sin sobrescribir otras propiedades
+            setUserFormData({ ...userFormData, foto_perfil: file });
         }
         if (rejectedFiles.length > 0) {
             const rejectedFile = rejectedFiles[0];
@@ -50,17 +52,17 @@ const UserDataFields = () => {
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
-        setUserData({
-            ...userData,
-            [name]: value,
-        });
+        setUserFormData(prev => ({
+          ...(prev || {}), // Previene null/undefined
+          [name]: value,
+        }));
     };
 
     const handleDateChange = (newValue) => {
-        setUserData({
-            ...userData,
-            fecha_nacimiento: newValue ? format(newValue, 'yyyy-MM-dd') : '',
-        });
+        setUserFormData(prev => ({
+          ...prev,
+          fecha_nacimiento: newValue ? format(newValue, 'yyyy-MM-dd') : '',
+        }));
     };
 
     return (
@@ -73,7 +75,7 @@ const UserDataFields = () => {
                         className="flex-1"
                         size="small"
                         name="nombre"
-                        value={userData.nombre}
+                        value={userFormData?.nombre || ''}
                         onChange={handleInputChange}
                     />
                     <TextField
@@ -82,7 +84,7 @@ const UserDataFields = () => {
                         className="flex-1"
                         size="small"
                         name="apellido"
-                        value={userData.apellido}
+                        value={userFormData?.apellido || ''}
                         onChange={handleInputChange}
                     />
                 </Box>
@@ -93,7 +95,7 @@ const UserDataFields = () => {
                         className="flex-1"
                         size="small"
                         name="telefono"
-                        value={userData.telefono}
+                        value={userFormData?.telefono || ''}
                         onChange={handleInputChange}
                     />
                     <TextField
@@ -102,7 +104,7 @@ const UserDataFields = () => {
                         className="flex-1"
                         size="small"
                         name="email"
-                        value={userData.email}
+                        value={userFormData?.email || ''}
                         onChange={handleInputChange}
                     />
                     <TextField
@@ -111,7 +113,7 @@ const UserDataFields = () => {
                         className="flex-1"
                         size="small"
                         name="dni"
-                        value={userData.dni}
+                        value={userFormData?.dni || ''}
                         onChange={handleInputChange}
                     />
                 </Box>
@@ -122,7 +124,7 @@ const UserDataFields = () => {
                         fullWidth
                         size="small"
                         name="direccion"
-                        value={userData.direccion}
+                        value={userFormData?.direccion || ''}
                         onChange={handleInputChange}
                     />
                 </Box>
@@ -133,13 +135,13 @@ const UserDataFields = () => {
                         className="flex-1"
                         size="small"
                         name="sexo"
-                        value={userData.sexo}
+                        value={userFormData?.sexo || ''}
                         onChange={handleInputChange}
                     />
                     <LocalizationProvider dateAdapter={AdapterDateFns}>
                         <DatePicker
                             label="Fecha de nacimiento*"
-                            value={userData.fecha_nacimiento ? parseISO(userData.fecha_nacimiento) : null}
+                            value={userFormData?.fecha_nacimiento ? parseISO(userFormData.fecha_nacimiento) : null}
                             onChange={handleDateChange}
                             className="flex-1"
                             slotProps={{ field: { size: 'small' } }}
@@ -153,7 +155,7 @@ const UserDataFields = () => {
                         className="flex-1"
                         size="small"
                         name="extension"
-                        value={userData.extension}
+                        value={userFormData?.extension || ''}
                         onChange={handleInputChange}
                     />
                     <TextField
@@ -162,7 +164,7 @@ const UserDataFields = () => {
                         className="flex-1"
                         size="small"
                         name="tipo_fiscal"
-                        value={userData.tipo_fiscal}
+                        value={userFormData?.tipo_fiscal || ''}
                         onChange={handleInputChange}
                     />
                 </Box>
@@ -173,7 +175,7 @@ const UserDataFields = () => {
                         className="flex-1"
                         size="small"
                         name="password"
-                        value={userData.password}
+                        value={userFormData?.password || ''}
                         onChange={handleInputChange}
                     />
                     <TextField
@@ -182,11 +184,12 @@ const UserDataFields = () => {
                         className="flex-1"
                         size="small"
                         name="password_confirmation"
-                        value={userData.password_confirmation}
+                        value={userFormData?.password_confirmation || ''}
                         onChange={handleInputChange}
                     />
                 </Box>
 
+                {/* Área de carga de imagen */}
                 {!file && !error && (
                     <Box
                         {...getRootProps()}

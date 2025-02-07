@@ -5,7 +5,7 @@ import { useAuth } from '../../../context/AuthContext'; // Importar el contexto
 import userListService from '../../../services/api/user-list/userListService'; // Importar el servicio de usuario
 
 const CreateUser = () => {
-    const { userData } = useAuth(); // Obtener los datos del usuario desde el contexto
+    const { userFormData } = useAuth(); // Obtener los datos del usuario desde el contexto
     const [loading, setLoading] = useState(false); // Estado de carga
     const [error, setError] = useState(null); // Estado para manejar errores
     const [success, setSuccess] = useState(false); // Estado para manejar éxito
@@ -14,9 +14,9 @@ const CreateUser = () => {
         setLoading(true); // Activar la carga
         setError(null); // Limpiar cualquier error previo
         setSuccess(false); // Limpiar el estado de éxito
-        console.log('los datos recopilados son:', userData);
+        console.log('los datos recopilados son:', userFormData);
         try {
-            const response = await userListService.createUser(userData); // Llamar a la API para crear el usuario
+            const response = await userListService.createUser(userFormData); // Llamar a la API para crear el usuario
             setSuccess(true); // Si la creación es exitosa, actualizar el estado de éxito
             console.log('Usuario creado con éxito:', response);
         } catch (error) {

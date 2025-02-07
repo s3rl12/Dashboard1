@@ -1,23 +1,24 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
-// Crear el contexto
 const AuthContext = createContext();
 
-// Proveedor de autenticación
 export const AuthProvider = ({ children }) => {
-    const [user, setUser] = useState(
-        JSON.parse(localStorage.getItem("user")) || null
-    );
+    // Estado unificado de autenticación
+    const [authState, setAuthState] = useState(() => {
+        const token = localStorage.getItem(import.meta.env.VITE_AUTH_TOKEN_KEY);
+        const userData = JSON.parse(localStorage.getItem(import.meta.env.VITE_USER_DATA_KEY));
+        return token && userData ? { token, user: userData } : null;
+    });
 
-    const [workloadData, setWorkloadData] = useState(null); // Añade el estado para WorkLoad
+    // Estados adicionales de la aplicación
+    const [workloadData, setWorkloadData] = useState(null);
     const [dependencyId, setDependencyId] = useState(null);
-    // Obtener la fecha actual en formato `yyyy-MM-dd`
-    const getCurrentDate = () => {
-        const today = new Date();
-        return today.toISOString().split('T')[0]; // Devuelve la fecha en formato `yyyy-MM-dd`
-    };
-    // Datos del formulario de creación de usuario
-    const [userData, setUserData] = useState({
+    
+    // Función de fecha actual (sin cambios)
+    const getCurrentDate = () => new Date().toISOString().split('T')[0];
+
+    // Datos del formulario (sin cambios)
+    const [userFormData, setUserFormData] = useState({
         nombre: '',
         apellido: '',
         telefono: '',
@@ -39,43 +40,45 @@ export const AuthProvider = ({ children }) => {
         despacho_fk: 'null',  // Solo almacenamos despacho_fk
     });
 
-    const login = (userData) => {
-        setUser(userData);
-        localStorage.setItem('user', JSON.stringify(userData));
-        localStorage.setItem('token', userData.token);
+    // Login mejorado
+    const login = ({ user, token }) => {
+        localStorage.setItem(import.meta.env.VITE_AUTH_TOKEN_KEY, token);
+        localStorage.setItem(import.meta.env.VITE_USER_DATA_KEY, JSON.stringify(user));
+        setAuthState({ token, user });
     };
 
+    // Logout seguro
     const logout = () => {
-        setUser(null);
-        localStorage.clear();
+        localStorage.removeItem(import.meta.env.VITE_AUTH_TOKEN_KEY);
+        localStorage.removeItem(import.meta.env.VITE_USER_DATA_KEY);
+        setAuthState(null);
+        
+        // Limpieza adicional de seguridad
         sessionStorage.clear();
-        document.cookie.split(';').forEach((cookie) => {
+        document.cookie.split(';').forEach(cookie => {
             const [name] = cookie.split('=');
             document.cookie = `${name}=; Max-Age=0; path=/; domain=${window.location.hostname}`;
         });
-
-        if (window.axios) {
-            delete window.axios.defaults.headers.common['Authorization'];
-        }
     };
 
+    // Verificación de autenticación
     const isAuthenticated = () => {
-        return !!user;
+        return !!authState?.token && !!authState?.user;
     };
 
     return (
         <AuthContext.Provider
             value={{
-                user,
+                ...authState,
                 login,
                 logout,
                 isAuthenticated,
-                workloadData, // Expón los datos de WorkLoad
-                setWorkloadData, // Expón el setter
-                userData, // Expón los datos del formulario
-                setUserData, // Expón el setter para actualizar los datos del formulario
+                workloadData,
+                setWorkloadData,
+                userFormData: userFormData,
+                setUserFormData,
                 dependencyId,
-                setDependencyId,
+                setDependencyId
             }}
         >
             {children}
@@ -83,5 +86,4 @@ export const AuthProvider = ({ children }) => {
     );
 };
 
-// Hook personalizado para acceder al contexto
 export const useAuth = () => useContext(AuthContext);

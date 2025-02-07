@@ -16,7 +16,7 @@ const apiCrimesIncidence = axios.create({
 // Interceptor para agregar el token en los encabezados de las solicitudes
 apiCrimesIncidence.interceptors.request.use(
     (config) => {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem(import.meta.env.VITE_AUTH_TOKEN_KEY);
         console.log('Token:', token);
         if (token) {
             config.headers['Authorization'] = `Bearer ${token}`;

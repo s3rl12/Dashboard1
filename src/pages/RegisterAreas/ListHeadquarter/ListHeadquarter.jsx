@@ -7,10 +7,11 @@ const ListHeadquarter = ({ onEditRow }) => {
   const [loading, setLoading] = useState(true);
 
   const columnsConfig = [
-    { field: 'nombre', headerName: 'Nombre Sede', flex: 1 },
-    { field: 'provincia', headerName: 'Provincia', flex: 1 },
-    { field: 'distrito_fiscal', headerName: 'Distrito Fiscal', flex: 1 },
-    { field: 'codigo_postal', headerName: 'Código Postal', flex: 1 },
+    { field: 'nombre', headerName: 'Nombre Sede', flex: 1, sortable: false },
+    { field: 'provincia', headerName: 'Provincia', flex: 1, sortable: false },
+    { field: 'activo', headerName: 'activo', flex: 1, sortable: false },
+    { field: 'distrito_fiscal', headerName: 'Distrito Fiscal', flex: 1, sortable: false },
+    { field: 'codigo_postal', headerName: 'Código Postal', flex: 1, sortable: false },
   ];
 
   useEffect(() => {

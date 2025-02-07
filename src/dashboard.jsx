@@ -104,45 +104,12 @@ DemoPageContent.propTypes = {
     navigate: PropTypes.func.isRequired,
 };
 
-function Search() {
-    return (
-        <div className="flex items-center gap-4">
-            <Tooltip title="Search" enterDelay={1000}>
-                <div>
-                    <IconButton type="button" aria-label="search" className="inline md:hidden text-gray-500">
-                        <SearchIcon fontSize="small" />
-                    </IconButton>
-                </div>
-            </Tooltip>
-            <TextField
-                label="Search"
-                variant="outlined"
-                size="small"
-                InputLabelProps={{ style: { color: '#fff' } }}
-                InputProps={{
-                    style: {
-                        color: '#fff',
-                        backgroundColor: '#15315C',
-                        borderRadius: '15px',
-                    },
-                    endAdornment: (
-                        <IconButton type="button" aria-label="search" size="small" className="text-white">
-                            <SearchIcon fontSize="small" />
-                        </IconButton>
-                    ),
-                }}
-                className="hidden md:inline-block mr-1"
-            />
-        </div>
-    );
-}
-
 function Dashboard() {
+    const { user, logout } = useAuth(); // Obtener datos del contexto
     const [pathname, setPathname] = useState('/dashboard');
     const navigate = useNavigate();
-    const { logout } = useAuth();
     const [isExpanded, setIsExpanded] = useState(true);
-    const [windowWidth, setWindowWidth] = useState(window.innerWidth); //nuevo
+    const [windowWidth, setWindowWidth] = useState(window.innerWidth);
     const [openMenus, setOpenMenus] = useState({});
 
     const toggleSidebar = () => {
@@ -169,102 +136,38 @@ function Dashboard() {
         }
     };
 
-    // Actualizamos el estado 'pathname' para la navegación
-    const router = useMemo(() => ({
-        pathname,
-        navigate: setPathname,
-        searchParams: new URLSearchParams(),
-    }), [pathname]);
-
-    const [session, setSession] = useState(() => {
-        const storedUser = localStorage.getItem('user');
-        return storedUser ? { user: JSON.parse(storedUser) } : null;
-    });
-
-    const authentication = useMemo(() => ({
-        signIn: (userData) => {
-            const userWithImage = {
-                ...userData,
-                image: 'https://avatars.githubusercontent.com/u/19550456',
-            };
-            localStorage.setItem('user', JSON.stringify(userWithImage));
-            setSession({ user: userWithImage });
-        },
-        signOut: async () => {
-            try {
-                const storedToken = localStorage.getItem('token');
-                if (!storedToken) {
-                    throw new Error('No token found for logout');
-                }
-                const response = await fetch(`http://${apiIp}/api/logout`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        Authorization: `Bearer ${storedToken}`,
-                    },
-                });
-                if (!response.ok) {
-                    console.warn('Error during API logout');
-                }
-            } catch (error) {
-                console.error('Logout error:', error);
-            } finally {
-                logout();
-                navigate('/');
-            }
-        },
-    }), [logout, navigate]);
-
-    useEffect(() => {
-        if (!session) {
-            navigate('/');
-        }
-    }, [session, navigate]);
-
-    const userRole = session?.user?.rol?.roles || null;
-    const storedRoles = useMemo(() => {
-        const roles = localStorage.getItem('roles');
-        return roles ? JSON.parse(roles) : [];
+    const routePermissions = useMemo(() => {
+        return JSON.parse(import.meta.env.VITE_ROUTE_PERMISSIONS);
     }, []);
 
-    const getNavigation = () => {
-        if (!session) return [];
-        if (!storedRoles.length) {
-            console.warn('No se encontraron roles en localStorage.');
-            return [];
-        }
-        const availableRoles = storedRoles.map(role => role.roles.toLowerCase().trim());
-        const normalizedUserRole = userRole?.toLowerCase().trim();
-        if (!availableRoles.includes(normalizedUserRole)) {
-            console.warn(`El rol del usuario (${userRole}) no coincide con los roles disponibles.`);
-            return [];
-        }
-        switch (normalizedUserRole) {
-            case 'administrador':
-                return NAVIGATION;
-            case 'sub administrador':
-                return NAVIGATION.filter(item =>
-                    ['dashboard', 'ReportGE', 'ReportManagement', 'user'].includes(item.segment)
-                );
-            case 'usuario estadístico':
-                return NAVIGATION.filter(item =>
-                    ['dashboard', 'ReportGE', 'ReportManagement'].includes(item.segment)
-                );
-            case 'usuario':
-                return NAVIGATION.filter(item =>
-                    ['dashboard', 'ReportGE'].includes(item.segment)
-                );
-            default:
-                console.warn('Rol desconocido:', normalizedUserRole);
-                return [];
+    const getAuthorizedNavigation = () => {
+        if (!user?.permisos) return [];
+
+        return NAVIGATION.filter(item => {
+            const requiredPermission = routePermissions[item.segment];
+            return requiredPermission ? user.permisos[requiredPermission] === 1 : false;
+        });
+    };
+
+    const handleLogout = async () => {
+        try {
+            await fetch(`http://${import.meta.env.VITE_API}/api/logout`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem(import.meta.env.VITE_AUTH_TOKEN_KEY)}`
+                }
+            });
+        } finally {
+            logout();
+            navigate('/');
         }
     };
 
-    const navigation = getNavigation();
+    useEffect(() => {
+        if (!user) navigate('/');
+    }, [user, navigate]);
 
-    if (!session) {
-        return null;
-    }
+    const authorizedNavigation = getAuthorizedNavigation();
 
     return (
         <div className="font-teko h-screen flex flex-col">
@@ -282,13 +185,13 @@ function Dashboard() {
                     animate={{ width: isExpanded ? 208 : 66.5 }}
                     transition={{ duration: 0.3, ease: "easeInOut" }}
                     className="fixed left-0 z-40 bg-[#183466] p-4 shadow-md overflow-y-auto"
-                    style={{ 
+                    style={{
                         top: '64px', // Height of the top bar (4rem = 64px)
                         height: 'calc(100vh - 64px)', // Full height minus top bar
                     }}
                 >
                     <ul className="space-y-2">
-                        {NAVIGATION.map((item, index) => {
+                        {authorizedNavigation.map((item, index) => {
                             const isSelected = `/${item.segment}` === pathname;
                             return (
                                 <li key={index} className="text-white">
@@ -320,11 +223,11 @@ function Dashboard() {
                     </ul>
                 </motion.div>
                 {/* Contenido principal */}
-                <div className="flex-1 overflow-y-auto" style={{ 
-    marginTop: '64px', // Avoid top bar overlap
-    marginLeft: isExpanded ? '208px' : '66.5px', // Avoid sidebar overlap
-    height: 'calc(100vh - 64px)', // Fill remaining vertical space
-  }}>
+                <div className="flex-1 overflow-y-auto" style={{
+                    marginTop: '64px', // Avoid top bar overlap
+                    marginLeft: isExpanded ? '208px' : '66.5px', // Avoid sidebar overlap
+                    height: 'calc(100vh - 64px)', // Fill remaining vertical space
+                }}>
                     <DemoPageContent pathname={pathname} navigate={navigate} />
                 </div>
             </div>

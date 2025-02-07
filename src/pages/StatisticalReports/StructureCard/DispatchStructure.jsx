@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -8,52 +8,20 @@ import {
   Typography,
 } from '@mui/material';
 import DispatchCardList from './DispatchCardList';
-import dispatchesDependencyService from '../../../services/api/dispatchesDependency-list/dispatchesDependencyService';
 
-const DispatchStructure = ({ open, onClose, dependencyId, navigate }) => { // Agregamos navigate como prop
-  const [dispatches, setDispatches] = useState([]);
-  const [loading, setLoading] = useState(false);
-  useEffect(() => {
-    const fetchDispatches = async () => {
-      if (dependencyId) {
-        setLoading(true);
-        try {
-          const response = await dispatchesDependencyService.getDispatchesByDependency(dependencyId);
-          if (response.data && response.data.despachos.length > 0) {
-            setDispatches(response.data.despachos);
-          } else {
-            setDispatches([]); // Si no hay despachos, asegurarse de que esté vacío
-          }
-        } catch (error) {
-          console.error(`Error fetching dispatches for dependency ${dependencyId}:`, error);
-          setDispatches([]);
-        } finally {
-          setLoading(false);
-        }
-      }
-    };
-
-    fetchDispatches();
-  }, [dependencyId]);
-
+const DispatchStructure = ({ open, onClose, despachos, navigate, dependencyId }) => {
   return (
-    <Dialog
-      open={open}
-      onClose={onClose}
-      sx={{ '& .MuiDialog-paper': { width: '100%', maxWidth: '900px', borderRadius: '10px' } }}
-    >
+    <Dialog open={open} onClose={onClose}>
       <DialogTitle>Despachos Asociados</DialogTitle>
       <DialogContent>
-        {loading ? (
-          <Typography>Cargando despachos...</Typography>
-        ) : dispatches.length > 0 ? (
-          <DispatchCardList  navigate={navigate} dependencyId={dependencyId} /> 
+        {despachos?.length > 0 ? (
+          <DispatchCardList dependencyId={dependencyId} navigate={navigate} />
         ) : (
           <Typography>No hay despachos disponibles</Typography>
         )}
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} color="primary">Cerrar</Button>
+        <Button onClick={onClose}>Cerrar</Button>
       </DialogActions>
     </Dialog>
   );

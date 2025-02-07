@@ -118,6 +118,7 @@ export default function RegisterAreasDataGrid({
           disableColumnFilter
           disableColumnSelector
           disableDensitySelector
+          disableColumnMenu
           pageSize={5}
           sx={{
             height: '100%',

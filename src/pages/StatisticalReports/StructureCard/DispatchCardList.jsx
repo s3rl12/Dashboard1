@@ -4,14 +4,14 @@ import AccordionSummary from '@mui/material/AccordionSummary';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { Typography } from '@mui/material';
-import DispatchData from './DispatchData';
 import StatisticalFunctions from '../StatisticalFunctions/StatisticalFunctions';
 import workloadService from '../../../services/api/workload-list/workloadService';
 
 const DispatchCardList = ({ navigate, dependencyId }) => {
+  console.log("datos id depencia:", dependencyId)
   const [workloadData, setWorkloadData] = useState(null); // Estado inicial como null
   const [error, setError] = useState(null);
-  const month = 12; // Asumiendo que enero es el mes requerido
+  const month = 12; // Mes requerido (ajusta el valor o comentario según corresponda)
   const year = 2024; // Año fijo, o dinámico si es necesario
 
   const fetchWorkloadData = async (id) => {
@@ -75,6 +75,5 @@ const DispatchCardList = ({ navigate, dependencyId }) => {
     </div>
   );
 };
-
 
 export default DispatchCardList;

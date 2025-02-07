@@ -5,10 +5,14 @@ import UserDispatch from "../../pages/UserProfile/components/UserDispatch";
 import ResetUserPassord from "../../pages/UserProfile/components/ResetUserPassword";
 import "../../assets/styles/TabPanel.css";
 
-function TabPanel({ children, value, index }) {
+function TabPanel({ children, value, index, ...other }) {
   return (
-    <div role="tabpanel" hidden={value !== index}>
-      {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
+    <div
+      role="tabpanel"
+      {...other}
+      style={{ display: value === index ? "block" : "none" }}
+    >
+      <Box sx={{ p: 3 }}>{children}</Box>
     </div>
   );
 }
@@ -20,9 +24,9 @@ function a11yProps(index) {
   };
 }
 
-export default function DefaultTabs({ profileData }) {
+export default function DefaultTabs({ profileData, isEditing }) {
   const [value, setValue] = useState(0);
-    console.log("datos:", profileData);
+  console.log("datos:", profileData);
   const handleChange = (event, newValue) => {
     setValue(newValue);
   };
@@ -46,14 +50,13 @@ export default function DefaultTabs({ profileData }) {
         </Tabs>
       </AppBar>
       <TabPanel value={value} index={0}>
-        {/* Se envían los datos recibidos a UserData */}
-        <UserData profileData={profileData} />
+        <UserData profileData={profileData} isEditing={isEditing} />
       </TabPanel>
       <TabPanel value={value} index={1}>
-        <UserDispatch />
+        <UserDispatch profileData={profileData} isEditing={isEditing} />
       </TabPanel>
       <TabPanel value={value} index={2}>
-        <ResetUserPassord />
+        <ResetUserPassord isEditing={isEditing} />
       </TabPanel>
     </Box>
   );

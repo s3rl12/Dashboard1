@@ -6,7 +6,7 @@ import areasService from '../../../../services/api/areas-list/AreasService';
 import { useAuth } from '../../../../context/AuthContext';
 
 const AdditionalData = () => {
-  const { userData, setUserData } = useAuth(); // Usar el contexto
+  const { userFormData, setUserFormData } = useAuth();
   const [areas, setAreas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedSede, setSelectedSede] = useState(null);
@@ -44,7 +44,7 @@ const AdditionalData = () => {
 
   const handleDespachoChange = (value) => {
     setSelectedDespacho(value);
-    setUserData({ ...userData, despacho_fk: value }); // Solo almacenar despacho_fk
+    setUserFormData({ ...userFormData, despacho_fk: value }); // Solo almacenar despacho_fk
   };
 
   const cardData = [

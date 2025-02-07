@@ -16,6 +16,8 @@ import Stack from '@mui/material/Stack';
 import Alert from '@mui/material/Alert';
 import LoadingBackdrop from './components/LoadingBackdrop';
 import RecoverPassword from './components/recoverpassword';
+import LoginService from './services/api/login-list/LoginService';
+
 
 import { useAuth } from "./context/AuthContext"; // Importa el hook de autenticación
 const apiIp = import.meta.env.VITE_API;
@@ -34,93 +36,34 @@ function App() {
   };
 
   const handleLogin = async (event) => {
-    event.preventDefault(); // Evita el comportamiento por defecto del formulario
-    setLoading(true); // Mostrar el spinner de carga
-    setAlertVisible(false); // Restablecer el estado de alertVisible al inicio
-
-    // Limpia cualquier token residual antes de la solicitud
-    localStorage.removeItem('token');
+    event.preventDefault();
+    setLoading(true);
+    setAlertVisible(false);
 
     try {
-      const loginData = {
-        email: email,
-        password: password,
-      };
-
-      const response = await fetch(`http://${apiIp}/api/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Cache-Control': 'no-store',
-        },
-        body: JSON.stringify(loginData),
-      });
-
-      if (!response.ok) {
-        // Si la respuesta no es exitosa, mostrar el Alert
-        setAlertVisible(true);
-        setTimeout(() => setAlertVisible(false), 5000); // Ocultar después de 3 segundos
-        throw new Error('Error en la solicitud: ' + response.status);
-      }
-
-      const data = await response.json();
-      const { token, data: userData } = data;
-
-      // Guardar datos de usuario y token
-      const fullUserData = {
-        name: `${userData.nombre} ${userData.apellido}`,
-        email: userData.email,
-        token,
-        rol: userData.roles_fk,
-        uuid: userData.uuid,
-      };
-      // Guardar en localStorage
-      localStorage.setItem('user', JSON.stringify(fullUserData));
-      localStorage.setItem('token', token);
-
-      // Solicitar roles desde la API
-      const rolesResponse = await fetch(`http://${apiIp}/api/ges_user/roles`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!rolesResponse.ok) {
-        throw new Error('Error al obtener los roles');
-      }
-
-      const rolesData = await rolesResponse.json();
-
-      // Guardar roles en localStorage
-      localStorage.setItem('roles', JSON.stringify(rolesData.data));
+      const credentials = { email, password };
+      const response = await LoginService.login(credentials);
+      
+      // Obtener datos del servicio
+      const { token, data: userData, permisos } = response;
 
       // Actualizar contexto de autenticación
-      login(fullUserData); // Actualizar contexto
+      login({
+        user: {
+          ...userData,
+          permisos // Incluir permisos en el contexto
+        },
+        token
+      });
 
-      console.log('Token de autenticación:', token);
-      alert("¡Inicio de sesión exitoso! Redirigiendo...");
-
-
-
-      navigate('/dashboard'); // Redirige al dashboard
-
+      navigate('/dashboard');
 
     } catch (error) {
-      console.log('Error:', error.message);
+      setAlertVisible(true);
+      setTimeout(() => setAlertVisible(false), 5000);
     } finally {
-      setLoading(false); // Ocultar el spinner de carga
+      setLoading(false);
     }
-
-    /*Verifica las credenciales
-    if (email === 'rbenitot@gmail.com' && password === '123456') {
-      navigate('/dashboard'); // Redirige a la página de dashboard
-    } else {
-      setAlertVisible(true); // Muestra el Alert
-      setTimeout(() => setAlertVisible(false), 3000);
-      //alert('Credenciales incorrectas');
-    }
-    */
   };
 
   return (
@@ -302,5 +245,4 @@ function App() {
     </>
   );
 }
-
 export default App;

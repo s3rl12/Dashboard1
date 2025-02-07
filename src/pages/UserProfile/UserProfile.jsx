@@ -3,9 +3,12 @@ import DefaultTabs from "../../components/Tabs/DefaultTabs";
 import Profile from "./components/Profile";
 import UserActivity from "./components/UserActivity";
 import profileDataService from "../../services/api/profileData-list/profileDataService";
+import { Button } from "@mui/material";
 
 const UserProfile = () => {
   const [profile, setProfile] = useState(null);
+  // Estado para controlar el modo edición (inicialmente bloqueado)
+  const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -19,6 +22,11 @@ const UserProfile = () => {
     fetchProfile();
   }, []);
 
+  // Función para activar el modo edición (se llama desde Profile)
+  const handleEdit = () => {
+    setIsEditing(true);
+  };
+
   return (
     <div className="flex flex-col w-full h-full gap-4 font-teko p-2 text-start">
       {/* Sección de Perfil y Datos Personales */}
@@ -26,17 +34,39 @@ const UserProfile = () => {
         {/* Perfil */}
         <div className="w-1/4">
           <Profile
-            userName={profile ? `${profile.nombre} ${profile.apellido}` : ""}
-            userRole={profile && profile.roles_fk ? profile.roles_fk.roles : ""}
-            fechaIngreso={profile ? profile.fecha_ingreso : ""}
-            activo={profile ? profile.activo : 0}
+            userName={
+              profile && profile.data_user
+                ? `${profile.data_user.nombre} ${profile.data_user.apellido}`
+                : ""
+            }
+            userRole={
+              profile && profile.data_user && profile.data_user.roles_fk
+                ? profile.data_user.roles_fk.roles
+                : ""
+            }
+            fechaIngreso={
+              profile && profile.data_user ? profile.data_user.fecha_ingreso : ""
+            }
+            activo={profile && profile.data_user ? profile.data_user.activo : 0}
+            onEdit={handleEdit}  // Pasa la función para activar el modo edición
           />
         </div>
 
         {/* Datos Personales */}
         <div className="flex flex-col w-3/4 bg-white rounded-2xl p-6 gap-4 shadow-md">
           <h1 className="text-xl font-semibold">Datos Personales</h1>
-          <DefaultTabs profileData={profile} />
+          {/* Se pasan profileData e isEditing a DefaultTabs */}
+          <DefaultTabs profileData={profile} isEditing={isEditing} />
+          {/* Botón Guardar habilitado sólo en modo edición */}  
+          <div className="flex justify-end mt-4">
+            <Button
+              variant="contained"
+              className="w-[120px] text-xl bg-[#183466] text-white rounded-md shadow-md hover:bg-[#152B52] px-4 py-1 transition duration-300"
+              disabled={!isEditing}
+            >
+              Guardar
+            </Button>
+          </div>
         </div>
       </div>
 

@@ -3,7 +3,7 @@ const apiIp = import.meta.env.VITE_API;
 // Configuración de la URL base para la API de perfiles
 const apiProfileData = axios.create({
   baseURL: `http://${apiIp}/api/perfil`,
-  timeout: 10000,
+  timeout: 60000,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -12,7 +12,7 @@ const apiProfileData = axios.create({
 // Interceptor para agregar el token de autenticación a las solicitudes
 apiProfileData.interceptors.request.use(
   config => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem(import.meta.env.VITE_AUTH_TOKEN_KEY);
     if (token) {
       config.headers['Authorization'] = `Bearer ${token}`;
     } else {

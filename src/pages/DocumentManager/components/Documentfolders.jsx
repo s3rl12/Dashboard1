@@ -7,50 +7,63 @@ import CreateFolder from '../../DocumentManager/components/CreateFolder';
 
 const Documentfolders = () => {
     const [folders, setFolders] = useState([]);
+    const [allFiles, setAllFiles] = useState([]);
     const [dataGridRows, setDataGridRows] = useState([]);
+    const [loadingFolders, setLoadingFolders] = useState(true);
+    const [loadingFiles, setLoadingFiles] = useState(false);
 
     // Fetch folders on mount
     useEffect(() => {
         const fetchFolders = async () => {
+            setLoadingFolders(true);
             try {
                 const response = await folderService.getFolder();
                 if (response.data && Array.isArray(response.data)) {
                     setFolders(response.data);
-                    console.log("Datos registrados:", response.data);
                 } else {
-                    console.error('Invalid folder structure:', response);
                     setFolders([]);
                 }
-            } catch (error) {
-                console.error('Error fetching folders:', error);
-                setFolders([]);
+            } finally {
+                setLoadingFolders(false);
             }
         };
         fetchFolders();
     }, []);
 
-    // Handle folder click
-    const handleCardClick = async (folderCode) => {
-        try {
-            const response = await fileFolderService.getFiles();
-            // Filtramos por folderCode y luego mapeamos los archivos correctamente
-            const mappedFiles = response.data
-                .filter(folder => folder.codigo_carp === folderCode) // Filtramos las carpetas por el código
-                .flatMap(folder => folder.archivos.map(file => ({
-                    id: file.id,
-                    nombre_carp: folder.nombre_carp, // Añadimos el nombre de la carpeta
-                    file_name: file.nombre, // Accedemos correctamente a la propiedad 'nombre'
-                    file_type: file.tipo_arch, // Accedemos correctamente a la propiedad 'tipo_arch'
-                    created_at: new Date(file.created_at).toLocaleDateString(), // Formateamos la fecha de creación
-                })));
-            console.log("Datos capturados:", mappedFiles);
-            setDataGridRows(mappedFiles);
-        } catch (error) {
-            console.error('Error fetching files:', error);
-            setDataGridRows([]);
-        }
+    // Fetch all files on mount (for global view)
+    useEffect(() => {
+        const fetchFiles = async () => {
+            setLoadingFiles(true);
+            try {
+                const response = await fileFolderService.getFiles();
+                // Mapear todos los archivos, incluyendo el código de la carpeta para poder filtrar después
+                const allMappedFiles = response.data.flatMap(folder => 
+                    folder.archivos.map(file => ({
+                        id: file.id,
+                        folderCode: folder.codigo_carp,  // Se agrega el código de la carpeta
+                        nombre_carp: folder.nombre_carp,
+                        file_name: file.nombre,
+                        file_type: file.tipo_arch,
+                        created_at: new Date(file.created_at).toLocaleDateString(),
+                    }))
+                );
+                setAllFiles(allMappedFiles);
+                setDataGridRows(allMappedFiles);
+            } catch (error) {
+                console.error('Error al obtener los archivos:', error);
+            } finally {
+                setLoadingFiles(false);
+            }
+        };
+        fetchFiles();
+    }, []);
+
+    // Handle folder click: filtrar los archivos globales según el código de la carpeta
+    const handleCardClick = (folderCode) => {
+        // Se filtran los archivos del estado global 'allFiles'
+        const filteredFiles = allFiles.filter(file => file.folderCode === folderCode);
+        setDataGridRows(filteredFiles);
     };
-    
 
     return (
         <div className="flex flex-col w-full gap-3 text-start font-teko">
@@ -70,8 +83,9 @@ const Documentfolders = () => {
             </div>
 
             <div className="flex rounded-xl bg-white p-6 shadow-lg">
-                <DocumentInformationDataGrid 
+                <DocumentInformationDataGrid
                     rows={dataGridRows}
+                    loading={loadingFiles}
                     columns={[
                         { field: 'id', headerName: 'ID', width: 90 },
                         { field: 'file_name', headerName: 'File Name', flex: 1 },

@@ -7,9 +7,13 @@ import QuickFilter from '../../../components/DocumentDataGrid/components/QuickFi
 import ExportDocument from '../../../components/DocumentDataGrid/components/ExportDocument';
 import FileUpload from '../../../components/DocumentDataGrid/components/FileUpload';
 
-export default function DocumentInformationDataGrid({ rows }) {
+export default function DocumentInformationDataGrid({ rows, loading }) {
     const [displayedRows, setDisplayedRows] = useState(rows);
-
+    const CustomNoRowsOverlay = () => (
+        <div className="flex items-center justify-center h-full">
+            No se encontraron documentos
+        </div>
+    );
     useEffect(() => {
         setDisplayedRows(rows);
     }, [rows]);
@@ -85,6 +89,24 @@ export default function DocumentInformationDataGrid({ rows }) {
                     disableColumnSelector
                     disableDensitySelector
                     disableColumnMenu
+                    loading={loading}
+                components={{
+                    NoRowsOverlay: CustomNoRowsOverlay,
+                }}
+                slotProps={{
+                    loadingOverlay: {
+                        variant: 'skeleton',
+                        noRowsVariant: 'skeleton',
+                    },
+                }}
+                sx={{
+                    '& .MuiDataGrid-skeletonContainer': {
+                        backgroundColor: '#f5f5f5',
+                    },
+                    '& .MuiDataGrid-skeletonCell': {
+                        backgroundColor: '#e0e0e0',
+                    }
+                }}
                 />
             </Box>
         </Box>
