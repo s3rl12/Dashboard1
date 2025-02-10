@@ -4,8 +4,8 @@ import UserIconTabs from "../../components/Tabs/UserIconTabs";
 
 const UserManagement = () => {
   return (
-    <div className="flex flex-col h-full w-full items-start p-5 gap-4 font-teko transition-all duration-300">
-      <h1 className="text-2xl font-medium">Gestión de usuarios - Usuarios</h1>
+    <div className="flex flex-col h-full w-full items-start p-5 gap-4 font-Quicksand transition-all duration-300">
+      <h1 className="text-xl font-bold">Gestión de usuarios - Usuarios</h1>
       <div className="flex flex-col h-full w-full">
         <UserGeneralInfo />
         <UserIconTabs />

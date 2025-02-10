@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import excelSVG from '../../../assets/icons/excel.svg';
 import * as XLSX from 'xlsx';
 import ImportAreasService from '../../../services/api/exportAreas-list/ImportAreasService';
@@ -42,6 +42,9 @@ const ImportBranch = () => {
     const [responseMessage, setResponseMessage] = useState(null);
     const [loading, setLoading] = useState(false);
 
+    // Ref para el input de archivo
+    const fileInputRef = useRef(null);
+
     const handleFileUpload = useCallback((event) => {
         const file = event.target.files[0];
         if (!file) return;
@@ -80,6 +83,10 @@ const ImportBranch = () => {
         setSelectedFile(null);
         setFilePreviewData(null);
         setResponseMessage(null);
+        // Reiniciamos el valor del input de archivo
+        if (fileInputRef.current) {
+            fileInputRef.current.value = "";
+        }
     };
 
     const handleSave = async () => {
@@ -112,7 +119,14 @@ const ImportBranch = () => {
                     <label className="flex flex-col items-center justify-center border rounded-xl bg-gray-100 hover:bg-gray-200 p-4 w-40 h-40 cursor-pointer">
                         <img src={excelSVG} alt="Excel Icon" className="w-12 h-12" />
                         <p className="font-teko text-base font-semibold mt-2">Subir archivo</p>
-                        <input type="file" accept=".xls,.xlsx" hidden onChange={handleFileUpload} />
+                        {/* Se asigna el ref al input */}
+                        <input 
+                            type="file" 
+                            accept=".xls,.xlsx" 
+                            hidden 
+                            onChange={handleFileUpload} 
+                            ref={fileInputRef} 
+                        />
                     </label>
                     {selectedFile && (
                         <div className="flex flex-col items-center mt-2">

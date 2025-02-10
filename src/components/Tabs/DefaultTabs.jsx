@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { AppBar, Box, Tabs, Tab } from "@mui/material";
-import UserData from "../../pages/UserProfile/components/UserData.JSX";
+import UserData from "../../pages/UserProfile/components/UserData.jsx";
 import UserDispatch from "../../pages/UserProfile/components/UserDispatch";
 import ResetUserPassord from "../../pages/UserProfile/components/ResetUserPassword";
 import "../../assets/styles/TabPanel.css";

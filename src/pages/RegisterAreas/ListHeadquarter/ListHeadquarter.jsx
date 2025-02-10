@@ -16,6 +16,7 @@ const ListHeadquarter = ({ onEditRow }) => {
 
   useEffect(() => {
     const fetchHeadquarters = async () => {
+      setLoading(true);
       try {
         const sedeData = await sedeService.getAllSedes();
         setHeadquarters(sedeData.data || []);

@@ -9,7 +9,7 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        khand: ["Khand", "sans-serif"],
+        Quicksand: ["Quicksand", "sans-serif"],
         teko: ["Teko", "sans-serif"],
       },
     },

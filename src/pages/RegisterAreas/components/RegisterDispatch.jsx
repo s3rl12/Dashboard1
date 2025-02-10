@@ -1,12 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Box, Typography, TextField, Button, FormControl, InputLabel, Select, MenuItem, CircularProgress } from '@mui/material';
 import RegisterAreasDataGrid from '../../../components/RegisterAreasDataGrid/RegisterAreasDataGrid';
 import ListDependencies from '../DependencyData/ListDependencies';
 import CreateDispatch from '../DispatchData/CreateDispatch';
 import ListDispatchData from '../DispatchData/ListDispatchData';
 import dispatchesService from '../../../services/api/dispatches-list/dispatchesService'; // Se asume que existe este servicio
+import OptionalAlert from '../../../components/alert/OptionalAlert'; // Importación de OptionalAlert
+import SimpleAlert from '../../../components/alert/SimpleAlert';
 
 const RegisterDispatch = () => {
+    // Se crea un ref para el contenedor del formulario
+    const formRef = useRef(null);
+
     // Configuración de columnas para la data grid (usada en ListDispatchData)
     const columnsConfig = [
         { field: 'nombre_despacho', headerName: 'Nombre despacho', flex: 1 },
@@ -44,6 +49,19 @@ const RegisterDispatch = () => {
         }));
     };
 
+    // Función para limpiar el formulario y salir del modo edición
+    const handleCancel = () => {
+        setDispatchData({
+            id: null,
+            code: '',
+            name: '',
+            phone: '',
+            ruc: '',
+            dependence: '',
+        });
+        setEditing(false);
+    };
+
     // Función para enviar el formulario (crear o actualizar despacho)
     const handleSubmit = async () => {
         try {
@@ -57,7 +75,7 @@ const RegisterDispatch = () => {
                 };
                 console.log('Payload de actualización:', payload);
                 await dispatchesService.updateDispatch(dispatchData.id, payload);
-                alert('Despacho actualizado exitosamente');
+                
             } else {
                 // Modo creación: se crea el despacho con el código ingresado
                 const payload = {
@@ -73,19 +91,22 @@ const RegisterDispatch = () => {
                 alert('Despacho creado exitosamente');
             }
             // Limpiar formulario y salir del modo edición
-            setDispatchData({
-                id: null,
-                code: '',
-                name: '',
-                phone: '',
-                ruc: '',
-                dependence: '',
-            });
-            setEditing(false);
+            handleCancel();
         } catch (error) {
             console.error('Error al guardar el despacho:', error);
             alert('Hubo un error al guardar el despacho');
         }
+    };
+
+    // Función que envuelve el guardado con confirmación usando OptionalAlert
+    const handleSubmitConfirm = async () => {
+        SimpleAlert({
+            title: "Confirmación de guardado",
+            text: "¿Estás seguro de que deseas guardar la información?",
+            onConfirm: async () => {
+                await handleSubmit();
+            },
+        });
     };
 
     // Callback para editar: se invoca desde el listado
@@ -99,6 +120,10 @@ const RegisterDispatch = () => {
             dependence: data.dependencia_fk?.id ? data.dependencia_fk.id : data.dependencia_fk,
         });
         setEditing(true);
+        // Realizamos el scroll suave hacia el formulario de edición
+        if (formRef.current) {
+            formRef.current.scrollIntoView({ behavior: 'smooth' });
+        }
     };
 
     // Callback para eliminar: se invoca desde el listado
@@ -115,8 +140,8 @@ const RegisterDispatch = () => {
 
     return (
         <Box className="flex flex-col w-full gap-6">
-            {/* Sección del formulario de registro/edición */}
-            <Box className="flex flex-col w-full bg-white rounded-2xl gap-4 shadow-md" sx={{ p: 5, boxShadow: 2 }}>
+            {/* Sección del formulario de registro/edición con el ref asignado */}
+            <Box ref={formRef} className="flex flex-col w-full bg-white rounded-2xl gap-4 shadow-md" sx={{ p: 5, boxShadow: 2 }}>
                 <Box className="flex items-start">
                     <Typography variant="h6" component="h1" fontWeight="semibold" fontFamily={'Teko, sans-serif'}>
                         {editing ? 'EDITAR DESPACHO' : 'REGISTRAR DESPACHO'}
@@ -191,10 +216,19 @@ const RegisterDispatch = () => {
                 </Box>
 
                 <Box className="flex justify-end gap-4 mt-6">
-                    <Button variant="outlined" sx={{ width: '120px', borderColor: '#183466', color: '#183466' }}>
+                    <Button
+                        variant="outlined"
+                        sx={{ width: '120px', borderColor: '#183466', color: '#183466' }}
+                        onClick={handleCancel}  // Se asigna la función handleCancel al botón Cancelar
+                    >
                         Cancelar
                     </Button>
-                    <Button variant="contained" color="primary" sx={{ width: '120px', backgroundColor: '#183466' }} onClick={handleSubmit}>
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        sx={{ width: '120px', backgroundColor: '#183466' }}
+                        onClick={handleSubmitConfirm}  // Se invoca handleSubmitConfirm para mostrar OptionalAlert
+                    >
                         Guardar
                     </Button>
                 </Box>

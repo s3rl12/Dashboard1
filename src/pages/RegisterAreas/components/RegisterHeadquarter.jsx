@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Box, Typography, TextField, Button } from '@mui/material';
 import InputLabel from '@mui/material/InputLabel';
 import FormControl from '@mui/material/FormControl';
@@ -8,6 +8,8 @@ import regionService from '../../../services/api/region-list/regionService';
 import createHeadquarter from '../../../pages/RegisterAreas/CreateHeadquarters/CreateHeadquarters';
 import sedeService from '../../../services/api/sede-list/sedeService'; // Servicio para actualizar sede
 import ListHeadquarter from '../../../pages/RegisterAreas/ListHeadquarter/ListHeadquarter';
+import OptionalAlert from '../../../components/alert/OptionalAlert'; // Importación de OptionalAlert
+import SimpleAlert from '../../../components/alert/SimpleAlert';
 
 const RegisterHeadquarter = () => {
   const [selectedRegion, setSelectedRegion] = useState('');
@@ -30,6 +32,9 @@ const RegisterHeadquarter = () => {
 
   // Estado para saber si se está en modo edición
   const [editing, setEditing] = useState(false);
+
+  // Se crea un ref para el contenedor del formulario
+  const formRef = useRef(null);
 
   const handleRegionChange = (event) => {
     setSelectedRegion(event.target.value);
@@ -81,6 +86,11 @@ const RegisterHeadquarter = () => {
     });
     setSelectedRegion(data.regional_fk?.id || '');
     setEditing(true);
+
+    // Realizamos el scroll suave hacia el formulario de edición
+    if (formRef.current) {
+      formRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
   };
 
   const handleSave = async () => {
@@ -104,7 +114,7 @@ const RegisterHeadquarter = () => {
 
         console.log('Payload de actualización:', payload);
         await sedeService.updateSede(headquarterData.id, payload);
-        alert('Sede actualizada con éxito');
+        
       } else {
         // Modo creación: se asigna "SC" para "cod_sede" y se mapean correctamente los campos
         const payload = {
@@ -124,27 +134,44 @@ const RegisterHeadquarter = () => {
       }
 
       // Limpiar campos y salir del modo edición
-      setHeadquarterData({
-        name: '',
-        phone: '',
-        ruc: '',
-        province: '',
-        distrito_fiscal: '',
-        postalCode: '',
-        id: null,
-      });
-      setOriginalHeadquarterData(null);
-      setSelectedRegion('');
-      setEditing(false);
+      handleCancel();
     } catch (error) {
       alert('Hubo un error al guardar la sede');
       console.error('Error en handleSave:', error);
     }
   };
 
+  // Función para limpiar los campos del formulario y salir del modo edición
+  const handleCancel = () => {
+    setHeadquarterData({
+      name: '',
+      phone: '',
+      ruc: '',
+      province: '',
+      distrito_fiscal: '',
+      postalCode: '',
+      id: null,
+    });
+    setOriginalHeadquarterData(null);
+    setSelectedRegion('');
+    setEditing(false);
+  };
+
+  // Función que envuelve el guardado con confirmación usando OptionalAlert
+  const handleSaveConfirm = async () => {
+    SimpleAlert({
+      title: "Confirmación de guardado",
+      text: "¿Estás seguro de que deseas guardar la información?",
+      onConfirm: async () => {
+        await handleSave();
+      },
+    });
+  };
+
   return (
     <Box className="flex flex-col w-full gap-6">
-      <Box className="flex flex-col w-full bg-white rounded-2xl gap-4" sx={{ p: 5, boxShadow: 2 }}>
+      {/* Se asigna el ref al contenedor del formulario */}
+      <Box ref={formRef} className="flex flex-col w-full bg-white rounded-2xl gap-4" sx={{ p: 5, boxShadow: 2 }}>
         <Box className="flex items-start">
           <Typography variant="h6" component="h1" fontWeight="semibold" fontFamily={'Teko, sans-serif'}>
             {editing ? 'EDITAR SEDE' : 'REGISTRAR SEDE'}
@@ -240,10 +267,18 @@ const RegisterHeadquarter = () => {
         </Box>
 
         <Box className="flex justify-end gap-4 mt-6">
-          <Button variant="outlined" sx={{ width: '120px', borderColor: '#183466', color: '#183466' }}>
+          <Button
+            variant="outlined"
+            sx={{ width: '120px', borderColor: '#183466', color: '#183466' }}
+            onClick={handleCancel}  // Se asigna la función handleCancel
+          >
             Cancelar
           </Button>
-          <Button variant="contained" sx={{ width: '120px', backgroundColor: '#183466' }} onClick={handleSave}>
+          <Button
+            variant="contained"
+            sx={{ width: '120px', backgroundColor: '#183466' }}
+            onClick={handleSaveConfirm}  // Se invoca handleSaveConfirm para mostrar OptionalAlert
+          >
             Guardar
           </Button>
         </Box>

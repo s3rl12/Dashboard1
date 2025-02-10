@@ -17,9 +17,9 @@ import Alert from '@mui/material/Alert';
 import LoadingBackdrop from './components/LoadingBackdrop';
 import RecoverPassword from './components/recoverpassword';
 import LoginService from './services/api/login-list/LoginService';
-
-
 import { useAuth } from "./context/AuthContext"; // Importa el hook de autenticación
+import logoMP from './assets/icons/logoMP.svg';
+import fondoSVG from './assets/icons/fondo.svg';
 const apiIp = import.meta.env.VITE_API;
 function App() {
   const { login } = useAuth(); // Llamada al hook al inicio del componente
@@ -43,7 +43,7 @@ function App() {
     try {
       const credentials = { email, password };
       const response = await LoginService.login(credentials);
-      
+
       // Obtener datos del servicio
       const { token, data: userData, permisos } = response;
 
@@ -78,7 +78,7 @@ function App() {
       <div
         className="flex items-center justify-center h-screen"
         style={{
-          backgroundImage: 'url("../src/Img/fondoderecho.webp")',
+          backgroundImage: `url(${fondoSVG})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',
@@ -100,25 +100,25 @@ function App() {
         </div>
         <div className="flex flex-row bg-white rounded-3xl shadow-md w-5/6 h-5/6 mx-auto items-center justify-center">
           <div className="flex flex-col items-center rounded-l-2xl justify-center bg-[#152B52] w-1/2 h-full text-white px-8 py-16">
-            <h1 className="font-khand text-9xl font-semibold text-[#ACC8FA]">SIEF</h1>
-            <h3 className="font-teko text-2xl font-semibold mb-4 text-center">
+            <h1 className="font-Quicksand text-9xl font-bold text-[#ACC8FA]">SIEF</h1>
+            <h3 className="font-Quicksand text-lg font-semibold mb-4 text-center">
               Sistema de Información <br />Estadística Fiscal (SIEF)
             </h3>
-            <p className="font-teko text-center font-light leading-relaxed max-w-sm text-base">
+            <p className="font-Quicksand text-center font-light leading-relaxed max-w-sm text-sm">
               El Sistema de Información y Estadística Fiscal (SIEF) es una herramienta desarrollada para el análisis y
               seguimiento del desempeño en la fiscalía. Facilita la generación de reportes detallados y rankings que
               permiten evaluar el rendimiento de fiscales, despachos y dependencias.
             </p>
           </div>
 
-          <div className='flex flex-col items-center justify-center w-1/2 h-full rounded-r-2xl bg-white p-8' >
-            <div className="h-28 w-80 mb-4">
-              <img src="../src/Img/LOGO.webp" alt="" className="mx-auto" />
+          <div className='flex flex-col items-center justify-center w-1/2 h-full rounded-r-2xl bg-white p-8'>
+            <div className="h-28 w-80">
+              <img src={logoMP} alt="Logo MP" />
             </div>
             <div className="login-content flex flex-col items-center justify-center w-full">
               <form onSubmit={handleLogin} action="" method="get" className="w-full max-w-xs">
-                <h2 className="font-teko text-3xl font-medium text-center text-[#616161]">Iniciar sesión</h2>
-                <p className="font-teko text-base font-light text-center text-[#616161]">Por favor, ingrese sus credenciales correctamente para acceder al sistema.</p>
+                <h2 className="font-Quicksand text-2xl font-semibold text-center text-[#616161]">Iniciar sesión</h2>
+                <p className="font-Quicksand text-xs font-normal text-center text-[#616161]">Por favor, ingrese sus credenciales correctamente para acceder al sistema.</p>
 
                 <div className="flex items-center justify-center mb-2 p-2 rounded-2xl w-full">
                   <Box
@@ -201,7 +201,7 @@ function App() {
                             </IconButton>
                           </InputAdornment>
                         }
-                        label="Contraseña"
+                        label="Contraseña*."
                         sx={{
                           borderRadius: '10px',
                           '& fieldset': { borderRadius: '10px', borderColor: '#A4A4A4' },
@@ -241,6 +241,7 @@ function App() {
           </div>
 
         </div>
+
       </div>
     </>
   );

@@ -62,10 +62,10 @@ export default function VerticalTabs() {
         <PDFCLFunction />
       </TabPanel>
       <TabPanel value={value} index={1}>
-        RAAAAAAAAAAAAAAAAAAAA
+        Reporte incidencia de delitos
       </TabPanel>
       <TabPanel value={value} index={2}>
-        DAAAAAAAAAAAAAAAAAAA
+        reporte control de plazos
       </TabPanel>
     </Box>
   );

@@ -14,6 +14,7 @@ export default function RegisterAreasDataGrid({
   columnsConfig = [],
   title = "Default Title",
   rows = [],
+  loading,
   onDeleteRow,
   onEditRow,  // Nueva prop para editar
 }) {
@@ -120,6 +121,13 @@ export default function RegisterAreasDataGrid({
           disableDensitySelector
           disableColumnMenu
           pageSize={5}
+          loading={loading} // Se pasa la propiedad loading a DataGrid
+          slotProps={{
+            loadingOverlay: {
+              variant: 'skeleton',
+              noRowsVariant: 'skeleton',
+            },
+          }}
           sx={{
             height: '100%',
             '& .MuiDataGrid-footer': {

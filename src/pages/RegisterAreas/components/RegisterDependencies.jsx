@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Box, Typography, TextField, Button } from '@mui/material';
 import { InputLabel, FormControl, Select, MenuItem } from '@mui/material';
 import RegisterAreasDataGrid from '../../../components/RegisterAreasDataGrid/RegisterAreasDataGrid';
@@ -6,8 +6,12 @@ import sedeService from '../../../services/api/sede-list/sedeService';
 import CreateDependency from '../DependencyData/CreateDependency';
 import dependencyService from '../../../services/api/dependency-list/dependencyService'; // Servicio para dependencias
 import ListDependencyData from '../DependencyData/ListDependencyData';
+import OptionalAlert from '../../../components/alert/OptionalAlert'; // Importación de OptionalAlert
+import SimpleAlert from '../../../components/alert/SimpleAlert';
 
 const RegisterDependencies = () => {
+    const formRef = useRef(null); // Ref para el contenedor del formulario
+
     const columnsConfig = [
         { field: 'fiscalia', headerName: 'Dependencia', flex: 1 },
         { field: 'nombre_fiscalia', headerName: 'Nombre fiscalía', flex: 1 },
@@ -40,6 +44,21 @@ const RegisterDependencies = () => {
 
     const handleHeadquarterChange = (event) => {
         setSelectedHeadquarter(event.target.value);
+    };
+
+    // Función para limpiar el formulario y salir del modo edición
+    const handleCancel = () => {
+        setDependencyData({
+            id: null,
+            fiscalia: '',
+            tipoFiscalia: '',
+            nombreFiscalia: '',
+            ruc: '',
+            telefono: '',
+        });
+        setOriginalDependencyData(null);
+        setSelectedHeadquarter('');
+        setEditing(false);
     };
 
     // Cargar las sedes disponibles
@@ -82,7 +101,7 @@ const RegisterDependencies = () => {
             console.log('Payload de actualización:', payload);
             try {
                 await dependencyService.updateDependency(dependencyData.id, payload);
-                alert('Dependencia actualizada exitosamente.');
+                
             } catch (error) {
                 console.error('Error al actualizar la dependencia:', error);
                 alert('Ocurrió un error al actualizar la dependencia. Intente nuevamente.');
@@ -112,17 +131,18 @@ const RegisterDependencies = () => {
         }
 
         // Limpiar el formulario y salir del modo edición
-        setDependencyData({
-            id: null,
-            fiscalia: '',
-            tipoFiscalia: '',
-            nombreFiscalia: '',
-            ruc: '',
-            telefono: '',
+        handleCancel();
+    };
+
+    // Función que envuelve el guardado con confirmación usando OptionalAlert
+    const handleSaveConfirm = async () => {
+        SimpleAlert({
+            title: "Confirmación de guardado",
+            text: "¿Estás seguro de que deseas guardar la información?",
+            onConfirm: async () => {
+                await handleSave();
+            },
         });
-        setOriginalDependencyData(null);
-        setSelectedHeadquarter('');
-        setEditing(false);
     };
 
     // Callback para editar: se invoca cuando se hace clic en "Edit" en el listado.
@@ -141,6 +161,11 @@ const RegisterDependencies = () => {
         // Suponiendo que el objeto "data" tiene "sede_fk" y que éste es un id o un objeto con id
         setSelectedHeadquarter(data.sede_fk?.id ? data.sede_fk.id : data.sede_fk);
         setEditing(true);
+        
+        // Realizamos el scroll suave hacia el formulario de edición
+        if (formRef.current) {
+            formRef.current.scrollIntoView({ behavior: 'smooth' });
+        }
     };
 
     // Callback para eliminar: se invoca desde el listado.
@@ -158,7 +183,8 @@ const RegisterDependencies = () => {
 
     return (
         <Box className="flex flex-col w-full gap-6">
-            <Box className="flex flex-col w-full bg-white rounded-2xl gap-4 shadow-md" sx={{ p: 5, boxShadow: 2 }}>
+            {/* Se asigna el ref al contenedor del formulario */}
+            <Box ref={formRef} className="flex flex-col w-full bg-white rounded-2xl gap-4 shadow-md" sx={{ p: 5, boxShadow: 2 }}>
                 <Box className="flex items-start">
                     <Typography variant="h6" component="h1" fontWeight="semibold" fontFamily={'Teko, sans-serif'}>
                         {editing ? 'EDITAR DEPENDENCIA' : 'REGISTRAR DEPENDENCIAS'}
@@ -241,10 +267,18 @@ const RegisterDependencies = () => {
                 </Box>
 
                 <Box className="flex justify-end gap-4 mt-6">
-                    <Button variant="outlined" sx={{ width: '120px', borderColor: '#183466', color: '#183466' }}>
+                    <Button
+                        variant="outlined"
+                        sx={{ width: '120px', borderColor: '#183466', color: '#183466' }}
+                        onClick={handleCancel}  // Se asigna la función handleCancel
+                    >
                         Cancelar
                     </Button>
-                    <Button variant="contained" sx={{ width: '120px', backgroundColor: '#183466' }} onClick={handleSave}>
+                    <Button
+                        variant="contained"
+                        sx={{ width: '120px', backgroundColor: '#183466' }}
+                        onClick={handleSaveConfirm}  // Se invoca handleSaveConfirm para mostrar OptionalAlert
+                    >
                         Guardar
                     </Button>
                 </Box>
