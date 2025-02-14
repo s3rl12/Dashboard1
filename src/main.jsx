@@ -7,7 +7,7 @@ import ControlPanel from './pages/ControlPanel/ControlPanel';
 import PrivateRoute from './routes/PrivateRoute';    // Ruta protegida
 import { AuthProvider } from './context/AuthContext'; // Ajusta la ruta según tu estructura
 import './index.css'
-
+import './font.css'
 
 
 

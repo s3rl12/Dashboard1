@@ -13,7 +13,7 @@ import {
   Stack,
   Alert,
 } from '@mui/material';
-import { Visibility, VisibilityOff, Send as SendIcon } from '@mui/icons-material';
+import { Visibility, VisibilityOff, Send as SendIcon, BorderAll } from '@mui/icons-material';
 import LoadingBackdrop from './components/LoadingBackdrop';
 import RecoverPassword from './components/recoverpassword';
 import LoginService from './services/api/login-list/LoginService';
@@ -21,7 +21,7 @@ import { useAuth } from "./context/AuthContext";
 import logoMP from './assets/icons/logoMP.svg';
 import fondoSVG from './assets/icons/fondo.svg';
 
-const apiIp = import.meta.env.VITE_API;
+
 const version = import.meta.env.VITE_VERSION || '1.1.1';
 
 // Estilos comunes para los contenedores de inputs y para los TextFields
@@ -31,21 +31,12 @@ const commonBoxSx = {
   display: 'flex',
   alignItems: 'center',
   width: '100%',
-  backgroundColor: 'white',
-  fontFamily: 'Inter, sans-serif',
-  fontWeight: '500',
-  fontSize: '12px',
   color: '#616161',
 };
 
 const textFieldSx = {
   borderRadius: '10px',
-  '& fieldset': { borderRadius: '10px', borderColor: '#A4A4A4' },
-  '& .MuiInputLabel-root': { color: '#616161', fontFamily: 'Inter, sans-serif', fontWeight: '500', fontSize: '12px' },
-  '& .MuiOutlinedInput-notchedOutline': { borderColor: '#A4A4A4' },
-  '& .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#A4A4A4' },
-  '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#A4A4A4' },
-  '& .MuiInputBase-input': { fontFamily: 'Inter, sans-serif', fontWeight: '500', fontSize: '12px', color: '#616161' },
+  '& fieldset': { borderRadius: '10px', borderColor: '#A4A4A4' }
 };
 
 function App() {
@@ -111,9 +102,9 @@ function App() {
             </p>
           </div>
           {/* Panel derecho con formulario */}
-          <div className="relative flex flex-col items-center justify-center w-1/2 h-full rounded-r-2xl bg-white p-8">
-            <div className="h-28 w-80">
-              <img src={logoMP} alt="Logo MP" />
+          <div className="relative flex flex-col items-center justify-center w-1/2 h-full rounded-r-2xl bg-white">
+            <div className="h-30 w-60">
+              <img src={logoMP} alt="Logo MP"/>
             </div>
             <form onSubmit={handleLogin} className="w-full max-w-xs">
               <h2 className="font-Quicksand text-2xl font-semibold text-center text-[#616161]">Iniciar sesión</h2>
@@ -137,7 +128,7 @@ function App() {
                 <FormControl fullWidth variant="outlined">
                   <InputLabel
                     size="small"
-                    sx={{ color: '#616161', fontFamily: 'Inter, sans-serif', fontWeight: '500', fontSize: '12px' }}
+                    sx={{fontWeight: '500' }}
                   >
                     Contraseña*.
                   </InputLabel>
@@ -153,7 +144,7 @@ function App() {
                           onClick={togglePasswordVisibility}
                           onMouseDown={handleMouseDownPassword}
                           edge="end"
-                          sx={{ fontSize: '20px' }}
+                          
                         >
                           {showPassword ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
                         </IconButton>
@@ -192,6 +183,7 @@ function App() {
             </form>
             {/* Versión del sistema en la esquina inferior derecha */}
             <p className="absolute bottom-4 right-4 text-xs text-gray-500">Versión {version}</p>
+            
           </div>
         </div>
       </div>

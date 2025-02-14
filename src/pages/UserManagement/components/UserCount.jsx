@@ -6,11 +6,11 @@ const UserTotal = ({ userSituation, totalUsers }) => {
   return (
     <div className="flex flex-row items-center justify-between gap-4 p-4 rounded-lg shadow-md bg-white w-full font-teko">
       <div className="flex flex-col text-start">
-        <p className="text-xl text-gray-600">{userSituation}</p>
-        <h2 className="text-lg font-semibold">{totalUsers}</h2>
+        <p className="text-base font-medium text-gray-600">{userSituation}</p>
+        <h2 className="text-base font-semibold">{totalUsers}</h2>
       </div>
       {/* Ícono */}
-      <img src={contadorSVG} alt="contador" className="w-15 h-15" />
+      <img src={contadorSVG} alt="contador" className="w-14 h-14" />
     </div>
   );
 };

@@ -38,7 +38,7 @@ export default function TabsIcon() {
                                 fontFamily: 'Teko, sans-serif',  // Font Teko
                             }}
                             icon={<img src={listaSVG} alt="Lista de usuarios" className="w-20 h-20 mx-auto" />}
-                            label={<p className="text-lg font-semibold">LISTA DE USUARIOS</p>}
+                            label={<p className="text-sm font-bold">LISTA DE USUARIOS</p>}
                             value="1"
                         />
                         <Tab
@@ -54,7 +54,7 @@ export default function TabsIcon() {
                                 fontFamily: 'Teko, sans-serif',  // Font Teko
                             }}
                             icon={<img src={usuarioSVG} alt="Crear usuario" className="w-20 h-20 mx-auto" />}
-                            label={<p className="text-lg font-semibold">CREAR USUARIO</p>}
+                            label={<p className="text-sm font-bold">CREAR USUARIO</p>}
                             value="2"
                         />
                         <Tab
@@ -69,7 +69,7 @@ export default function TabsIcon() {
                                 fontFamily: 'Teko, sans-serif',  // Font Teko
                             }}
                             icon={<img src={importarSVG} alt="Importar usuarios" className="w-20 h-20 mx-auto" />}
-                            label={<p className="text-lg font-semibold">IMPORTAR USUARIOS</p>}
+                            label={<p className="text-sm font-bold">IMPORTAR USUARIOS</p>}
                             value="3"
                         />
                     </TabList>
