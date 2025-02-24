@@ -66,10 +66,10 @@ const Documentfolders = () => {
     };
 
     return (
-        <div className="flex flex-col w-full gap-3 text-start font-teko">
+        <div className="flex flex-col gap-3 text-start font-teko">
             <h2 className="text-xl font-medium">Mis Documentos</h2>
 
-            <div className="flex flex-wrap gap-4 justify-start">
+            <div className="flex flex-wrap gap-3 justify-start">
                 {folders.map((folder) => (
                     <DocumentCard
                         key={folder.codigo_carp}
@@ -82,7 +82,7 @@ const Documentfolders = () => {
                 <CreateFolder />
             </div>
 
-            <div className="flex rounded-xl bg-white p-6 shadow-lg">
+            <div className="flex rounded-xl bg-white p-4 shadow-lg">
                 <DocumentInformationDataGrid
                     rows={dataGridRows}
                     loading={loadingFiles}

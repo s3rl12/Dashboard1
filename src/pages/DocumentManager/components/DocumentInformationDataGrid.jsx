@@ -70,10 +70,10 @@ export default function DocumentInformationDataGrid({ rows, loading }) {
     ], []);
 
     return (
-        <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%' }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 1, marginBottom: 2 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%'}}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', marginBottom: 2 }}>
                 <QuickFilter onChange={(value) => handleFilterChange(value)} />
-                <Box sx={{ display: 'flex', gap: 2 }}>
+                <Box sx={{ display: 'flex', gap: 1 }}>
                     <ExportDocument onExport={handleExport} />
                     <FileUpload />
                 </Box>
