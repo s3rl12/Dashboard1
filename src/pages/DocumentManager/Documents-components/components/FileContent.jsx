@@ -1,4 +1,3 @@
-// FileContent.jsx
 import React, { useMemo, useState } from "react";
 import {
   flexRender,
@@ -15,14 +14,11 @@ import {
   TableHeaderCell,
   TableRow,
 } from "@tremor/react";
+import { IconTrash, IconPencil, IconFileZip } from "@tabler/icons-react";
 import {
-  RiDeleteBin7Line,
-  RiPencilLine,
-  RiFileLine,
   RiArrowLeftSLine,
   RiArrowRightSLine,
 } from "@remixicon/react";
-import { IconFileZip, IconTrash, IconEye, IconPencil } from "@tabler/icons-react";
 
 // Ajusta la ruta a tu Drawer
 import {
@@ -46,94 +42,36 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(" ");
 }
 
-export default function FileContent() {
-  const [tableData, setTableData] = useState([
-    {
-      workspace: "sales_by_day_api",
-      owner: "John Doe",
-      status: "aprobado",
-      lastEdited: "23/09/2023 13:00",
-    },
-    {
-      workspace: "marketing_campaign",
-      owner: "Jane Smith",
-      status: "editado",
-      lastEdited: "22/09/2023 10:45",
-    },
-    {
-      workspace: "sales_campaign",
-      owner: "Jane Smith",
-      status: "eliminado",
-      lastEdited: "22/09/2023 10:45",
-    },
-  ]);
+export default function FileContent({ archivos = [] }) {
+  // Mantenemos el array de archivos en un estado local (para simular cambios: eliminar, etc.)
+  const [fileData, setFileData] = useState(archivos);
 
+  // Control del Drawer
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [selectedRow, setSelectedRow] = useState(null);
+  const [selectedFile, setSelectedFile] = useState(null);
 
-  // Renderiza el badge del estado
-  function renderStatusBadge(statusValue) {
-    let colorClasses = "";
-    let label = statusValue;
-
-    switch (statusValue) {
-      case "aprobado":
-        colorClasses = "text-green-700 bg-green-50 border border-green-600/20";
-        label = "Aprobado";
-        break;
-      case "editado":
-        colorClasses = "text-orange-700 bg-orange-50 border border-orange-600/20";
-        label = "Editado";
-        break;
-      case "eliminado":
-        colorClasses = "text-red-700 bg-red-50 border border-red-600/20";
-        label = "Eliminado";
-        break;
-      default:
-        colorClasses = "text-gray-700 bg-gray-50 border border-gray-300/20";
-        break;
-    }
-
-    return (
-      <span
-        className={classNames(
-          "inline-flex items-center px-2 py-1 text-sm font-medium rounded-md",
-          colorClasses
-        )}
-      >
-        {label}
-      </span>
-    );
-  }
-
-  // Aquí es donde invocamos OptionalAlert
-  const handleDelete = (rowData) => {
+  // Para “eliminar” un archivo, simulamos la acción con OptionalAlert
+  const handleDelete = (file) => {
     OptionalAlert({
       title: "¿Estás seguro?",
       text: "¡No podrás revertir esto!",
       onConfirm: async () => {
-        // Simulamos un proceso asíncrono para que se vea el “Procesando...”
-        // (en tu caso podrías usar un await a tu API de borrado real)
-        await new Promise((resolve) => setTimeout(resolve, 1500));
+        // Simulamos proceso asíncrono:
+        await new Promise((resolve) => setTimeout(resolve, 1000));
 
-        // Marcamos como "eliminado"
-        setTableData((prev) =>
-          prev.map((item) =>
-            item.workspace === rowData.workspace
-              ? { ...item, status: "eliminado" }
-              : item
-          )
-        );
+        // Removemos el archivo del state local
+        setFileData((prev) => prev.filter((f) => f.id !== file.id));
       },
     });
   };
 
+  // Columnas de la tabla (se elimina la columna "Tipo", y se formatea la fecha)
   const columns = useMemo(
     () => [
       {
         header: "Nombre",
-        accessorKey: "workspace",
-        enableSorting: true,
+        accessorKey: "nombre",
+        enableSorting: false,
         meta: { align: "text-left" },
         cell: ({ getValue }) => (
           <div className="inline-flex items-center gap-2">
@@ -143,50 +81,55 @@ export default function FileContent() {
         ),
       },
       {
-        header: "Usuario",
-        accessorKey: "owner",
-        enableSorting: true,
-        meta: { align: "text-left" },
-      },
-      {
-        header: "Estado",
-        accessorKey: "status",
+        header: "Tamaño",
+        accessorKey: "peso_arch",
         enableSorting: false,
         meta: { align: "text-left" },
-        cell: ({ getValue }) => renderStatusBadge(getValue()),
       },
       {
         header: "Fecha de creación",
-        accessorKey: "lastEdited",
+        accessorKey: "created_at",
         enableSorting: false,
         meta: { align: "text-right" },
+        // Formateamos la fecha en "yyyy-mm-dd"
+        cell: ({ getValue }) => {
+          const rawDate = getValue() || ""; // p.ej. "2025-02-18T15:34:11.000000Z"
+          if (!rawDate) return ""; // Por si no viene fecha
+
+          const dateObj = new Date(rawDate);
+          // Si es inválida, podrías devolver un texto
+          if (isNaN(dateObj.getTime())) return "Fecha inválida";
+
+          const yyyy = dateObj.getFullYear();
+          const mm = String(dateObj.getMonth() + 1).padStart(2, "0");
+          const dd = String(dateObj.getDate()).padStart(2, "0");
+          return `${yyyy}-${mm}-${dd}`;
+        },
       },
       {
         header: "Acciones",
         id: "actions",
         meta: { align: "text-right" },
         cell: ({ row }) => {
-          const rowData = row.original;
-          const isDisabled = rowData.status === "eliminado";
-
+          const fileRow = row.original; // { id, nombre, peso_arch, ... }
           return (
             <div className="inline-flex items-center space-x-1">
+              {/* Botón Editar (Drawer) */}
               <button
                 type="button"
-                className="inline-flex items-center rounded-md px-2 py-1.5 text-gray-600 ring-1 ring-inset ring-gray-200 hover:bg-gray-100 disabled:opacity-50"
+                className="inline-flex items-center rounded-md px-2 py-1.5 text-gray-600 ring-1 ring-inset ring-gray-200 hover:bg-gray-100"
                 onClick={() => {
-                  setSelectedRow(rowData);
+                  setSelectedFile(fileRow);
                   setIsDrawerOpen(true);
                 }}
-                disabled={isDisabled}
               >
                 <IconPencil className="size-4" aria-hidden />
               </button>
+              {/* Botón Eliminar (OptionalAlert) */}
               <button
                 type="button"
-                className="inline-flex items-center rounded-md px-2 py-1.5 text-gray-600 ring-1 ring-inset ring-gray-200 hover:bg-gray-100 disabled:opacity-50"
-                onClick={() => handleDelete(rowData)}
-                disabled={isDisabled}
+                className="inline-flex items-center rounded-md px-2 py-1.5 text-gray-600 ring-1 ring-inset ring-gray-200 hover:bg-gray-100"
+                onClick={() => handleDelete(fileRow)}
               >
                 <IconTrash className="size-4" aria-hidden />
               </button>
@@ -198,21 +141,22 @@ export default function FileContent() {
     []
   );
 
+  // Configuramos la tabla con React Table
   const table = useReactTable({
-    data: tableData,
+    data: fileData, // la data local
     columns,
-    enableRowSelection: false,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     initialState: {
       pagination: {
         pageIndex: 0,
-        pageSize: 3,
+        pageSize: 3, // si quieres mostrar 5 archivos por página
       },
     },
   });
 
+  // Indices para "Showing X - Y of Z"
   const totalRows = table.getFilteredRowModel().rows.length;
   const pageIndex = table.getState().pagination.pageIndex;
   const pageSize = table.getState().pagination.pageSize;
@@ -220,6 +164,7 @@ export default function FileContent() {
   const endIndex = Math.min(startIndex + pageSize - 1, totalRows);
 
   const handleSave = () => {
+    // Lógica al guardar en el Drawer
     setIsDrawerOpen(false);
   };
 
@@ -229,10 +174,10 @@ export default function FileContent() {
         {/* Sección izquierda: Título y texto */}
         <div className="flex flex-col items-start space-y-2">
           <h4 className="font-semibold text-tremor-content-strong dark:text-dark-tremor-content-strong">
-            Documentos
+            Archivos
           </h4>
           <p className="text-tremor-default text-tremor-content dark:text-dark-tremor-content">
-            Listado de documentos con estados y acciones
+            Lista de archivos de la carpeta
           </p>
         </div>
 
@@ -250,7 +195,10 @@ export default function FileContent() {
                       key={header.id}
                       className={classNames(header.column.columnDef.meta.align)}
                     >
-                      {flexRender(header.column.columnDef.header, header.getContext())}
+                      {flexRender(
+                        header.column.columnDef.header,
+                        header.getContext()
+                      )}
                     </TableHeaderCell>
                   ))}
                 </TableRow>
@@ -266,7 +214,10 @@ export default function FileContent() {
                   {row.getVisibleCells().map((cell) => (
                     <TableCell
                       key={cell.id}
-                      className={classNames(cell.column.columnDef.meta.align, "relative")}
+                      className={classNames(
+                        cell.column.columnDef.meta.align,
+                        "relative"
+                      )}
                     >
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
@@ -318,24 +269,24 @@ export default function FileContent() {
         </div>
       </div>
 
-      {/* Drawer para editar */}
+      {/* Drawer para editar un archivo */}
       <Drawer
         open={isDrawerOpen}
         onOpenChange={(open) => {
           if (!open) {
             setIsDrawerOpen(false);
-            setSelectedRow(null);
+            setSelectedFile(null);
           }
         }}
       >
         <DrawerContent className="sm:max-w-md">
           <DrawerHeader>
             <DrawerTitle>
-              {selectedRow?.workspace ?? "Editar documento"}
+              {selectedFile?.nombre ?? "Editar archivo"}
             </DrawerTitle>
             <DrawerDescription>
-              {selectedRow
-                ? `Usuario: ${selectedRow.owner} | Estado: ${selectedRow.status}`
+              {selectedFile
+                ? `Tamaño: ${selectedFile.peso_arch}`
                 : ""}
             </DrawerDescription>
           </DrawerHeader>

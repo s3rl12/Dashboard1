@@ -57,6 +57,7 @@ const navigation2 = [
     icon: IconUser,
     children: [
       { name: "Lista de usuarios", href: "/dashboard/usuarios" },
+      { name: "Usuarios", href: "/dashboard/Agentes" },
       { name: "Roles y permisos", href: "/dashboard/roles" },
       { name: "Historial de actividad", href: "/sales/insights" },
     ],
@@ -77,7 +78,7 @@ const navigation2 = [
     icon: IconFolder,
     children: [
       { name: "Lista de archivos", href: "/dashboard/archivos" },
-      { name: "Lista de fiscales", href: "/dashboard/documentos" },
+      { name: "Lista de reportes", href: "/dashboard/documentos" },
     ],
   },
 ];

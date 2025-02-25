@@ -1,49 +1,42 @@
-// Documents.jsx
+// Users.jsx
 import React, { useState } from "react";
-import { Callout } from "./Documents-components/Callout";
-import { TabNavigation, TabNavigationLink } from "./Documents-components/TabNavigation";
+
+// 1. Importamos el servicio que sube usuarios
+import importUserService from '../../services/api/import-user/importUserService';
+// (Ajusta la ruta según tu estructura)
+
+import { TabNavigation, TabNavigationLink } from "../../pages/DocumentManager/Documents-components/TabNavigation";
+import FileUpload from "../DocumentManager/Documents-components/components/FileUpload";
+
 import {
-  RiErrorWarningFill,
   RiExchange2Line,
   RiCustomerService2Fill,
 } from "@remixicon/react";
-import { IconFilePlus, IconFolderOpen } from "@tabler/icons-react";
-import FileUpload from "./Documents-components/components/FileUpload";
-import DocumentFolders from "./Documents-components/components/DocumentFolders";
-export default function Documents({ carpetasData }) {
-  // Estado local para saber cuál pestaña está activa
-  const [activeTab, setActiveTab] = useState("carpetas");
+import { IconUsersPlus, IconFilePlus } from "@tabler/icons-react";
+import ListUsers from "./components/ListUsers";
+
+export default function Users() {
+  const [activeTab, setActiveTab] = useState("Usuarios");
 
   return (
-    <div className="p-4 space-y-4">
-      {/* 1. Título */}
-      <h1 className="text-xl font-semibold">GESTOR DE DOCUMENTOS</h1>
+    <div className="p-2 space-y-4">
+      <h1 className="text-base font-semibold">GESTOR DE USUARIOS</h1>
 
-      {/* 2. Callout debajo del título */}
-      <Callout title="AWS Credit Alert" icon={RiErrorWarningFill}>
-        Warning: Your AWS credits are nearly depleted. Please review your usage and
-        consider adding more credits to avoid service interruptions.
-      </Callout>
-
-      {/* 3. TabNavigation debajo del Callout */}
       <TabNavigation>
         <TabNavigationLink
-          // Para la pestaña "carpetas"
           className="inline-flex gap-2"
-          // Evita la navegación real (href="#") y maneja el click
           href="#"
-          active={activeTab === "carpetas"}
+          active={activeTab === "Usuarios"}
           onClick={(e) => {
             e.preventDefault();
-            setActiveTab("carpetas");
+            setActiveTab("Usuarios");
           }}
         >
-          <IconFolderOpen className="size-4" aria-hidden="true" />
-          Carpetas
+          <IconUsersPlus className="size-4" aria-hidden="true" />
+          Usuarios
         </TabNavigationLink>
 
         <TabNavigationLink
-          // Para la pestaña "importar"
           className="inline-flex gap-2"
           href="#"
           active={activeTab === "importar"}
@@ -83,17 +76,21 @@ export default function Documents({ carpetasData }) {
         </TabNavigationLink>
       </TabNavigation>
 
-      {/* Contenido condicional según la pestaña activa */}
-      {activeTab === "carpetas" && (
+      {activeTab === "Usuarios" && (
         <div>
-          <DocumentFolders carpetasData={carpetasData} />
+          <ListUsers />
         </div>
       )}
 
       {activeTab === "importar" && (
         <div>
-          {/* Renderiza el FileUpload */}
-          <FileUpload />
+          {/*
+            2. Pasamos la función "importUserService.importUsers" 
+               como prop a FileUpload (ej. "onUploadFile" o "uploadService")
+          */}
+          <FileUpload 
+            uploadService={importUserService.importUsers}
+          />
         </div>
       )}
 

@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { IconFileZip, IconTrash, IconEye } from "@tabler/icons-react";
 import { Divider } from "@tremor/react";
-import * as XLSX from "xlsx"; // Para parsear Excel
+import * as XLSX from "xlsx";
 
 import {
   Select,
@@ -16,22 +16,17 @@ import { Button } from "@/components/dashboard/Button";
 import InputSearch from "./inputSearch";
 import { Filters } from "./FiltersUI";
 
-// Importamos el Dialog y sub-componentes
 import {
   Dialog,
-  DialogTrigger,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
   DialogFooter,
   DialogClose,
-} from '../../../../components/ui/Dialog';
+} from "../../../../components/ui/Dialog";
 
-// Importamos nuestro componente Preview
-import Preview from '../../../../components/preview-data/preview';
-
-// 1. Importa el hook useToast (opcional si usas Toast)
+import Preview from "../../../../components/preview-data/preview";
 import { useToast } from "../../../../lib/useToast";
 
 function classNames(...classes) {
@@ -45,16 +40,16 @@ const data = [
   { value: "milk", label: "🥛 Milk" },
 ];
 
-export default function FileUpload() {
-  // Estados de dropzone
+/**
+ * Componente FileUpload
+ * @param {Function} uploadService - Función para subir el archivo a la API (ej: importUserService.importUsers)
+ */
+export default function FileUpload({ uploadService }) {
   const [files, setFiles] = useState([]);
-  // Filtro
   const [selectedFilter, setSelectedFilter] = useState("recent");
 
-  // useToast para disparar toasts (opcional)
   const { toast } = useToast();
 
-  // useDropzone
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop: (acceptedFiles) => setFiles(acceptedFiles),
   });
@@ -65,7 +60,6 @@ export default function FileUpload() {
   const [select3, setSelect3] = useState("");
   const [select4, setSelect4] = useState("");
 
-  // Reset selects
   const resetAllSelects = () => {
     setSelect1("");
     setSelect2("");
@@ -73,15 +67,14 @@ export default function FileUpload() {
     setSelect4("");
   };
 
-  // --- Nuevo estado para previsualizar
+  // Vista previa
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [previewData, setPreviewData] = useState(null);
 
-  // Función para parsear el archivo con XLSX y abrir el dialog
+  // Manejo de la vista previa (parsear Excel con XLSX)
   const handlePreview = async (file) => {
     if (!file) return;
     try {
-      // 1. Leemos el archivo
       const reader = new FileReader();
       reader.onload = (e) => {
         const data = e.target.result;
@@ -89,10 +82,7 @@ export default function FileUpload() {
         const sheetName = workbook.SheetNames[0];
         const sheet = workbook.Sheets[sheetName];
         const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-
-        // 2. Guardamos en previewData
         setPreviewData(jsonData);
-        // 3. Abrimos el Dialog
         setIsPreviewOpen(true);
       };
       reader.readAsArrayBuffer(file);
@@ -106,14 +96,14 @@ export default function FileUpload() {
     }
   };
 
-  // Mapeo de archivos para mostrar en la UI
+  // Renderizamos la lista de archivos
   const filesList = files.map((file) => (
     <li
       key={file.path || file.name}
       className="relative rounded-tremor-default border border-tremor-border bg-tremor-background p-4 shadow-tremor-input dark:border-dark-tremor-border dark:bg-dark-tremor-background dark:shadow-dark-tremor-input"
     >
-      {/* Botón eliminar */}
       <div className="absolute right-2 top-1/2 flex -translate-y-1/2 gap-1">
+        {/* Botón eliminar */}
         <button
           type="button"
           className="rounded-tremor-small p-2 text-tremor-content-subtle hover:text-tremor-content dark:text-dark-tremor-content-subtle hover:dark:text-dark-tremor-content"
@@ -126,7 +116,6 @@ export default function FileUpload() {
         >
           <IconTrash className="size-5 shrink-0" aria-hidden />
         </button>
-
         {/* Botón ver (abre dialog) */}
         <button
           type="button"
@@ -137,8 +126,7 @@ export default function FileUpload() {
           <IconEye className="size-5 shrink-0" aria-hidden />
         </button>
       </div>
-
-      <div className="flex items-center space-x-3 pr-12"> {/* pr-12 para dar espacio a los botones */}
+      <div className="flex items-center space-x-3 pr-12">
         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-tremor-small bg-tremor-background-subtle dark:bg-dark-tremor-background-subtle">
           <IconFileZip
             className="size-5 text-tremor-content-emphasis dark:text-dark-tremor-content-emphasis"
@@ -157,7 +145,10 @@ export default function FileUpload() {
     </li>
   ));
 
-  // Función para manejar la subida al hacer clic en “Upload”
+  /**
+   * handleUpload:
+   * - Llamamos a la prop "uploadService" para subir el primer archivo (o todos).
+   */
   const handleUpload = async (e) => {
     e.preventDefault();
     if (!files.length) {
@@ -169,7 +160,7 @@ export default function FileUpload() {
       return;
     }
 
-    // Muestra toast de “loading” (opcional)
+    // Muestra toast de “loading”
     const loadingToast = toast?.({
       variant: "loading",
       title: "Uploading...",
@@ -178,13 +169,15 @@ export default function FileUpload() {
     });
 
     try {
-      // Simulamos la subida con un setTimeout
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      // 1. Llamamos a la función que viene por prop
+      //    Por ejemplo, subimos solo el primer archivo: files[0]
+      //    o subimos todos si la API lo soporta (depende de tu caso)
+      await uploadService(files[0]);
 
-      // Cierra el toast de loading
+      // 2. Cierra el toast de loading
       loadingToast?.dismiss();
 
-      // Muestra toast de success
+      // 3. Muestra toast de success
       toast?.({
         variant: "success",
         title: "File uploaded",
@@ -375,7 +368,6 @@ export default function FileUpload() {
             <DialogTitle>Preview of the file</DialogTitle>
             <DialogDescription>See the contents of your Excel file</DialogDescription>
           </DialogHeader>
-          {/* Previsualización con el componente <Preview data={previewData} /> */}
           <Preview data={previewData} />
           <DialogFooter>
             <DialogClose asChild>

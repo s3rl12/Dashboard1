@@ -9,7 +9,7 @@ import {
 import { IconFolderSymlink } from "@tabler/icons-react";
 import FileContent from "./FileContent"; // Ajusta la ruta a tu FileContent.jsx
 
-export default function DocumentFolders() {
+export default function DocumentFolders({ carpetasData = [] }) {
   return (
     <div className="mx-auto max-w-full">
       <h1 className="text-md font-semibold text-gray-900 dark:text-gray-900">
@@ -17,46 +17,22 @@ export default function DocumentFolders() {
       </h1>
 
       <Accordion type="multiple" className="mt-3">
-        {/* Folder A */}
-        <AccordionItem value="folder-a">
-          <AccordionTrigger>
-            <span className="flex items-center gap-2">
-              <IconFolderSymlink className="size-5 text-blue-500" />
-              Folder A
-            </span>
-          </AccordionTrigger>
-          <AccordionContent>
-            {/* Aquí se incluye el componente FileContent */}
-            <FileContent />
-          </AccordionContent>
-        </AccordionItem>
-
-        {/* Folder B */}
-        <AccordionItem value="folder-b">
-          <AccordionTrigger>
-            <span className="flex items-center gap-2">
-              <IconFolderSymlink className="size-5 text-blue-500" />
-              Folder B
-            </span>
-          </AccordionTrigger>
-          <AccordionContent>
-            
-            <FileContent />
-          </AccordionContent>
-        </AccordionItem>
-
-        {/* Folder C */}
-        <AccordionItem value="folder-c">
-          <AccordionTrigger>
-            <span className="flex items-center gap-2">
-              <IconFolderSymlink className="size-5 text-blue-500" />
-              Folder C
-            </span>
-          </AccordionTrigger>
-          <AccordionContent>
-            <FileContent />
-          </AccordionContent>
-        </AccordionItem>
+        {carpetasData.map((folder) => (
+          <AccordionItem
+            key={folder.id}
+            value={folder.codigo_carp} // algo único
+          >
+            <AccordionTrigger>
+              <span className="flex items-center gap-2">
+                <IconFolderSymlink className="size-5 text-blue-500" />
+                {folder.nombre_carp}
+              </span>
+            </AccordionTrigger>
+            <AccordionContent>
+              <FileContent archivos={folder.archivos} />
+            </AccordionContent>
+          </AccordionItem>
+        ))}
       </Accordion>
     </div>
   );

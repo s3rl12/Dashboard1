@@ -21,7 +21,8 @@ import { useAuth } from "./context/AuthContext";
 import logoMP from './assets/icons/logoMP.svg';
 import fondoSVG from './assets/icons/fondo.svg';
 
-
+import { useQueryClient } from '@tanstack/react-query'
+import { fetchCarpetasArchivos } from './hooks/useCarpetasArchivos'
 const version = import.meta.env.VITE_VERSION || '1.1.1';
 
 // Estilos comunes para los contenedores de inputs y para los TextFields
@@ -49,6 +50,8 @@ function App() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  const queryClient = useQueryClient();
+
   const togglePasswordVisibility = () => setShowPassword((prev) => !prev);
   const handleMouseDownPassword = (event) => event.preventDefault();
 
@@ -57,14 +60,24 @@ function App() {
     setLoading(true);
     setAlertVisible(false);
     try {
-      const { token, data: userData, permisos } = await LoginService.login({ email, password });
-      login({ user: { ...userData, permisos }, token });
-      navigate('/dashboard');
+      // 1. Hacemos login
+      const { token, data: userData, permisos } = await LoginService.login({ email, password })
+      // 2. Guardamos token/usuario en el AuthContext
+      login({ user: { ...userData, permisos }, token })
+
+      // 3. Justo después de loguear, hacemos prefetch de la query
+      await queryClient.prefetchQuery({
+        queryKey: ['carpetas-archivos'],
+        queryFn: fetchCarpetasArchivos,
+      })
+
+      // 4. Navegamos al Dashboard
+      navigate('/dashboard')
     } catch (error) {
-      setAlertVisible(true);
-      setTimeout(() => setAlertVisible(false), 5000);
+      setAlertVisible(true)
+      setTimeout(() => setAlertVisible(false), 5000)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
   };
 
