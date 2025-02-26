@@ -17,12 +17,24 @@ import {
 } from "@tremor/react";
 import { RiArrowLeftSLine, RiArrowRightSLine } from "@remixicon/react";
 import { IconUserCircle, IconTrash, IconPencil } from "@tabler/icons-react";
-
+import UserForm from "./UserForm";
+import { Button } from '../../../components/ui/Button';
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogClose,
+} from '../../../components/ui/Dialog';
 function classNames(...classes) {
   return classes.filter(Boolean).join(" ");
 }
 
 export default function ListUsers() {
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   // Datos estáticos de ejemplo
   const [usersData] = useState([
     {
@@ -148,9 +160,31 @@ export default function ListUsers() {
         <h4 className="font-semibold text-base text-tremor-content-strong dark:text-dark-tremor-content-strong">
           Lista de Usuarios
         </h4>
-        <p className="text-tremor-default text-sm text-tremor-content dark:text-dark-tremor-content">
+        <p className="text-tremor-default text-sm text-tremor-content dark:text-dark-tremor-content pb-1">
           Ejemplo de tabla con datos estáticos.
         </p>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogTrigger asChild>
+            <Button className="w-fit">Nuevo usuario</Button>
+          </DialogTrigger>
+
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Crear nuevo usuario</DialogTitle>
+              <DialogDescription>
+                Completa los campos para agregar un usuario.
+              </DialogDescription>
+            </DialogHeader>
+            <UserForm />
+            {/* Botones de acción */}
+            <DialogFooter>
+              <DialogClose asChild>
+                <Button variant="secondary">Cancelar</Button>
+              </DialogClose>
+              <Button type="button">Guardar</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* Contenedor de la tabla (lado derecho) */}

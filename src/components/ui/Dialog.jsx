@@ -41,7 +41,7 @@ const DialogContent = React.forwardRef(({ className, ...props }, ref) => {
             // Posiciona centrado
             "fixed left-1/2 top-1/2 z-50",
             // Tamaño máximo
-            "w-[95vw] max-w-3xl max-h-[90vh]",
+            "w-[95vw] max-w-7xl max-h-[90vh]",
             // Centra en pantalla
             "-translate-x-1/2 -translate-y-1/2",
             // Fondo blanco, sin dark

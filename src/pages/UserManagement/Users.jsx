@@ -88,7 +88,7 @@ export default function Users() {
             2. Pasamos la función "importUserService.importUsers" 
                como prop a FileUpload (ej. "onUploadFile" o "uploadService")
           */}
-          <FileUpload 
+          <FileUpload
             uploadService={importUserService.importUsers}
           />
         </div>

@@ -363,7 +363,7 @@ export default function FileUpload({ uploadService }) {
 
       {/* Dialog para vista previa */}
       <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
-        <DialogContent className="sm:max-w-3xl">
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>Preview of the file</DialogTitle>
             <DialogDescription>See the contents of your Excel file</DialogDescription>
