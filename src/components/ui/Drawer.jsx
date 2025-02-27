@@ -23,7 +23,7 @@ export const DrawerContent = React.forwardRef(function DrawerContent(
         className={cx(
           // Importante: convertimos en flex-col para que Header, Body y Footer
           // se dispongan en columna y el Footer quede al final.
-          "fixed right-0 top-0 h-full w-full max-w-sm bg-white shadow-lg flex flex-col",
+          "fixed right-0 top-0 h-full w-full max-w-xl bg-white shadow-lg flex flex-col",
           className
         )}
         {...props}
