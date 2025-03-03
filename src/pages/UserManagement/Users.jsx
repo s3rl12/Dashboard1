@@ -15,7 +15,7 @@ import {
 import { IconUsersPlus, IconFilePlus } from "@tabler/icons-react";
 import ListUsers from "./components/ListUsers";
 
-export default function Users() {
+export default function Users({ usersData, rolesData, areasData }) {  // Se reciben los tres parámetros
   const [activeTab, setActiveTab] = useState("Usuarios");
 
   return (
@@ -78,19 +78,19 @@ export default function Users() {
 
       {activeTab === "Usuarios" && (
         <div>
-          <ListUsers />
+          {/* Se pasan los tres parámetros a ListUsers */}
+          <ListUsers 
+            usersData={usersData} 
+            rolesData={rolesData} 
+            areasData={areasData} 
+          />
         </div>
       )}
 
       {activeTab === "importar" && (
         <div>
-          {/*
-            2. Pasamos la función "importUserService.importUsers" 
-               como prop a FileUpload (ej. "onUploadFile" o "uploadService")
-          */}
-          <FileUpload
-            uploadService={importUserService.importUsers}
-          />
+          {/* Se pasa la función "importUserService.importUsers" como prop a FileUpload */}
+          <FileUpload uploadService={importUserService.importUsers} />
         </div>
       )}
 

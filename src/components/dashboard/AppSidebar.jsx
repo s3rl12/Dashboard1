@@ -48,7 +48,7 @@ const navigation2 = [
     icon: IconAlignBoxBottomCenter,
     children: [
       { name: "Reporte despachos", href: "/dashboard/reportes" },
-      { name: "Reporte fiscales", href: "/dashboard/reportes" },
+      { name: "Estadisticas", href: "/dashboard/estadisticas" },
     ],
   },
   {

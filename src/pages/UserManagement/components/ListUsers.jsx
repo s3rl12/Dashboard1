@@ -1,5 +1,5 @@
 // src/pages/Users/components/ListUsers.jsx
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import {
   flexRender,
   getCoreRowModel,
@@ -41,17 +41,17 @@ import {
   DrawerClose,
 } from "../../../components/ui/Drawer";
 
-// Importa Input, Label, Divider, Select, etc. (reutilizando los que usabas en UserForm)
 import { Input } from "../../../components/ui/Input";
 import { Label } from "../../../components/ui/Label";
 import { Divider } from "../../../components/ui/Divider";
 import { Select, SelectTrigger, SelectContent, SelectItem } from "../../../components/dashboard/Select";
 import { RadioGroup } from "@headlessui/react";
-import { RiCheckboxCircleFill, RiCheckLine } from "@remixicon/react";
+import { RiCheckboxCircleFill } from "@remixicon/react";
 import { DatePicker } from "../../../components/ui/DatePicker";
 
 import OptionalAlert from "../../../components/alert/OptionalAlert";
 import UserForm from "./UserForm";
+
 function classNames(...classes) {
   return classes.filter(Boolean).join(" ");
 }
@@ -77,72 +77,42 @@ function StatusBadge({ status }) {
   );
 }
 
-// Datos de ejemplo para “Notification settings”
-const workspaces = [
-  {
-    id: 1,
-    title: "Notificaciones Diarias",
-    description: "Recibe actualizaciones diarias de todas las actividades",
-    users: "Básico",
-  },
-  {
-    id: 2,
-    title: "Notificaciones en Tiempo Real",
-    description: "Alertas inmediatas para acciones críticas",
-    users: "Premium",
-  },
-  {
-    id: 3,
-    title: "Sin Notificaciones",
-    description: "Solo notificaciones esenciales del sistema",
-    users: "Minimalista",
-  },
-];
+export default function ListUsers({ usersData: propUsersData = [], rolesData = [], areasData= [] }) {
+  // Se usa un estado local para manejar modificaciones (como eliminación)
+  const [tableData, setTableData] = useState(propUsersData);
 
-export default function ListUsers() {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  // Actualizar el estado local si la prop cambia
+  useEffect(() => {
+    setTableData(propUsersData);
+  }, [propUsersData]);
+
+  // Transformar rolesData en workspaces
+  const workspaces = rolesData.map((role) => {
+    const activePermissions = Object.values(role.permisos_fk || {}).filter(value => value === 1).length;
+    return {
+      id: role.id,
+      title: role.roles,
+      description: role.descripcion,
+      users: `${activePermissions} permisos activos`,
+    };
+  });
 
   // Control del Drawer de edición
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
+  const [selectedWorkspace, setSelectedWorkspace] = useState(workspaces[0] || {});
 
-  // Para la sección "Notification settings" (RadioGroup)
-  const [selectedWorkspace, setSelectedWorkspace] = useState(workspaces[0]);
-
-  const [usersData, setUsersData] = useState([
-    {
-      nombre: "John Doe",
-      email: "john@example.com",
-      rol: "Administrador",
-      despacho: "Ventas",
-      estado: "Activo",
-    },
-    {
-      nombre: "Jane Smith",
-      email: "jane@example.com",
-      rol: "Usuario",
-      despacho: "Compras",
-      estado: "Inactivo",
-    },
-    {
-      nombre: "Bob Johnson",
-      email: "bob@example.com",
-      rol: "Usuario",
-      despacho: "Finanzas",
-      estado: "Activo",
-    },
-  ]);
-
-  // Eliminar -> set estado = “Inactivo”
+  // Función para “eliminar” un usuario (actualiza su estado a “Inactivo”)
   const handleDeleteUser = (rowData) => {
     OptionalAlert({
       title: "¿Estás seguro?",
       text: "¡No podrás revertir esto!",
       onConfirm: async () => {
         await new Promise((resolve) => setTimeout(resolve, 1200));
-        setUsersData((prev) =>
+        setTableData((prev) =>
           prev.map((user) =>
-            user === rowData ? { ...user, estado: "Inactivo" } : user
+            user.id === rowData.id ? { ...user, estado: 0 } : user
           )
         );
       },
@@ -158,12 +128,14 @@ export default function ListUsers() {
         enableSorting: false,
         meta: { align: "text-left" },
         cell: ({ row }) => {
-          const { nombre, email } = row.original;
+          const { nombre, apellido, email } = row.original;
           return (
             <div className="inline-flex items-start gap-2">
               <IconUserCircle className="size-5 text-gray-600" aria-hidden />
               <div className="flex flex-col">
-                <span className="font-medium text-gray-800">{nombre}</span>
+                <span className="font-medium text-gray-800">
+                  {nombre} {apellido}
+                </span>
                 <span className="text-sm text-gray-500">{email}</span>
               </div>
             </div>
@@ -172,13 +144,15 @@ export default function ListUsers() {
       },
       {
         header: "Rol",
-        accessorKey: "rol",
+        // Se extrae el rol del objeto anidado roles_fk
+        accessorFn: (row) => row.roles_fk?.roles || "Sin rol",
         enableSorting: false,
         meta: { align: "text-left" },
       },
       {
         header: "Despacho",
-        accessorKey: "despacho",
+        // Se muestra despacho_fk o un valor por defecto
+        accessorFn: (row) => row.despacho_fk || "Sin despacho",
         enableSorting: false,
         meta: { align: "text-left" },
       },
@@ -189,7 +163,9 @@ export default function ListUsers() {
         meta: { align: "text-left" },
         cell: ({ getValue }) => {
           const statusValue = getValue();
-          return <StatusBadge status={statusValue} />;
+          // Convertir el valor numérico en texto
+          const statusText = statusValue === 1 ? "Activo" : "Inactivo";
+          return <StatusBadge status={statusText} />;
         },
       },
       {
@@ -228,7 +204,7 @@ export default function ListUsers() {
   );
 
   const table = useReactTable({
-    data: usersData,
+    data: tableData,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -255,10 +231,10 @@ export default function ListUsers() {
           Lista de Usuarios
         </h4>
         <p className="text-sm text-gray-600 pb-1">
-          Ejemplo de tabla con datos estáticos.
+          Ejemplo de tabla generada a partir de datos recibidos.
         </p>
 
-        {/* Dialog p/ crear nuevo usuario */}
+        {/* Dialog para crear nuevo usuario */}
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button className="w-fit">Nuevo usuario</Button>
@@ -270,8 +246,7 @@ export default function ListUsers() {
                 Completa los campos para agregar un usuario.
               </DialogDescription>
             </DialogHeader>
-            
-            <UserForm />
+            <UserForm rolesData={rolesData} areasData={areasData}  />
             <DialogFooter>
               <DialogClose asChild>
                 <Button variant="secondary">Cancelar</Button>
@@ -347,7 +322,6 @@ export default function ListUsers() {
               <RiArrowLeftSLine className="size-5 text-gray-600" aria-hidden />
               <span className="sr-only">Previous</span>
             </button>
-
             <button
               onClick={() => table.nextPage()}
               disabled={!table.getCanNextPage()}
@@ -369,16 +343,14 @@ export default function ListUsers() {
               Modifica los datos del usuario seleccionado
             </DrawerDescription>
           </DrawerHeader>
-
           <DrawerBody>
-            {/* Si no hay usuario seleccionado, mostramos un mensaje simple */}
             {!selectedUser ? (
               <p className="text-sm text-gray-500">
                 No se ha seleccionado ningún usuario.
               </p>
             ) : (
               <div className="space-y-6">
-                {/* === Sección: Personal information === */}
+                {/* Sección de edición de información personal */}
                 <section>
                   <h2 className="font-semibold text-gray-800 text-base">
                     Personal information
@@ -386,9 +358,7 @@ export default function ListUsers() {
                   <p className="mt-1 text-sm text-gray-600">
                     Lorem ipsum dolor sit amet, consetetur sadipscing elitr.
                   </p>
-                  {/* Máximo 2 columnas por fila */}
                   <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    {/* Row 1: Nombre, Apellido */}
                     <div>
                       <Label htmlFor="nombre" className="text-sm font-medium text-gray-700">
                         Nombre <span className="text-red-500">*</span>
@@ -399,7 +369,7 @@ export default function ListUsers() {
                         name="nombre"
                         className="mt-1"
                         value={selectedUser.nombre}
-                        onChange={() => {}}
+                        onChange={() => { }}
                       />
                     </div>
                     <div>
@@ -411,13 +381,10 @@ export default function ListUsers() {
                         id="apellido"
                         name="apellido"
                         className="mt-1"
-                        placeholder="Ingresa tu apellido"
-                        value="(sin data)" // Ajusta si tienes datos
-                        onChange={() => {}}
+                        value={selectedUser.apellido}
+                        onChange={() => { }}
                       />
                     </div>
-
-                    {/* Row 2: Correo */}
                     <div className="col-span-full">
                       <Label htmlFor="correo" className="text-sm font-medium text-gray-700">
                         Correo <span className="text-red-500">*</span>
@@ -428,10 +395,10 @@ export default function ListUsers() {
                         name="correo"
                         className="mt-1"
                         value={selectedUser.email}
-                        onChange={() => {}}
+                        onChange={() => { }}
                       />
                     </div>
-
+                    {/* ... Resto de campos para edición */}
                     {/* Row 3: DNI, Fecha */}
                     <div>
                       <Label htmlFor="dni" className="text-sm font-medium text-gray-700">
@@ -442,9 +409,8 @@ export default function ListUsers() {
                         id="dni"
                         name="dni"
                         className="mt-1"
-                        placeholder="12345678"
-                        value="(sin data)" // Ajusta
-                        onChange={() => {}}
+                        value={selectedUser.dni}
+                        onChange={() => { }}
                       />
                     </div>
                     <div>
@@ -454,7 +420,8 @@ export default function ListUsers() {
                       <DatePicker
                         placeholder="Selecciona la fecha"
                         className="mt-1"
-                        // Podrías setear un value, si tuviéramos la info
+
+                      // Podrías setear un value, si tuviéramos la info
                       />
                     </div>
 
@@ -468,9 +435,8 @@ export default function ListUsers() {
                         id="telefono"
                         name="telefono"
                         className="mt-1"
-                        placeholder="999-999-999"
-                        value="(sin data)" // Ajusta
-                        onChange={() => {}}
+                        value={selectedUser.telefono}
+                        onChange={() => { }}
                       />
                     </div>
 
@@ -484,9 +450,8 @@ export default function ListUsers() {
                         id="direccion"
                         name="direccion"
                         className="mt-1"
-                        placeholder="Ej. Calle 123, Ciudad"
-                        value="(sin data)" // Ajusta
-                        onChange={() => {}}
+                        value={selectedUser.direccion}
+                        onChange={() => { }}
                       />
                     </div>
 
@@ -514,9 +479,8 @@ export default function ListUsers() {
                         id="extension"
                         name="extension"
                         className="mt-1"
-                        placeholder="Ej. 105"
-                        value="(sin data)"
-                        onChange={() => {}}
+                        value={selectedUser.extension}
+                        onChange={() => { }}
                       />
                     </div>
                     {/* Siguiente fila */}
@@ -529,9 +493,8 @@ export default function ListUsers() {
                         id="tipo-fiscal"
                         name="tipo-fiscal"
                         className="mt-1"
-                        placeholder="Ej. Tipo A"
-                        value="(sin data)"
-                        onChange={() => {}}
+                        value={selectedUser.tipo_fiscal}
+                        onChange={() => { }}
                       />
                     </div>
 
@@ -547,7 +510,7 @@ export default function ListUsers() {
                         className="mt-1"
                         placeholder="********"
                         value="(sin data)"
-                        onChange={() => {}}
+                        onChange={() => { }}
                       />
                     </div>
                     <div>
@@ -561,12 +524,11 @@ export default function ListUsers() {
                         className="mt-1"
                         placeholder="********"
                         value="(sin data)"
-                        onChange={() => {}}
+                        onChange={() => { }}
                       />
                     </div>
                   </div>
                 </section>
-
                 <Divider className="my-5" />
 
                 {/* === Sección: Workspace settings (vertical) === */}
@@ -632,16 +594,14 @@ export default function ListUsers() {
 
                 <Divider className="my-5" />
 
-                {/* === Sección: Notification settings === */}
+                {/* Sección de Roles y Permisos */}
                 <section>
                   <h2 className="font-semibold text-gray-800 text-base">
-                    Notification settings
+                    Roles y Permisos
                   </h2>
                   <p className="mt-1 text-sm text-gray-600">
-                    Selecciona tu preferencia de notificaciones
+                    Selecciona tu preferencia de acceso
                   </p>
-
-                  {/* Manejo de spacing para RadioGroup */}
                   <RadioGroup
                     value={selectedWorkspace}
                     onChange={setSelectedWorkspace}
@@ -649,45 +609,34 @@ export default function ListUsers() {
                     className="mt-4 space-y-4"
                   >
                     <RadioGroup.Label className="text-sm font-semibold text-gray-700">
-                      Configuración de notificaciones
+                      Configuración de acceso al sistema
                     </RadioGroup.Label>
-                    {/* grid-cols-1 para ajustarlo al Drawer */}
                     <div className="grid grid-cols-1 gap-4">
                       {workspaces.map((item) => (
                         <RadioGroup.Option
                           key={item.id}
                           value={item}
                           className={({ active }) =>
-                            `relative flex cursor-pointer rounded-lg border p-4 transition ${
-                              active
-                                ? "border-blue-500 ring-2 ring-blue-200"
-                                : "border-gray-200"
+                            `relative flex cursor-pointer rounded-lg border p-4 transition ${active
+                              ? "border-blue-500 ring-2 ring-blue-200"
+                              : "border-gray-200"
                             } bg-white`
                           }
                         >
                           {({ checked }) => (
-                            <>
-                              <div className="flex w-full flex-col justify-between">
-                                <div>
-                                  <RadioGroup.Label className="block text-sm font-medium text-gray-700">
-                                    {item.title}
-                                  </RadioGroup.Label>
-                                  <p className="mt-1 text-sm text-gray-600">
-                                    {item.description}
-                                  </p>
-                                </div>
-                                <span className="mt-4 text-sm font-medium text-gray-700">
-                                  {item.users}
-                                </span>
-                              </div>
-                              <RiCheckboxCircleFill
-                                className={`size-5 shrink-0 text-blue-500 ${
-                                  !checked ? "invisible" : ""
-                                }`}
-                                aria-hidden={true}
-                              />
-                            </>
-                          )}
+                <>
+                  <div className="flex w-full flex-col justify-between">
+                    <div>
+                      <RadioGroup.Label className="block text-sm font-medium text-gray-700">
+                        {item.title}
+                      </RadioGroup.Label>
+                      <p className="mt-1 text-sm text-gray-600">{item.description}</p>
+                    </div>
+                    <span className="mt-4 text-sm font-medium text-gray-700">{item.users}</span>
+                  </div>
+                  <RiCheckboxCircleFill className={`size-5 shrink-0 text-blue-500 ${!checked ? "invisible" : ""}`} aria-hidden={true} />
+                </>
+              )}
                         </RadioGroup.Option>
                       ))}
                     </div>
@@ -696,7 +645,6 @@ export default function ListUsers() {
               </div>
             )}
           </DrawerBody>
-
           <DrawerFooter>
             <DrawerClose asChild>
               <button className="rounded-md bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200">
@@ -705,10 +653,7 @@ export default function ListUsers() {
             </DrawerClose>
             <button
               className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
-              onClick={() => {
-                // Lógica para guardar cambios
-                setIsDrawerOpen(false);
-              }}
+              onClick={() => setIsDrawerOpen(false)}
             >
               Guardar
             </button>

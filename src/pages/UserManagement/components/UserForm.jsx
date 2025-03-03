@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Textarea } from "@tremor/react";
 import { Input } from "../../../components/ui/Input";
 import { Label } from "../../../components/ui/Label";
 import {
@@ -7,65 +6,128 @@ import {
   SelectItem,
   SelectTrigger,
   SelectContent,
+  SelectValue,
 } from "../../../components/dashboard/Select";
 import { Divider } from "../../../components/ui/Divider";
 import { RadioGroup } from "@headlessui/react";
 import { RiCheckboxCircleFill, RiCheckLine } from "@remixicon/react";
 import { DatePicker } from "../../../components/ui/DatePicker";
+import { useAuth } from "../../../context/AuthContext";
 
-/* RadioGroup data y componente de ejemplo */
-const workspaces = [
-  {
-    id: 1,
-    title: "Notificaciones Diarias",
-    description: "Recibe actualizaciones diarias de todas las actividades",
-    users: "Básico",
-  },
-  {
-    id: 2,
-    title: "Notificaciones en Tiempo Real",
-    description: "Alertas inmediatas para acciones críticas",
-    users: "Premium",
-  },
-  {
-    id: 3,
-    title: "Sin Notificaciones",
-    description: "Solo notificaciones esenciales del sistema",
-    users: "Minimalista",
-  },
-];
+const featureMapping = {
+  panel_control: "Panel de control",
+  ges_user: "Gestión usuario",
+  ges_areas: "Gestión áreas",
+  ges_fiscal: "Gestión usuarios fiscal",
+  ges_reportes: "Reportes estadísticos",
+  ges_archivos: "Gestión archivos",
+};
 
-const PackageDetails = ({ workspaceId }) => {
-  const features = {
-    1: ["Resumen matutino", "Reporte de actividad diaria", "Alertas de seguridad"],
-    2: ["Alertas de acceso", "Notificaciones de transacciones", "Monitoreo en vivo"],
-    3: ["Actualizaciones del sistema", "Mantenimiento programado"],
-  };
+const PackageDetails = ({ workspace }) => {
+  // Generar features basados en los permisos activos
+  const features = Object.keys(featureMapping)
+    .filter((key) => workspace.permissions && workspace.permissions[key] === 1)
+    .map((key) => featureMapping[key]);
 
   return (
     <div className="mt-6">
       <p className="text-tremor-default font-medium text-tremor-content-strong dark:text-dark-tremor-content-strong">
         Incluye:
       </p>
-      <ul role="list" className="mt-2 space-y-2">
-        {features[workspaceId].map((feature, idx) => (
-          <li key={idx} className="flex items-center space-x-2">
-            <RiCheckLine
-              className="size-5 text-tremor-content dark:text-dark-tremor-content"
-              aria-hidden={true}
-            />
-            <span className="text-tremor-default text-tremor-content-strong dark:text-dark-tremor-content-strong">
-              {feature}
-            </span>
-          </li>
-        ))}
-      </ul>
+      {features.length > 0 ? (
+        <ul role="list" className="mt-2 space-y-2">
+          {features.map((feature, idx) => (
+            <li key={idx} className="flex items-center space-x-2">
+              <RiCheckLine
+                className="size-5 text-tremor-content dark:text-dark-tremor-content"
+                aria-hidden={true}
+              />
+              <span className="text-tremor-default text-tremor-content-strong dark:text-dark-tremor-content-strong">
+                {feature}
+              </span>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="mt-2 text-tremor-default text-tremor-content dark:text-dark-tremor-content">
+          Sin permisos asignados
+        </p>
+      )}
     </div>
   );
 };
 
-export default function UserForm() {
-  const [selectedWorkspace, setSelectedWorkspace] = useState(workspaces[0]);
+// Función para generar workspaces dinámicos a partir de rolesData
+const dynamicWorkspaces = (rolesData) =>
+  rolesData.map((role) => {
+    const permissionKeys = Object.keys(featureMapping);
+    const activeCount = permissionKeys.reduce(
+      (acc, key) =>
+        acc + (role.permisos_fk && role.permisos_fk[key] === 1 ? 1 : 0),
+      0
+    );
+    return {
+      id: role.id,
+      title: role.roles,
+      description: role.descripcion,
+      permissions: role.permisos_fk,
+      users: `${activeCount} permisos activos`,
+    };
+  });
+
+export default function UserForm({ rolesData = [], areasData = [] }) {
+  // Generar workspaces dinámicos a partir de rolesData
+  const workspaces = dynamicWorkspaces(rolesData);
+
+  // Estado para seleccionar workspace (roles)
+  const [selectedWorkspace, setSelectedWorkspace] = useState(
+    workspaces[0] || {}
+  );
+
+  // Estados para manejar la selección de áreas (sede, dependencia y despacho)
+  // Estados actualizados
+  const [selectedSede, setSelectedSede] = useState("");
+  const [selectedDependencia, setSelectedDependencia] = useState("");
+  const [selectedDespacho, setSelectedDespacho] = useState("");
+
+  const { userFormData, setUserFormData } = useAuth();
+
+  // Actualizado en la sección de manejo de estados
+  const handleSedeChange = (value) => {
+    const sedeId = value ? Number(value) : null;
+    setSelectedSede(sedeId);
+    setSelectedDependencia(null);
+    setSelectedDespacho(null);
+    setUserFormData(prev => ({
+      ...prev,
+      sede_fk: sedeId,
+      dependencia_fk: null,
+      despacho_fk: null
+    }));
+  };
+
+  const handleDependenciaChange = (value) => {
+    const dependenciaId = value ? Number(value) : null;
+    setSelectedDependencia(dependenciaId);
+    setSelectedDespacho(null);
+    setUserFormData(prev => ({
+      ...prev,
+      dependencia_fk: dependenciaId,
+      despacho_fk: null
+    }));
+  };
+
+  const handleDespachoChange = (value) => {
+    const despachoId = value ? Number(value) : null;
+
+    setSelectedDespacho(despachoId);
+    setUserFormData(prev => ({ ...prev, despacho_fk: despachoId }));
+  };
+
+  const currentSede = areasData.find(sede => sede.id === selectedSede);
+  const currentDependencia = currentSede?.dependencias?.find(
+    dep => dep.id === selectedDependencia
+  );
 
   return (
     <form className="pt-5">
@@ -79,7 +141,6 @@ export default function UserForm() {
             Lorem ipsum dolor sit amet, consetetur sadipscing elitr.
           </p>
         </div>
-
         <div className="sm:max-w-3xl md:col-span-2">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-6">
             {/* Row 1: Nombre*, Apellido* */}
@@ -107,7 +168,6 @@ export default function UserForm() {
                 className="mt-2"
               />
             </div>
-
             {/* Row 2: Correo* */}
             <div className="col-span-full">
               <Label htmlFor="correo" className="text-tremor-default font-medium">
@@ -121,7 +181,6 @@ export default function UserForm() {
                 className="mt-2"
               />
             </div>
-
             {/* Row 3: DNI*, Fecha nac.*, Teléfono* */}
             <div className="col-span-full sm:col-span-2">
               <Label htmlFor="dni" className="text-tremor-default font-medium">
@@ -153,7 +212,6 @@ export default function UserForm() {
                 className="mt-2"
               />
             </div>
-
             {/* Row 4: Dirección */}
             <div className="col-span-full">
               <Label htmlFor="direccion" className="text-tremor-default font-medium">
@@ -167,7 +225,6 @@ export default function UserForm() {
                 className="mt-2"
               />
             </div>
-
             {/* Row 5: Género*, Extensión*, Tipo Fiscal* */}
             <div className="col-span-full sm:col-span-2">
               <Label htmlFor="genero" className="text-tremor-default font-medium">
@@ -207,7 +264,6 @@ export default function UserForm() {
                 className="mt-2"
               />
             </div>
-
             {/* Row 6: Password*, Confirmar Password* */}
             <div className="col-span-full sm:col-span-3">
               <Label htmlFor="password" className="text-tremor-default font-medium">
@@ -250,51 +306,73 @@ export default function UserForm() {
           </p>
         </div>
 
-        {/* Nueva disposición de campos: Sede*, dependencia*, despacho* */}
+        {/* Campos para Sede, Dependencia y Despacho */}
         <div className="sm:max-w-3xl md:col-span-2">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-6">
-            {/* Row 1: Sede* */}
+            {/* Sede */}
             <div className="col-span-full">
               <Label htmlFor="sede" className="text-tremor-default font-medium">
                 Sede <span className="text-red-500">*</span>
               </Label>
-              <Select>
+              <Select
+                value={selectedSede ? String(selectedSede) : ""}
+                onValueChange={handleSedeChange}
+              >
                 <SelectTrigger id="sede" className="mt-2 w-full">
-                  Selecciona la sede
+                  <SelectValue placeholder="Selecciona la sede" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="sede1">Sede 1</SelectItem>
-                  <SelectItem value="sede2">Sede 2</SelectItem>
+                  {areasData.map((sede) => (
+                    <SelectItem key={sede.id} value={String(sede.id)}>
+                      {sede.nombre} ({sede.cod_sede})
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
 
-            {/* Row 2: dependencia*, despacho* */}
+            {/* Dependencia */}
             <div className="col-span-full sm:col-span-3">
               <Label htmlFor="dependencia" className="text-tremor-default font-medium">
                 Dependencia <span className="text-red-500">*</span>
               </Label>
-              <Select>
+              <Select
+                value={selectedDependencia ? String(selectedDependencia) : ""}
+                onValueChange={handleDependenciaChange}
+                disabled={!selectedSede}
+              >
                 <SelectTrigger id="dependencia" className="mt-2 w-full">
-                  Selecciona la dependencia
+                  <SelectValue placeholder="Selecciona dependencia" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="dep1">Dependencia 1</SelectItem>
-                  <SelectItem value="dep2">Dependencia 2</SelectItem>
+                  {currentSede?.dependencias?.map((dep) => (
+                    <SelectItem key={dep.id} value={String(dep.id)}>
+                      {dep.nombre_fiscalia} ({dep.cod_depen})
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Despacho */}
             <div className="col-span-full sm:col-span-3">
               <Label htmlFor="despacho" className="text-tremor-default font-medium">
                 Despacho <span className="text-red-500">*</span>
               </Label>
-              <Select>
+              <Select
+                value={String(selectedDespacho)}
+                onValueChange={handleDespachoChange}
+                disabled={!selectedDependencia}
+              >
                 <SelectTrigger id="despacho" className="mt-2 w-full">
-                  Selecciona el despacho
+                  <SelectValue placeholder="Selecciona despacho" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="desp1">Despacho 1</SelectItem>
-                  <SelectItem value="desp2">Despacho 2</SelectItem>
+                  {currentDependencia?.despachos?.map((despacho) => (
+                    <SelectItem key={despacho.id} value={String(despacho.id)}>
+                      {despacho.nombre_despacho} ({despacho.cod_despa})
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -314,7 +392,6 @@ export default function UserForm() {
             Selecciona tu preferencia de notificaciones
           </p>
         </div>
-
         <div className="sm:max-w-3xl md:col-span-2">
           <RadioGroup
             value={selectedWorkspace}
@@ -330,10 +407,9 @@ export default function UserForm() {
                   key={item.id}
                   value={item}
                   className={({ active }) =>
-                    `relative flex cursor-pointer rounded-lg border p-4 transition ${
-                      active
-                        ? "border-tremor-brand ring-2 ring-tremor-brand-muted dark:border-dark-tremor-brand-subtle"
-                        : "border-tremor-border dark:border-dark-tremor-border"
+                    `relative flex cursor-pointer rounded-lg border p-4 transition ${active
+                      ? "border-tremor-brand ring-2 ring-tremor-brand-muted dark:border-dark-tremor-brand-subtle"
+                      : "border-tremor-border dark:border-dark-tremor-border"
                     } bg-tremor-background dark:bg-dark-tremor-background`
                   }
                 >
@@ -353,9 +429,8 @@ export default function UserForm() {
                         </span>
                       </div>
                       <RiCheckboxCircleFill
-                        className={`size-5 shrink-0 text-tremor-brand dark:text-dark-tremor-brand ${
-                          !checked ? "invisible" : ""
-                        }`}
+                        className={`size-5 shrink-0 text-tremor-brand dark:text-dark-tremor-brand ${!checked ? "invisible" : ""
+                          }`}
                         aria-hidden={true}
                       />
                     </>
@@ -363,7 +438,7 @@ export default function UserForm() {
                 </RadioGroup.Option>
               ))}
             </div>
-            <PackageDetails workspaceId={selectedWorkspace.id} />
+            <PackageDetails workspace={selectedWorkspace} />
           </RadioGroup>
         </div>
       </div>

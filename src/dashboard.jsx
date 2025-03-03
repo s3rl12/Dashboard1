@@ -1,8 +1,6 @@
 // Dashboard.jsx
 import React from "react";
 import { Routes, Route } from "react-router-dom";
-// 1. Importamos nuestro custom hook (ya creado)
-//import { useCarpetasArchivos } from './hooks/useCarpetasArchivos';
 import { useQueryClient } from '@tanstack/react-query';
 // Importa el resto (AuthContext, Sidebar, etc.)
 import { SidebarProvider } from "./components/dashboard/Sidebar";
@@ -15,17 +13,19 @@ import UserManagement from "./pages/UserManagement/UserManagement";
 import RolesPermissions from "./pages/RolesPermissions/RolesPermissions";
 import DocumentManager from "./pages/DocumentManager/DocumentManager";
 import RegisterAreas from "./pages/RegisterAreas/RegisterAreas";
+import Reports from "./pages/StatisticalReports/Reports";
 // Ojo: Este es el componente para la ruta "documentos"
 import Documents from "./pages/DocumentManager/Documents";
 import Users from "./pages/UserManagement/Users";
+
 export default function Dashboard() {
- const queryClient = useQueryClient();
+  const queryClient = useQueryClient();
   const carpetasData = queryClient.getQueryData(['carpetas-archivos']);
+  const usersData = queryClient.getQueryData(['list-user']); // Data de usuarios
+  const rolesData = queryClient.getQueryData(['list-rol']);   // Data de roles
+  const areasData = queryClient.getQueryData(['list-areas']);   // Data de áreas
 
-  
-
-  // 4. “carpetasData” es un array con las carpetas y archivos (data: [...]).
-  //    Lo pasamos a la ruta “documentos” como prop
+  // Se pasan como props a los componentes correspondientes en las rutas.
   return (
     <div className="flex h-screen bg-gray-100">
       <SidebarProvider defaultOpen={true}>
@@ -42,17 +42,22 @@ export default function Dashboard() {
           <main className="flex-1 p-4 overflow-auto">
             <Routes>
               <Route path="reportes" element={<StatisticalReports />} />
+              <Route path="estadisticas" element={<Reports />} />
               <Route path="usuarios" element={<UserManagement />} />
               <Route path="roles" element={<RolesPermissions />} />
               <Route path="areas" element={<RegisterAreas />} />
               <Route path="archivos" element={<DocumentManager />} />
 
-              {/* Aquí le pasamos la data al componente “Documents” */}
+              {/* Se pasa la data de carpetas al componente “Documents” */}
               <Route
                 path="documentos"
                 element={<Documents carpetasData={carpetasData} />}
               />
-              <Route path="Agentes" element={<Users />} />
+              {/* Se pasan los tres parámetros a Users */}
+              <Route 
+                path="Agentes" 
+                element={<Users usersData={usersData} rolesData={rolesData} areasData={areasData} />} 
+              />
               {/* Más sub-rutas si quieres */}
             </Routes>
           </main>
