@@ -68,7 +68,8 @@ const navigation2 = [
     icon: IconBuildings,
     children: [
       { name: "Lista de areas", href: "/dashboard/areas" },
-      { name: "Lista de fiscales", href: "/products/variants" },
+      { name: "Areas fiscales", href: "/dashboard/Area" },
+      { name: "Lista de fiscales", href: "/products/Area" },
       { name: "Logistica", href: "/products/suppliers" },
     ],
   },

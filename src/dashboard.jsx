@@ -1,4 +1,3 @@
-// Dashboard.jsx
 import React from "react";
 import { Routes, Route } from "react-router-dom";
 import { useQueryClient } from '@tanstack/react-query';
@@ -17,6 +16,12 @@ import Reports from "./pages/StatisticalReports/Reports";
 // Ojo: Este es el componente para la ruta "documentos"
 import Documents from "./pages/DocumentManager/Documents";
 import Users from "./pages/UserManagement/Users";
+import Areas from "./pages/RegisterAreas/Areas";
+// Importa los nuevos componentes para las rutas específicas de Estadísticas
+import WorkLoad from './pages/StatisticalFunctions/WorkLoad/WorkLoad';
+
+import CrimesHighestIncidence from './pages/StatisticalFunctions/CrimesHighestIncidence/CrimesHighestIncidence';
+
 
 export default function Dashboard() {
   const queryClient = useQueryClient();
@@ -43,9 +48,15 @@ export default function Dashboard() {
             <Routes>
               <Route path="reportes" element={<StatisticalReports />} />
               <Route path="estadisticas" element={<Reports />} />
+
+              {/* Rutas nuevas para Estadísticas */}
+              <Route path="estadisticas/WorkLoad" element={<WorkLoad />} />
+              <Route path="estadisticas/CrimesHighestIncidence" element={<CrimesHighestIncidence />} />
+
               <Route path="usuarios" element={<UserManagement />} />
               <Route path="roles" element={<RolesPermissions />} />
               <Route path="areas" element={<RegisterAreas />} />
+              <Route path="Area" element={<Areas />} />
               <Route path="archivos" element={<DocumentManager />} />
 
               {/* Se pasa la data de carpetas al componente “Documents” */}

@@ -54,7 +54,7 @@ const Trigger = React.forwardRef(function Trigger(
         disabled={disabled}
         {...props}
       >
-        <RiCalendar2Fill className="size-5 shrink-0 text-gray-400" />
+        <RiCalendar2Fill className="size-5 shrink-0 text-gray-800" />
         <span className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-left text-gray-900">
           {children || <span className="text-gray-400">{placeholder}</span>}
         </span>
