@@ -332,12 +332,12 @@ export default function AreaForm({ areaType, onSubmit, onCancel }) {
   };
 
   return (
-    <form className="pt-5" onSubmit={handleSubmit}>
+    <form className="pt-5" onSubmit={handleSubmit} noValidate>
       {renderFormByType()}
       <Divider className="my-5" />
       <div className="flex justify-end gap-2">
         {/* Al hacer clic en Cancelar se invoca el callback para cerrar el Dialog */}
-        <Button variant="secondary" onClick={onCancel}>Cancelar</Button>
+        <Button type="button" variant="secondary" onClick={onCancel}>Cancelar</Button>
         <Button type="submit">Guardar</Button>
       </div>
     </form>

@@ -75,14 +75,22 @@ const dynamicWorkspaces = (rolesData) =>
     };
   });
 
-export default function UserForm({ rolesData = [], areasData = [] }) {
+export default function UserForm({ rolesData = [], areasData = [], onCancel, }) {
   // Generar workspaces dinámicos a partir de rolesData
   const workspaces = dynamicWorkspaces(rolesData);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    // Aquí puedes agregar lógica de validación o guardado
+    console.log("Formulario enviado");
+  };
 
   // Estado para seleccionar workspace (roles)
   const [selectedWorkspace, setSelectedWorkspace] = useState(
     workspaces[0] || {}
   );
+
+
 
   // Estados para manejar la selección de áreas (sede, dependencia y despacho)
   // Estados actualizados
@@ -130,7 +138,7 @@ export default function UserForm({ rolesData = [], areasData = [] }) {
   );
 
   return (
-    <form className="pt-5">
+    <form className="pt-5" onSubmit={handleSubmit} noValidate>
       {/* Sección: Personal information */}
       <div className="grid grid-cols-1 gap-10 md:grid-cols-3">
         <div>
@@ -138,7 +146,7 @@ export default function UserForm({ rolesData = [], areasData = [] }) {
             Informacion personal
           </h2>
           <p className="mt-1 text-tremor-default leading-6 text-tremor-content dark:text-dark-tremor-content">
-          Ingrese la información personal del usuario y otros datos de identificación.
+            Ingrese la información personal del usuario y otros datos de identificación.
           </p>
         </div>
         <div className="sm:max-w-3xl md:col-span-2">
@@ -299,10 +307,10 @@ export default function UserForm({ rolesData = [], areasData = [] }) {
       <div className="grid grid-cols-1 gap-10 md:grid-cols-3">
         <div>
           <h2 className="font-semibold text-tremor-content-strong dark:text-dark-tremor-content-strong">
-          Configuración del Espacio de Trabajo
+            Configuración del Espacio de Trabajo
           </h2>
           <p className="mt-1 text-tremor-default leading-6 text-tremor-content dark:text-dark-tremor-content">
-          Selecciona las areas al que estarás asignado dentro de la organización.
+            Selecciona las areas al que estarás asignado dentro de la organización.
           </p>
         </div>
 
@@ -389,7 +397,7 @@ export default function UserForm({ rolesData = [], areasData = [] }) {
             Roles y Permisos
           </h2>
           <p className="mt-1 text-tremor-default leading-6 text-tremor-content dark:text-dark-tremor-content">
-          Selecciona los permisos y nivel de acceso para tu cuenta dentro del sistema.
+            Selecciona los permisos y nivel de acceso para tu cuenta dentro del sistema.
           </p>
         </div>
         <div className="sm:max-w-3xl md:col-span-2">
@@ -441,6 +449,25 @@ export default function UserForm({ rolesData = [], areasData = [] }) {
             <PackageDetails workspace={selectedWorkspace} />
           </RadioGroup>
         </div>
+      </div>
+      <Divider className="my-5" />
+      <div className="flex justify-end gap-2">
+        {/* Botón Cancelar: invoca onCancel para cerrar el diálogo */}
+        <button
+          type="button"
+          className="rounded-md bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200"
+          onClick={onCancel}
+        >
+          Cancelar
+        </button>
+
+        {/* Botón Guardar: disparará handleSubmit */}
+        <button
+          type="submit"
+          className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+        >
+          Guardar
+        </button>
       </div>
     </form>
   );

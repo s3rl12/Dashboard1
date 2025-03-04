@@ -81,14 +81,11 @@ export default function ListUsers({ usersData: propUsersData = [], rolesData = [
   // Se usa un estado local para manejar modificaciones (como eliminación)
   const [tableData, setTableData] = useState(propUsersData);
 
-  // Actualizar el estado local si la prop cambia
-  useEffect(() => {
-    setTableData(propUsersData);
-  }, [propUsersData]);
-
   // Transformar rolesData en workspaces
   const workspaces = rolesData.map((role) => {
-    const activePermissions = Object.values(role.permisos_fk || {}).filter(value => value === 1).length;
+    const activePermissions = Object.values(role.permisos_fk || {}).filter(
+      (value) => value === 1
+    ).length;
     return {
       id: role.id,
       title: role.roles,
@@ -246,13 +243,8 @@ export default function ListUsers({ usersData: propUsersData = [], rolesData = [
                 Completa los campos para agregar un usuario.
               </DialogDescription>
             </DialogHeader>
-            <UserForm rolesData={rolesData} areasData={areasData}  />
-            <DialogFooter>
-              <DialogClose asChild>
-                <Button variant="secondary">Cancelar</Button>
-              </DialogClose>
-              <Button type="button">Guardar</Button>
-            </DialogFooter>
+            <UserForm rolesData={rolesData} areasData={areasData} onCancel={() => setIsDialogOpen(false)} />
+            
           </DialogContent>
         </Dialog>
       </div>
