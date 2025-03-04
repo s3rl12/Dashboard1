@@ -47,8 +47,8 @@ const navigation2 = [
     href: "/Reporte",
     icon: IconAlignBoxBottomCenter,
     children: [
-      { name: "Reporte despachos", href: "/dashboard/reportes" },
-      { name: "Estadisticas", href: "/dashboard/estadisticas" },
+      
+      { name: "Reportes estadisticos", href: "/dashboard/estadisticas" },
     ],
   },
   {
@@ -56,7 +56,7 @@ const navigation2 = [
     href: "/Gestion",
     icon: IconUser,
     children: [
-      { name: "Lista de usuarios", href: "/dashboard/usuarios" },
+      
       { name: "Usuarios", href: "/dashboard/Agentes" },
       { name: "Roles y permisos", href: "/dashboard/roles" },
       { name: "Historial de actividad", href: "/sales/insights" },
@@ -78,8 +78,8 @@ const navigation2 = [
     href: "/Gestion",
     icon: IconFolder,
     children: [
-      { name: "Lista de archivos", href: "/dashboard/archivos" },
-      { name: "Lista de reportes", href: "/dashboard/documentos" },
+      
+      { name: "Archivos", href: "/dashboard/documentos" },
     ],
   },
 ];

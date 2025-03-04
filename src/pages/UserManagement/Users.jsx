@@ -48,32 +48,6 @@ export default function Users({ usersData, rolesData, areasData }) {  // Se reci
           <IconFilePlus className="size-4" aria-hidden="true" />
           Importar
         </TabNavigationLink>
-
-        <TabNavigationLink
-          className="inline-flex gap-2"
-          href="#"
-          active={activeTab === "transactions"}
-          onClick={(e) => {
-            e.preventDefault();
-            setActiveTab("transactions");
-          }}
-        >
-          <RiExchange2Line className="size-4" aria-hidden="true" />
-          Transactions
-        </TabNavigationLink>
-
-        <TabNavigationLink
-          className="inline-flex gap-2"
-          href="#"
-          active={activeTab === "customers"}
-          onClick={(e) => {
-            e.preventDefault();
-            setActiveTab("customers");
-          }}
-        >
-          <RiCustomerService2Fill className="size-4" aria-hidden="true" />
-          Customers
-        </TabNavigationLink>
       </TabNavigation>
 
       {activeTab === "Usuarios" && (
@@ -92,14 +66,6 @@ export default function Users({ usersData, rolesData, areasData }) {  // Se reci
           {/* Se pasa la función "importUserService.importUsers" como prop a FileUpload */}
           <FileUpload uploadService={importUserService.importUsers} />
         </div>
-      )}
-
-      {activeTab === "transactions" && (
-        <p className="text-sm text-gray-700">Contenido de Transactions</p>
-      )}
-
-      {activeTab === "customers" && (
-        <p className="text-sm text-gray-700">Contenido de Customers</p>
       )}
     </div>
   );

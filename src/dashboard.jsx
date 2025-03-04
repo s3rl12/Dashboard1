@@ -46,18 +46,18 @@ export default function Dashboard() {
 
           <main className="flex-1 p-4 overflow-auto">
             <Routes>
-              <Route path="reportes" element={<StatisticalReports />} />
+              
               <Route path="estadisticas" element={<Reports />} />
 
               {/* Rutas nuevas para Estadísticas */}
               <Route path="estadisticas/WorkLoad" element={<WorkLoad />} />
               <Route path="estadisticas/CrimesHighestIncidence" element={<CrimesHighestIncidence />} />
 
-              <Route path="usuarios" element={<UserManagement />} />
+              
               <Route path="roles" element={<RolesPermissions />} />
               <Route path="areas" element={<RegisterAreas />} />
               <Route path="Area" element={<Areas />} />
-              <Route path="archivos" element={<DocumentManager />} />
+              
 
               {/* Se pasa la data de carpetas al componente “Documents” */}
               <Route

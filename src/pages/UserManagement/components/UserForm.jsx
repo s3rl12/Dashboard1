@@ -135,10 +135,10 @@ export default function UserForm({ rolesData = [], areasData = [] }) {
       <div className="grid grid-cols-1 gap-10 md:grid-cols-3">
         <div>
           <h2 className="font-semibold text-tremor-content-strong dark:text-dark-tremor-content-strong">
-            Personal information
+            Informacion personal
           </h2>
           <p className="mt-1 text-tremor-default leading-6 text-tremor-content dark:text-dark-tremor-content">
-            Lorem ipsum dolor sit amet, consetetur sadipscing elitr.
+          Ingrese la información personal del usuario y otros datos de identificación.
           </p>
         </div>
         <div className="sm:max-w-3xl md:col-span-2">
@@ -299,10 +299,10 @@ export default function UserForm({ rolesData = [], areasData = [] }) {
       <div className="grid grid-cols-1 gap-10 md:grid-cols-3">
         <div>
           <h2 className="font-semibold text-tremor-content-strong dark:text-dark-tremor-content-strong">
-            Workspace settings
+          Configuración del Espacio de Trabajo
           </h2>
           <p className="mt-1 text-tremor-default leading-6 text-tremor-content dark:text-dark-tremor-content">
-            Lorem ipsum dolor sit amet, consetetur sadipscing elitr.
+          Selecciona las areas al que estarás asignado dentro de la organización.
           </p>
         </div>
 
@@ -382,14 +382,14 @@ export default function UserForm({ rolesData = [], areasData = [] }) {
 
       <Divider className="my-5" />
 
-      {/* Sección: Notification settings (RadioGroup) */}
+      {/* Sección: Roles y Permisos */}
       <div className="grid grid-cols-1 gap-10 md:grid-cols-3">
         <div>
           <h2 className="font-semibold text-tremor-content-strong dark:text-dark-tremor-content-strong">
-            Notification settings
+            Roles y Permisos
           </h2>
           <p className="mt-1 text-tremor-default leading-6 text-tremor-content dark:text-dark-tremor-content">
-            Selecciona tu preferencia de notificaciones
+          Selecciona los permisos y nivel de acceso para tu cuenta dentro del sistema.
           </p>
         </div>
         <div className="sm:max-w-3xl md:col-span-2">

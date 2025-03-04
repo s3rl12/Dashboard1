@@ -5,80 +5,54 @@ import {
   RiTruckLine,
   RiTimeLine,
 } from "@remixicon/react";
-import { IconBuildings, IconFilePlus } from '@tabler/icons-react'
+import { IconBuildings, IconBuildingPlus } from '@tabler/icons-react'
 
+import FileUpload from "../DocumentManager/Documents-components/components/FileUpload";
 import { TabNavigation, TabNavigationLink } from "../../pages/DocumentManager/Documents-components/TabNavigation";
 import ListSede from "./Components/ListSede";
 
 export default function Reports() {
-  const [activeTab, setActiveTab] = useState("In progress");
-
+  const [activeTab, setActiveTab] = useState("Areas fiscal");
+  
   return (
     <div className="p-2 space-y-4">
       <div>
         <h3 className="text-tremor-title font-semibold text-tremor-content-strong dark:text-dark-tremor-content-strong">
-          Reports
+          REPORTES ESTADISTICOS
         </h3>
-        <p className="text-tremor-default text-tremor-content dark:text-dark-tremor-content">
-          Check status of recent reports
-        </p>
       </div>
 
       <TabNavigation>
         <TabNavigationLink
           className="inline-flex gap-2"
           href="#"
-          active={activeTab === "In progress"}
+          active={activeTab === "Areas fiscal"}
           onClick={(e) => {
             e.preventDefault();
-            setActiveTab("In progress");
+            setActiveTab("Areas fiscal");
           }}
         >
           <IconBuildings className="size-4" aria-hidden="true" />
-          In progress
+          Areas fiscal
         </TabNavigationLink>
 
         <TabNavigationLink
           className="inline-flex gap-2"
           href="#"
-          active={activeTab === "Delivering"}
+          active={activeTab === "Importar"}
           onClick={(e) => {
             e.preventDefault();
-            setActiveTab("Delivering");
+            setActiveTab("Importar");
           }}
         >
-          <IconFilePlus className="size-4" aria-hidden="true" />
-          Delivering
-        </TabNavigationLink>
-
-        <TabNavigationLink
-          className="inline-flex gap-2"
-          href="#"
-          active={activeTab === "Delayed"}
-          onClick={(e) => {
-            e.preventDefault();
-            setActiveTab("Delayed");
-          }}
-        >
-          <RiTimeLine className="size-4" aria-hidden="true" />
-          Delayed
+          <IconBuildingPlus className="size-4" aria-hidden="true" />
+          Importar
         </TabNavigationLink>
       </TabNavigation>
 
-      {activeTab === "In progress" && <ListSede />}
-      {activeTab === "Delivering" && (
-        <div className="p-6">
-          <p className="text-tremor-default text-tremor-content dark:text-dark-tremor-content">
-            Delivering reports content goes here...
-          </p>
-        </div>
-      )}
-      {activeTab === "Delayed" && (
-        <div className="p-6">
-          <p className="text-tremor-default text-tremor-content dark:text-dark-tremor-content">
-            Delayed reports content goes here...
-          </p>
-        </div>
+      {activeTab === "Areas fiscal" && <ListSede />}
+      {activeTab === "Importar" && (
+        <FileUpload/>
       )}
     </div>
   );

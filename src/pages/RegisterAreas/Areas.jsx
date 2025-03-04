@@ -2,9 +2,8 @@
 import React, { useState } from "react";
 import { TabNavigation, TabNavigationLink } from "../../pages/DocumentManager/Documents-components/TabNavigation";
 import FileUpload from "../DocumentManager/Documents-components/components/FileUpload";
-import { IconBuildings, IconFilePlus } from "@tabler/icons-react";
+import { IconBuildings, IconBuildingPlus } from "@tabler/icons-react";
 import { RiExchange2Line } from "@remixicon/react";
-
 import AreasList from './components/AreasList';
 
 export default function Areas() {
@@ -37,35 +36,10 @@ export default function Areas() {
             setActiveTab("importar");
           }}
         >
-          <IconFilePlus className="size-4" aria-hidden="true" />
+          <IconBuildingPlus className="size-4" aria-hidden="true" />
           Importar
         </TabNavigationLink>
-
-        <TabNavigationLink
-          className="inline-flex gap-2"
-          href="#"
-          active={activeTab === "transactions"}
-          onClick={(e) => {
-            e.preventDefault();
-            setActiveTab("transactions");
-          }}
-        >
-          <RiExchange2Line className="size-4" aria-hidden="true" />
-          Transactions
-        </TabNavigationLink>
-
-        <TabNavigationLink
-          className="inline-flex gap-2"
-          href="#"
-          active={activeTab === "customers"}
-          onClick={(e) => {
-            e.preventDefault();
-            setActiveTab("customers");
-          }}
-        >
-          <RiExchange2Line className="size-4" aria-hidden="true" />
-          Customers
-        </TabNavigationLink>
+ 
       </TabNavigation>
 
       {activeTab === "Áreas" && (
@@ -80,14 +54,6 @@ export default function Areas() {
           {/* Se pasa la función de importación de áreas, si existe */}
           <FileUpload />
         </div>
-      )}
-
-      {activeTab === "transactions" && (
-        <p className="text-sm text-gray-700">Contenido de Transactions</p>
-      )}
-
-      {activeTab === "customers" && (
-        <p className="text-sm text-gray-700">Contenido de Customers</p>
       )}
     </div>
   );

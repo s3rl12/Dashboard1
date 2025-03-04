@@ -15,16 +15,9 @@ export default function Documents({ carpetasData }) {
   const [activeTab, setActiveTab] = useState("carpetas");
 
   return (
-    <div className="p-4 space-y-4">
+    <div className="p-2 space-y-4">
       {/* 1. Título */}
-      <h1 className="text-xl font-semibold">GESTOR DE DOCUMENTOS</h1>
-
-      {/* 2. Callout debajo del título */}
-      <Callout title="AWS Credit Alert" icon={RiErrorWarningFill}>
-        Warning: Your AWS credits are nearly depleted. Please review your usage and
-        consider adding more credits to avoid service interruptions.
-      </Callout>
-
+      <h1 className="text-base font-semibold">GESTOR DE DOCUMENTOS</h1>
       {/* 3. TabNavigation debajo del Callout */}
       <TabNavigation>
         <TabNavigationLink
@@ -55,32 +48,7 @@ export default function Documents({ carpetasData }) {
           <IconFilePlus className="size-4" aria-hidden="true" />
           Importar
         </TabNavigationLink>
-
-        <TabNavigationLink
-          className="inline-flex gap-2"
-          href="#"
-          active={activeTab === "transactions"}
-          onClick={(e) => {
-            e.preventDefault();
-            setActiveTab("transactions");
-          }}
-        >
-          <RiExchange2Line className="size-4" aria-hidden="true" />
-          Transactions
-        </TabNavigationLink>
-
-        <TabNavigationLink
-          className="inline-flex gap-2"
-          href="#"
-          active={activeTab === "customers"}
-          onClick={(e) => {
-            e.preventDefault();
-            setActiveTab("customers");
-          }}
-        >
-          <RiCustomerService2Fill className="size-4" aria-hidden="true" />
-          Customers
-        </TabNavigationLink>
+  
       </TabNavigation>
 
       {/* Contenido condicional según la pestaña activa */}
@@ -95,14 +63,6 @@ export default function Documents({ carpetasData }) {
           {/* Renderiza el FileUpload */}
           <FileUpload />
         </div>
-      )}
-
-      {activeTab === "transactions" && (
-        <p className="text-sm text-gray-700">Contenido de Transactions</p>
-      )}
-
-      {activeTab === "customers" && (
-        <p className="text-sm text-gray-700">Contenido de Customers</p>
       )}
     </div>
   );

@@ -1,15 +1,7 @@
 // DependencyList.jsx
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  RiDatabase2Line,
-  RiGroupLine,
-  RiSearchLine,
-  RiTimeLine,
-  RiArrowUpDownLine,
-  RiAddLine,
-} from "@remixicon/react";
-import { List, ListItem, Switch } from "@tremor/react";
+import { List, ListItem } from "@tremor/react";
 import { Divider } from "../../../components/ui/Divider";
 import Card from "../../../components/ui/Card";
 import { Label } from "../../../components/ui/Label";
@@ -18,6 +10,7 @@ import { DateRangePicker } from "../../../components/ui/DatePicker";
 import { IconBuildings } from "@tabler/icons-react";
 import { IconClockHour3 } from "@tabler/icons-react";
 import { IconUsers } from "@tabler/icons-react";
+import { IconArrowsUpDown } from "@tabler/icons-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,13 +21,13 @@ import {
   DropdownMenuTrigger,
 } from "../../../components/dashboard/DropdownMenu";
 import { Button } from "@/components/dashboard/Button";
-
+import { useToast } from '../../../lib/useToast';
 const data = [
   {
     region: "US-East",
     workspaces: [
       {
-        name: "SC-FPPCT",
+        name: "SC-FPPCT-1",
         status: "active",
         type: "1° FISCALIA PROVINCIAL PENAL COORPORATIVA DE TAMBOPATA",
         database: "RAMOS CHOQUE HAROLT OMAR",
@@ -46,7 +39,7 @@ const data = [
         ],
       },
       {
-        name: "testing_environment_2",
+        name: "SC-FPPCT-2",
         status: "inactive",
         type: "2° FISCALIA PROVINCIAL PENAL COORPORATIVA DE TAMBOPATA",
         database: "RAMOS CHOQUE HAROLT OMAR",
@@ -58,10 +51,10 @@ const data = [
         ],
       },
       {
-        name: "training_environment",
+        name: "SC-FPPCT-3",
         status: "active",
-        type: "Test workspace",
-        database: "live_data",
+        type: "3° FISCALIA PROVINCIAL PENAL COORPORATIVA DE TAMBOPATA",
+        database: "RAMOS CHOQUE HAROLT OMAR",
         href: "#",
         capacity: [
           { label: "users", value: 3 },
@@ -70,10 +63,10 @@ const data = [
         ],
       },
       {
-        name: "analytics_dashboard",
+        name: "SC-FPPCT-4",
         status: "inactive",
-        type: "API",
-        database: "test_data",
+        type: "4° FISCALIA PROVINCIAL PENAL COORPORATIVA DE TAMBOPATA",
+        database: "RAMOS CHOQUE HAROLT OMAR",
         href: "#",
         capacity: [
           { label: "users", value: 3 },
@@ -82,10 +75,10 @@ const data = [
         ],
       },
       {
-        name: "managed_database_test",
+        name: "SC-FPPCT-5",
         status: "active",
-        type: "Test workspace",
-        database: "live_data",
+        type: "5° FISCALIA PROVINCIAL PENAL COORPORATIVA DE TAMBOPATA",
+        database: "RAMOS CHOQUE HAROLT OMAR",
         href: "#",
         capacity: [
           { label: "users", value: 3 },
@@ -107,9 +100,13 @@ export default function DependencyList() {
   // Selecciona únicamente la región 'US-East'
   const regionData = data.find((item) => item.region === "US-East");
 
-  // Estados para los Dropdown Menus
-  const [sorting, setSorting] = useState("alphabetical");
+  // Estados para los Dropdown Menus y para el Input de búsqueda
+  const [sorting, setSorting] = useState("");
   const [date, setDate] = useState("last-30-days");
+  const [searchTerm, setSearchTerm] = useState("");
+
+  // Estado para resaltar el label "Reportes"
+  const [highlightReportes, setHighlightReportes] = useState(false);
 
   const radioItems = [
     { value: "alphabetical", label: "Carga laboral", hint: "A-Z" },
@@ -118,30 +115,40 @@ export default function DependencyList() {
       label: "Incidencia delitos",
       hint: "Z-A",
     },
-    { value: "created-at", label: "Created at", hint: "Jan-Dec" },
   ];
 
-  const radioItems2 = [
-    { value: "last-day", label: "Last day" },
-    { value: "last-15-days", label: "Last 15 days" },
-    { value: "last-30-days", label: "Last 30 days" },
-    { value: "last-quarter", label: "Last quarter" },
-  ];
-
-  const selectedLabel = radioItems.find((item) => item.value === sorting)?.label;
-  const selectedLabel2 = radioItems2.find((item) => item.value === date)?.label;
-
+  const selectedLabel = sorting ? radioItems.find((item) => item.value === sorting)?.label : "Reportes";
   const navigate = useNavigate();
 
-  // Función que se llama al hacer clic en una Card
+  // Hook de toasts
+  const { toast } = useToast();
+
+  // Maneja el clic en un card
   const handleCardClick = () => {
+    if (!sorting) {
+      // Resaltar label y mostrar toast
+      setHighlightReportes(true);
+      // Si no se seleccionó ningún reporte, muestra un toast de advertencia
+      toast?.({
+        variant: "warning",
+        title: "No se seleccionó reporte",
+        description: "Por favor, seleccione un tipo de reporte antes de continuar.",
+      });
+      return; // Detenemos la ejecución, no navegamos
+    }
+
+    // Si sí hay un reporte seleccionado, navega normalmente
     if (sorting === "alphabetical") {
       navigate("/dashboard/estadisticas/WorkLoad");
     } else if (sorting === "reverse-alphabetical") {
       navigate("/dashboard/estadisticas/CrimesHighestIncidence");
     }
-    // Si el sorting es "created-at", se puede definir otra acción o dejarla sin navegación
   };
+
+  // Filtrado de workspaces basado en el término ingresado en el Input (buscando en "type")
+  const filteredWorkspaces = regionData.workspaces.filter((workspace) =>
+    workspace.type.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <>
@@ -149,23 +156,26 @@ export default function DependencyList() {
       <div className="block md:flex md:items-center md:justify-between pt-4">
         <Input
           placeholder="Search workspace..."
-          icon={<RiSearchLine />}
           className="h-9 w-full rounded-tremor-small md:max-w-xs"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
         />
         <div className="lg:flex lg:items-center lg:space-x-3">
-          {/* Primer Dropdown Menu: Sorting */}
+          {/* Dropdown Menu: Tipo de reporte */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
                 type="button"
                 className="flex items-center gap-x-2 rounded-tremor-small border border-tremor-border bg-tremor-background py-1 pl-3 pr-1.5 !text-tremor-default font-medium text-tremor-content-strong shadow-tremor-input transition hover:bg-tremor-background-muted hover:text-tremor-content-strong focus:z-10 focus:outline-none dark:border-dark-tremor-border dark:bg-gray-950 dark:text-dark-tremor-content-strong dark:shadow-dark-tremor-input hover:dark:bg-gray-950/50"
               >
-                <RiArrowUpDownLine
+                <IconArrowsUpDown
                   className="-ml-px size-5 shrink-0 text-tremor-content dark:text-dark-tremor-content"
                   aria-hidden={true}
                 />
-                Sorted by{" "}
-                <span className="rounded bg-tremor-brand-faint px-2 py-1 text-tremor-label font-semibold text-tremor-brand dark:bg-tremor-brand-subtle/10 dark:text-dark-tremor-brand">
+                Tipo de reporte:{" "}
+                <span className={`rounded bg-tremor-brand-faint px-2 py-1 text-tremor-label font-semibold 
+                  dark:bg-tremor-brand-subtle/10 dark:text-dark-tremor-brand 
+                  ${highlightReportes ? "text-blue-600" : "text-tremor-brand"}`}>
                   {selectedLabel}
                 </span>
               </Button>
@@ -174,7 +184,10 @@ export default function DependencyList() {
               className="!min-w-[calc(var(--radix-dropdown-menu-trigger-width))]"
               align="start"
             >
-              <DropdownMenuRadioGroup value={sorting} onValueChange={setSorting}>
+              <DropdownMenuRadioGroup value={sorting} onValueChange={(val) => {
+                setSorting(val);
+                setHighlightReportes(false);
+              }}>
                 {radioItems.map((item) => (
                   <DropdownMenuRadioItem
                     key={item.value}
@@ -205,7 +218,7 @@ export default function DependencyList() {
 
       {/* Grid de workspaces */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3">
-        {regionData.workspaces.map((workspace, index) => (
+        {filteredWorkspaces.map((workspace, index) => (
           <Card
             key={`${workspace.name}-${index}`}
             className="rounded-tremor-small p-4 cursor-pointer"
@@ -241,10 +254,7 @@ export default function DependencyList() {
               {workspace.capacity.map((item) => {
                 const Icon = capacityIcon[item.label];
                 return (
-                  <div
-                    key={item.label}
-                    className="flex items-center space-x-1.5"
-                  >
+                  <div key={item.label} className="flex items-center space-x-1.5">
                     <Icon
                       className="size-4 text-tremor-content-subtle dark:text-dark-tremor-content-subtle"
                       aria-hidden="true"
