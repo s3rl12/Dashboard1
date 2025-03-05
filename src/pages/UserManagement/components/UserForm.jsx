@@ -13,6 +13,9 @@ import { RadioGroup } from "@headlessui/react";
 import { RiCheckboxCircleFill, RiCheckLine } from "@remixicon/react";
 import { DatePicker } from "../../../components/ui/DatePicker";
 import { useAuth } from "../../../context/AuthContext";
+import { useToast } from '../../../lib/useToast';
+
+import userListService from '../../../services/api/user-list/userListService';
 
 const featureMapping = {
   panel_control: "Panel de control",
@@ -40,7 +43,7 @@ const PackageDetails = ({ workspace }) => {
             <li key={idx} className="flex items-center space-x-2">
               <RiCheckLine
                 className="size-5 text-tremor-content dark:text-dark-tremor-content"
-                aria-hidden={true}
+                aria-hidden="true"
               />
               <span className="text-tremor-default text-tremor-content-strong dark:text-dark-tremor-content-strong">
                 {feature}
@@ -75,30 +78,36 @@ const dynamicWorkspaces = (rolesData) =>
     };
   });
 
-export default function UserForm({ rolesData = [], areasData = [], onCancel, }) {
+// Función para obtener la fecha actual en formato YYYY-MM-DD
+function getCurrentDate() {
+  const now = new Date();
+  return now.toISOString().split("T")[0];
+}
+
+export default function UserForm({ rolesData = [], areasData = [], onCancel }) {
   // Generar workspaces dinámicos a partir de rolesData
   const workspaces = dynamicWorkspaces(rolesData);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    // Aquí puedes agregar lógica de validación o guardado
-    console.log("Formulario enviado");
-  };
+  // Estados para los campos controlados adicionales
+  const [sexo, setSexo] = useState("");
+  const [fechaNacimiento, setFechaNacimiento] = useState(null);
 
   // Estado para seleccionar workspace (roles)
   const [selectedWorkspace, setSelectedWorkspace] = useState(
     workspaces[0] || {}
   );
 
-
-
   // Estados para manejar la selección de áreas (sede, dependencia y despacho)
-  // Estados actualizados
   const [selectedSede, setSelectedSede] = useState("");
   const [selectedDependencia, setSelectedDependencia] = useState("");
   const [selectedDespacho, setSelectedDespacho] = useState("");
 
+  // Estados para controlar la solicitud
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [abortController, setAbortController] = useState(null);
+
   const { userFormData, setUserFormData } = useAuth();
+  const { toast, dismiss } = useToast();
 
   // Actualizado en la sección de manejo de estados
   const handleSedeChange = (value) => {
@@ -106,11 +115,11 @@ export default function UserForm({ rolesData = [], areasData = [], onCancel, }) 
     setSelectedSede(sedeId);
     setSelectedDependencia(null);
     setSelectedDespacho(null);
-    setUserFormData(prev => ({
+    setUserFormData((prev) => ({
       ...prev,
       sede_fk: sedeId,
       dependencia_fk: null,
-      despacho_fk: null
+      despacho_fk: null,
     }));
   };
 
@@ -118,24 +127,126 @@ export default function UserForm({ rolesData = [], areasData = [], onCancel, }) 
     const dependenciaId = value ? Number(value) : null;
     setSelectedDependencia(dependenciaId);
     setSelectedDespacho(null);
-    setUserFormData(prev => ({
+    setUserFormData((prev) => ({
       ...prev,
       dependencia_fk: dependenciaId,
-      despacho_fk: null
+      despacho_fk: null,
     }));
   };
 
   const handleDespachoChange = (value) => {
     const despachoId = value ? Number(value) : null;
-
     setSelectedDespacho(despachoId);
-    setUserFormData(prev => ({ ...prev, despacho_fk: despachoId }));
+    setUserFormData((prev) => ({ ...prev, despacho_fk: despachoId }));
   };
 
-  const currentSede = areasData.find(sede => sede.id === selectedSede);
+  const currentSede = areasData.find((sede) => sede.id === selectedSede);
   const currentDependencia = currentSede?.dependencias?.find(
-    dep => dep.id === selectedDependencia
+    (dep) => dep.id === selectedDependencia
   );
+
+  // Función para manejar la cancelación: si se está enviando, se aborta la solicitud y se muestra el toast warning
+  const handleCancel = () => {
+    if (isSubmitting && abortController) {
+      abortController.abort();
+      toast({ variant: "warning", title: "Cancelado", description: "La creación del usuario fue cancelada" });
+      setIsSubmitting(false);
+      setAbortController(null);
+    }
+    onCancel();
+  };
+
+  // Modificación del handleSubmit para enviar los datos mediante userListService.createUser
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    // Acceder a los elementos del formulario
+    const formElements = e.target.elements;
+    const nombre = formElements.nombre.value;
+    const apellido = formElements.apellido.value;
+    const email = formElements.correo.value;
+    const dni = formElements.dni.value;
+    const telefono = formElements.telefono.value;
+    const direccion = formElements.direccion.value;
+    const extension = formElements.extension.value;
+    const tipo_fiscal = formElements["tipo-fiscal"].value;
+    const password = formElements.password.value;
+    const password_confirmation = formElements["confirm-password"].value;
+
+    // Convertir fecha de nacimiento a formato YYYY-MM-DD (si se seleccionó)
+    const fecha_nacimiento = fechaNacimiento
+      ? fechaNacimiento.toISOString().split("T")[0]
+      : "";
+
+    // Se toman solo los IDs para el rol y el despacho
+    const roles_fk = selectedWorkspace?.id || null;
+    const despacho_fk = selectedDespacho || null;
+
+    // Construir el objeto de datos para el nuevo usuario
+    const newUserData = {
+      nombre,
+      apellido,
+      telefono,
+      email,
+      dni,
+      sexo, // valor seleccionado en el Select de "Género"
+      direccion,
+      fecha_nacimiento,
+      foto_perfil: null,
+      extension,
+      tipo_fiscal,
+      activo: "1",
+      fecha_ingreso: getCurrentDate(),
+      password,
+      password_confirmation,
+      estado: "1",
+      fiscal_fk: null,
+      roles_fk, // solo se envía el ID del rol seleccionado
+      despacho_fk, // solo se envía el ID del despacho seleccionado
+    };
+
+    // Bloquear el botón "Guardar" y mostrar toast de carga
+    setIsSubmitting(true);
+    const controller = new AbortController();
+    setAbortController(controller);
+    // Mostrar toast de carga
+    const loadingToast = toast({
+      variant: "loading",
+      title: "Creando usuario...",
+      description: "Por favor, espere."
+    });
+
+    try {
+      console.log("Datos del usuario:", newUserData);
+      // Se asume que userListService.createUser acepta un objeto de configuración con signal para abortar
+      const response = await userListService.createUser(newUserData, { signal: controller.signal });
+      console.log("Usuario creado:", response);
+      // Actualizar toast a éxito
+      toast({
+        variant: "success",
+        title: "Usuario creado",
+        description: "El usuario fue creado exitosamente."
+      });
+      // Cerrar automáticamente el diálogo después de un breve retraso (ej. 2 segundos)
+      setTimeout(() => {
+        onCancel();
+      }, 2000);
+    } catch (error) {
+      if (error.name === "AbortError") {
+        // Error por cancelación: ya se mostró el toast warning en handleCancel
+        console.error("Solicitud cancelada");
+      } else {
+        console.error("Error al crear el usuario:", error);
+        toast({
+          variant: "error",
+          title: "Error",
+          description: "No se pudo crear el usuario."
+        });
+      }
+    } finally {
+      setIsSubmitting(false);
+      setAbortController(null);
+    }
+  };
 
   return (
     <form className="pt-5" onSubmit={handleSubmit} noValidate>
@@ -206,7 +317,12 @@ export default function UserForm({ rolesData = [], areasData = [], onCancel, }) 
               <Label className="text-tremor-default font-medium">
                 Fecha de nacimiento <span className="text-red-500">*</span>
               </Label>
-              <DatePicker placeholder="Selecciona la fecha" className="mt-2" />
+              <DatePicker
+                placeholder="Selecciona la fecha"
+                className="mt-2"
+                value={fechaNacimiento}
+                onChange={setFechaNacimiento}
+              />
             </div>
             <div className="col-span-full sm:col-span-2">
               <Label htmlFor="telefono" className="text-tremor-default font-medium">
@@ -238,13 +354,14 @@ export default function UserForm({ rolesData = [], areasData = [], onCancel, }) 
               <Label htmlFor="genero" className="text-tremor-default font-medium">
                 Género <span className="text-red-500">*</span>
               </Label>
-              <Select>
+              <Select value={sexo} onValueChange={setSexo}>
                 <SelectTrigger id="genero" className="mt-2 w-full">
-                  Selecciona
+                  <SelectValue placeholder="Selecciona" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="varon">Varón</SelectItem>
-                  <SelectItem value="mujer">Mujer</SelectItem>
+                  {/* Actualizamos los valores para que coincidan con lo que espera el servidor */}
+                  <SelectItem value="m">Masculino</SelectItem>
+                  <SelectItem value="f">Femenino</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -415,9 +532,10 @@ export default function UserForm({ rolesData = [], areasData = [], onCancel, }) 
                   key={item.id}
                   value={item}
                   className={({ active }) =>
-                    `relative flex cursor-pointer rounded-lg border p-4 transition ${active
-                      ? "border-tremor-brand ring-2 ring-tremor-brand-muted dark:border-dark-tremor-brand-subtle"
-                      : "border-tremor-border dark:border-dark-tremor-border"
+                    `relative flex cursor-pointer rounded-lg border p-4 transition ${
+                      active
+                        ? "border-tremor-brand ring-2 ring-tremor-brand-muted dark:border-dark-tremor-brand-subtle"
+                        : "border-tremor-border dark:border-dark-tremor-border"
                     } bg-tremor-background dark:bg-dark-tremor-background`
                   }
                 >
@@ -437,8 +555,9 @@ export default function UserForm({ rolesData = [], areasData = [], onCancel, }) 
                         </span>
                       </div>
                       <RiCheckboxCircleFill
-                        className={`size-5 shrink-0 text-tremor-brand dark:text-dark-tremor-brand ${!checked ? "invisible" : ""
-                          }`}
+                        className={`size-5 shrink-0 text-tremor-brand dark:text-dark-tremor-brand ${
+                          !checked ? "invisible" : ""
+                        }`}
                         aria-hidden={true}
                       />
                     </>
@@ -452,19 +571,20 @@ export default function UserForm({ rolesData = [], areasData = [], onCancel, }) 
       </div>
       <Divider className="my-5" />
       <div className="flex justify-end gap-2">
-        {/* Botón Cancelar: invoca onCancel para cerrar el diálogo */}
+        {/* Botón Cancelar: usa handleCancel para cancelar la creación si está en curso */}
         <button
           type="button"
           className="rounded-md bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200"
-          onClick={onCancel}
+          onClick={handleCancel}
         >
           Cancelar
         </button>
 
-        {/* Botón Guardar: disparará handleSubmit */}
+        {/* Botón Guardar: bloqueado cuando isSubmitting es true */}
         <button
           type="submit"
-          className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+          disabled={isSubmitting}
+          className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Guardar
         </button>

@@ -1,21 +1,12 @@
 // Users.jsx
 import React, { useState } from "react";
-
-// 1. Importamos el servicio que sube usuarios
 import importUserService from '../../services/api/import-user/importUserService';
-// (Ajusta la ruta según tu estructura)
-
 import { TabNavigation, TabNavigationLink } from "../../pages/DocumentManager/Documents-components/TabNavigation";
 import FileUpload from "../DocumentManager/Documents-components/components/FileUpload";
-
-import {
-  RiExchange2Line,
-  RiCustomerService2Fill,
-} from "@remixicon/react";
 import { IconUsersPlus, IconFilePlus } from "@tabler/icons-react";
 import ListUsers from "./components/ListUsers";
 
-export default function Users({ usersData, rolesData, areasData }) {  // Se reciben los tres parámetros
+export default function Users({ usersData, rolesData, areasData }) {
   const [activeTab, setActiveTab] = useState("Usuarios");
 
   return (
