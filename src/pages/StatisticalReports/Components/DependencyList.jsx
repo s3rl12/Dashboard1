@@ -1,5 +1,5 @@
 // DependencyList.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { List, ListItem } from "@tremor/react";
 import { Divider } from "../../../components/ui/Divider";
@@ -14,91 +14,138 @@ import { IconArrowsUpDown } from "@tabler/icons-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "../../../components/dashboard/DropdownMenu";
 import { Button } from "@/components/dashboard/Button";
-import { useToast } from '../../../lib/useToast';
-const data = [
-  {
-    region: "US-East",
-    workspaces: [
-      {
-        name: "SC-FPPCT-1",
-        status: "active",
-        type: "1° FISCALIA PROVINCIAL PENAL COORPORATIVA DE TAMBOPATA",
-        database: "RAMOS CHOQUE HAROLT OMAR",
-        href: "#",
-        capacity: [
-          { label: "users", value: 3 },
-          { label: "storage", value: "15" },
-          { label: "lastEdited", value: "1d ago" },
-        ],
-      },
-      {
-        name: "SC-FPPCT-2",
-        status: "inactive",
-        type: "2° FISCALIA PROVINCIAL PENAL COORPORATIVA DE TAMBOPATA",
-        database: "RAMOS CHOQUE HAROLT OMAR",
-        href: "#",
-        capacity: [
-          { label: "users", value: 2 },
-          { label: "storage", value: "10" },
-          { label: "lastEdited", value: "2d ago" },
-        ],
-      },
-      {
-        name: "SC-FPPCT-3",
-        status: "active",
-        type: "3° FISCALIA PROVINCIAL PENAL COORPORATIVA DE TAMBOPATA",
-        database: "RAMOS CHOQUE HAROLT OMAR",
-        href: "#",
-        capacity: [
-          { label: "users", value: 3 },
-          { label: "storage", value: "5" },
-          { label: "lastEdited", value: "4h ago" },
-        ],
-      },
-      {
-        name: "SC-FPPCT-4",
-        status: "inactive",
-        type: "4° FISCALIA PROVINCIAL PENAL COORPORATIVA DE TAMBOPATA",
-        database: "RAMOS CHOQUE HAROLT OMAR",
-        href: "#",
-        capacity: [
-          { label: "users", value: 3 },
-          { label: "storage", value: "10" },
-          { label: "lastEdited", value: "1d ago" },
-        ],
-      },
-      {
-        name: "SC-FPPCT-5",
-        status: "active",
-        type: "5° FISCALIA PROVINCIAL PENAL COORPORATIVA DE TAMBOPATA",
-        database: "RAMOS CHOQUE HAROLT OMAR",
-        href: "#",
-        capacity: [
-          { label: "users", value: 3 },
-          { label: "storage", value: "3" },
-          { label: "lastEdited", value: "7d ago" },
-        ],
-      },
-    ],
-  },
-];
+import { useToast } from "../../../lib/useToast";
 
+// Diccionario de íconos para capacity
 const capacityIcon = {
-  users: IconBuildings,
-  storage: IconUsers,
-  lastEdited: IconClockHour3,
+  users: IconBuildings,       // Ícono para la cantidad de despachos
+  storage: IconUsers,         // Ícono con valor estático 1
+  lastEdited: IconClockHour3, // Ícono para la fecha de actualización
 };
 
-export default function DependencyList() {
-  // Selecciona únicamente la región 'US-East'
-  const regionData = data.find((item) => item.region === "US-East");
+// Función para formatear el tiempo relativo desde updated_at
+function getRelativeTime(dateStr) {
+  if (!dateStr) return "";
+  const updated = new Date(dateStr);
+  const now = new Date();
+  const diff = now - updated; // Diferencia en milisegundos
+
+  const diffInMinutes = Math.floor(diff / (1000 * 60));
+  if (diffInMinutes < 60) {
+    return `Hace ${diffInMinutes}m`;
+  }
+  const diffInHours = Math.floor(diff / (1000 * 60 * 60));
+  if (diffInHours < 24) {
+    return `Hace ${diffInHours}h`;
+  }
+  const days = Math.floor(diffInHours / 24);
+  return `Hace ${days}d`;
+}
+
+/**
+ * Transforma cada dependencia a la estructura usada en el UI original (workspaces).
+ * @param {Object} dependency - Objeto con {cod_depen, fiscalia, activo, despachos, updated_at}
+ * @returns {Object} workspace - Objeto adaptado para la UI original
+ */
+function transformDependencyToWorkspace(dependency) {
+  return {
+    // Se usa cod_depen como "name" para mostrar en la tarjeta
+    name: dependency.cod_depen,
+    // Estado: "active" o "inactive"
+    status: dependency.activo === 1 ? "active" : "inactive",
+    // type: fiscalia
+    type: dependency.fiscalia,
+    // "database": se asigna el texto estático "Fiscal titular"
+    database: "Fiscal titular",
+    // Se construye la capacidad con 3 items:
+    // "users": # de despachos, "storage": valor fijo 1, "lastEdited": tiempo relativo
+    capacity: [
+      {
+        label: "users",
+        value: dependency.despachos ? dependency.despachos.length : 0,
+      },
+      {
+        label: "storage",
+        value: 1, // Valor estático para mostrar IconUsers con "1"
+      },
+      {
+        label: "lastEdited",
+        value: getRelativeTime(dependency.updated_at),
+      },
+    ],
+  };
+}
+
+/**
+ * 
+ * @param {Object} props
+ * @param {Array} props.dependencias - Lista de dependencias proveniente de la sede seleccionada
+ * @param {boolean} props.isLoading - Indica si se están cargando las dependencias
+ * @param {Error|null} props.error - Error en la carga (si existe)
+ * @param {string} props.activeTab - Nombre del tab actual (por ej. "Reports")
+ */
+export default function DependencyList({
+  dependencias = [],
+  isLoading = false,
+  error = null,
+  activeTab = "Reports",
+}) {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  // Referencia para el toast actual y un flag para saber si ya se cargó la data
+  const toastRef = useRef(null);
+  const hasDataLoaded = useRef(false);
+
+  // Efecto para manejar la lógica de toasts al estilo "Users.jsx"
+  useEffect(() => {
+    if (activeTab === "Reports") {
+      // Si estamos en la pestaña "Reports"
+      if (isLoading && !hasDataLoaded.current) {
+        // Crear un toast de "loading" solo si no se ha cargado antes
+        if (!toastRef.current) {
+          toastRef.current = toast({
+            variant: "loading",
+            title: "Cargando dependencias...",
+            disableDismiss: true,
+          });
+        }
+      } else if (!isLoading && toastRef.current) {
+        // Si finalizó la carga y hay un toastRef => actualizarlo a success o error
+        const newToast = toastRef.current.update({
+          variant: error ? "error" : "success",
+          title: error ? "Error" : "Éxito",
+          description: error
+            ? "Error al cargar dependencias."
+            : "Dependencias cargadas correctamente.",
+          disableDismiss: false,
+        });
+        toastRef.current = newToast;
+        hasDataLoaded.current = true;
+      }
+    }
+  }, [isLoading, error, activeTab, toast]);
+
+  // Cleanup para descartar el toast al cambiar de pestaña o desmontar
+  useEffect(() => {
+    return () => {
+      if (toastRef.current) {
+        toastRef.current.dismiss();
+        toastRef.current = null;
+      }
+    };
+  }, [activeTab]);
+
+  // Creamos un "regionData" ficticio con un arreglo "workspaces" mapeado desde dependencias
+  const regionData = {
+    region: "Dependencies",
+    workspaces: dependencias.map(transformDependencyToWorkspace),
+  };
 
   // Estados para los Dropdown Menus y para el Input de búsqueda
   const [sorting, setSorting] = useState("");
@@ -108,6 +155,7 @@ export default function DependencyList() {
   // Estado para resaltar el label "Reportes"
   const [highlightReportes, setHighlightReportes] = useState(false);
 
+  // Items del menú de reporte
   const radioItems = [
     { value: "alphabetical", label: "Carga laboral", hint: "A-Z" },
     {
@@ -117,27 +165,22 @@ export default function DependencyList() {
     },
   ];
 
-  const selectedLabel = sorting ? radioItems.find((item) => item.value === sorting)?.label : "Reportes";
-  const navigate = useNavigate();
-
-  // Hook de toasts
-  const { toast } = useToast();
+  const selectedLabel = sorting
+    ? radioItems.find((item) => item.value === sorting)?.label
+    : "Reportes";
 
   // Maneja el clic en un card
   const handleCardClick = () => {
     if (!sorting) {
-      // Resaltar label y mostrar toast
       setHighlightReportes(true);
-      // Si no se seleccionó ningún reporte, muestra un toast de advertencia
       toast?.({
         variant: "warning",
         title: "No se seleccionó reporte",
         description: "Por favor, seleccione un tipo de reporte antes de continuar.",
       });
-      return; // Detenemos la ejecución, no navegamos
+      return;
     }
 
-    // Si sí hay un reporte seleccionado, navega normalmente
     if (sorting === "alphabetical") {
       navigate("/dashboard/estadisticas/WorkLoad");
     } else if (sorting === "reverse-alphabetical") {
@@ -173,9 +216,11 @@ export default function DependencyList() {
                   aria-hidden={true}
                 />
                 Tipo de reporte:{" "}
-                <span className={`rounded bg-tremor-brand-faint px-2 py-1 text-tremor-label font-semibold 
+                <span
+                  className={`rounded bg-tremor-brand-faint px-2 py-1 text-tremor-label font-semibold 
                   dark:bg-tremor-brand-subtle/10 dark:text-dark-tremor-brand 
-                  ${highlightReportes ? "text-blue-600" : "text-tremor-brand"}`}>
+                  ${highlightReportes ? "text-blue-600" : "text-tremor-brand"}`}
+                >
                   {selectedLabel}
                 </span>
               </Button>
@@ -184,10 +229,13 @@ export default function DependencyList() {
               className="!min-w-[calc(var(--radix-dropdown-menu-trigger-width))]"
               align="start"
             >
-              <DropdownMenuRadioGroup value={sorting} onValueChange={(val) => {
-                setSorting(val);
-                setHighlightReportes(false);
-              }}>
+              <DropdownMenuRadioGroup
+                value={sorting}
+                onValueChange={(val) => {
+                  setSorting(val);
+                  setHighlightReportes(false);
+                }}
+              >
                 {radioItems.map((item) => (
                   <DropdownMenuRadioItem
                     key={item.value}
@@ -224,6 +272,7 @@ export default function DependencyList() {
             className="rounded-tremor-small p-4 cursor-pointer"
             onClick={handleCardClick}
           >
+            {/* Nombre y estado */}
             <div className="flex items-center space-x-2">
               <h4 className="truncate text-sm font-medium text-tremor-content-strong dark:text-dark-tremor-content-strong">
                 <a href={workspace.href} className="focus:outline-none">
@@ -232,11 +281,18 @@ export default function DependencyList() {
                 </a>
               </h4>
               {workspace.status === "active" && (
-                <span className="inline-flex items-center rounded bg-emerald-100 px-1.5 py-0.5 text-xs font-medium text-emerald-800 dark:bg-emerald-400/10 dark:text-emerald-400">
+                <span className="inline-flex items-center rounded bg-blue-100 px-1.5 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-400/10 dark:text-blue-400">
                   active
                 </span>
               )}
+              {workspace.status === "inactive" && (
+                <span className="inline-flex items-center rounded bg-red-100 px-1.5 py-0.5 text-xs font-medium text-red-800 dark:bg-red-400/10 dark:text-red-400">
+                  inactive
+                </span>
+              )}
             </div>
+
+            {/* Descripción: fiscalía (type) y "Fiscal titular" (database) */}
             <List className="mt-3 divide-none">
               <ListItem className="justify-start space-x-2 py-1">
                 <span className="font-medium text-tremor-content-strong dark:text-dark-tremor-content-strong">
@@ -244,21 +300,25 @@ export default function DependencyList() {
                 </span>
               </ListItem>
               <ListItem className="justify-start space-x-2 py-1">
-                <span className="font-medium text-sm text-tremor-content-strong dark:text-dark-tremor-content-strong">
+                <span className="font-medium text-base text-tremor-content-strong dark:text-dark-tremor-content-strong">
                   Fiscal titular:
                 </span>
-                <span className="text-xs">{workspace.database}</span>
+                <span className="text-sm">{workspace.database}</span>
               </ListItem>
             </List>
+
+            {/* Capacidad: # despachos (users), valor estático 1 (storage) y tiempo de actualización (lastEdited) */}
             <div className="mt-5 flex flex-wrap gap-4">
               {workspace.capacity.map((item) => {
                 const Icon = capacityIcon[item.label];
                 return (
                   <div key={item.label} className="flex items-center space-x-1.5">
-                    <Icon
-                      className="size-4 text-tremor-content-subtle dark:text-dark-tremor-content-subtle"
-                      aria-hidden="true"
-                    />
+                    {Icon && (
+                      <Icon
+                        className="size-4 text-tremor-content-subtle dark:text-dark-tremor-content-subtle"
+                        aria-hidden="true"
+                      />
+                    )}
                     <span className="text-xs font-medium text-tremor-content dark:text-dark-tremor-content">
                       {item.value}
                     </span>

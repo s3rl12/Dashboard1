@@ -11,7 +11,7 @@ const TOAST_LIMIT = 4;
 /**
  * Tiempo para remover toasts en ms
  */
-const TOAST_REMOVE_DELAY = 30000; // Ajusta a tu preferencia
+const TOAST_REMOVE_DELAY = 100000; // Ajusta a tu preferencia
 
 let count = 0;
 function genId() {
@@ -149,6 +149,10 @@ function toast(props) {
   return { id, dismiss, update };
 }
 
+function dismissToast(toastId) {
+  dispatch({ type: actionTypes.DISMISS_TOAST, toastId });
+}
+
 /**
  * Hook para manejar toasts en React.
  * Retorna { toasts, toast, dismiss }.
@@ -169,6 +173,6 @@ export function useToast() {
   return {
     ...state,
     toast,
-    dismiss: (toastId) => dispatch({ type: actionTypes.DISMISS_TOAST, toastId }),
+    dismiss: dismissToast,
   };
 }

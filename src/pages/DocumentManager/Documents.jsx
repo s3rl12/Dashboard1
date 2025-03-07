@@ -2,18 +2,16 @@
 import React, { useState } from "react";
 import { Callout } from "./Documents-components/Callout";
 import { TabNavigation, TabNavigationLink } from "./Documents-components/TabNavigation";
-import {
-  RiErrorWarningFill,
-  RiExchange2Line,
-  RiCustomerService2Fill,
-} from "@remixicon/react";
+import { useCarpetasArchivos } from "../../hooks/useCarpetasArchivos";
 import { IconFilePlus, IconFolderOpen } from "@tabler/icons-react";
 import FileUpload from "./Documents-components/components/FileUpload";
 import DocumentFolders from "./Documents-components/components/DocumentFolders";
-export default function Documents({ carpetasData }) {
+export default function Documents() {
   // Estado local para saber cuál pestaña está activa
   const [activeTab, setActiveTab] = useState("carpetas");
-
+const { 
+    data: carpetasData, 
+  } = useCarpetasArchivos();
   return (
     <div className="p-2 space-y-4">
       {/* 1. Título */}

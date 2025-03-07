@@ -23,9 +23,9 @@ export function UserProfile() {
             className="flex size-8 shrink-0 items-center justify-center rounded-full border border-gray-300 bg-white text-xs text-gray-700"
             aria-hidden="true"
           >
-            ES
+            AD
           </span>
-          <span>Emma Stone</span>
+          <span>Administrador</span>
         </span>
         <ChevronsUpDown
           className="size-4 shrink-0 text-gray-500 group-hover:text-gray-700"

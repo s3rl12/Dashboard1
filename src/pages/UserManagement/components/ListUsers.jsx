@@ -48,7 +48,7 @@ import { Select, SelectTrigger, SelectContent, SelectItem } from "../../../compo
 import { RadioGroup } from "@headlessui/react";
 import { RiCheckboxCircleFill } from "@remixicon/react";
 import { DatePicker } from "../../../components/ui/DatePicker";
-
+import userListService from '../../../services/api/user-list/userListService';
 import OptionalAlert from "../../../components/alert/OptionalAlert";
 import UserForm from "./UserForm";
 
@@ -77,7 +77,7 @@ function StatusBadge({ status }) {
   );
 }
 
-export default function ListUsers({ usersData: propUsersData = [], rolesData = [], areasData= [] }) {
+export default function ListUsers({ usersData: propUsersData = [], rolesData = [], areasData = [] }) {
   // Se usa un estado local para manejar modificaciones (como eliminación)
   const [tableData, setTableData] = useState(propUsersData);
 
@@ -106,12 +106,20 @@ export default function ListUsers({ usersData: propUsersData = [], rolesData = [
       title: "¿Estás seguro?",
       text: "¡No podrás revertir esto!",
       onConfirm: async () => {
-        await new Promise((resolve) => setTimeout(resolve, 1200));
-        setTableData((prev) =>
-          prev.map((user) =>
-            user.id === rowData.id ? { ...user, estado: 0 } : user
-          )
-        );
+        try {
+          // Llamar al servicio para eliminar en el backend
+          await userListService.deleteUser(rowData.id);
+          
+          // Actualizar el estado local (eliminar el usuario de la tabla)
+          setTableData((prev) => prev.filter(user => user.id !== rowData.id));
+          
+          // Opcional: Mostrar feedback de éxito
+          console.log("Usuario eliminado correctamente");
+        } catch (error) {
+          // Manejar errores (ej: mostrar notificación)
+          console.error("Error al eliminar usuario:", error.response?.data);
+          alert("No se pudo eliminar el usuario");
+        }
       },
     });
   };
@@ -209,7 +217,7 @@ export default function ListUsers({ usersData: propUsersData = [], rolesData = [
     initialState: {
       pagination: {
         pageIndex: 0,
-        pageSize: 5,
+        pageSize: 8,
       },
     },
   });
@@ -244,7 +252,7 @@ export default function ListUsers({ usersData: propUsersData = [], rolesData = [
               </DialogDescription>
             </DialogHeader>
             <UserForm rolesData={rolesData} areasData={areasData} onCancel={() => setIsDialogOpen(false)} />
-            
+
           </DialogContent>
         </Dialog>
       </div>
@@ -616,19 +624,19 @@ export default function ListUsers({ usersData: propUsersData = [], rolesData = [
                           }
                         >
                           {({ checked }) => (
-                <>
-                  <div className="flex w-full flex-col justify-between">
-                    <div>
-                      <RadioGroup.Label className="block text-sm font-medium text-gray-700">
-                        {item.title}
-                      </RadioGroup.Label>
-                      <p className="mt-1 text-sm text-gray-600">{item.description}</p>
-                    </div>
-                    <span className="mt-4 text-sm font-medium text-gray-700">{item.users}</span>
-                  </div>
-                  <RiCheckboxCircleFill className={`size-5 shrink-0 text-blue-500 ${!checked ? "invisible" : ""}`} aria-hidden={true} />
-                </>
-              )}
+                            <>
+                              <div className="flex w-full flex-col justify-between">
+                                <div>
+                                  <RadioGroup.Label className="block text-sm font-medium text-gray-700">
+                                    {item.title}
+                                  </RadioGroup.Label>
+                                  <p className="mt-1 text-sm text-gray-600">{item.description}</p>
+                                </div>
+                                <span className="mt-4 text-sm font-medium text-gray-700">{item.users}</span>
+                              </div>
+                              <RiCheckboxCircleFill className={`size-5 shrink-0 text-blue-500 ${!checked ? "invisible" : ""}`} aria-hidden={true} />
+                            </>
+                          )}
                         </RadioGroup.Option>
                       ))}
                     </div>

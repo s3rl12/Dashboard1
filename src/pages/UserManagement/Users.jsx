@@ -1,13 +1,80 @@
-// Users.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { useListUser } from '../../hooks/useListUser';
+import { useListRol } from '../../hooks/useListRol';
+import { useListDF } from '../../hooks/useListDF';
 import importUserService from '../../services/api/import-user/importUserService';
 import { TabNavigation, TabNavigationLink } from "../../pages/DocumentManager/Documents-components/TabNavigation";
 import FileUpload from "../DocumentManager/Documents-components/components/FileUpload";
 import { IconUsersPlus, IconFilePlus } from "@tabler/icons-react";
 import ListUsers from "./components/ListUsers";
+import { useToast } from '../../lib/useToast';
 
-export default function Users({ usersData, rolesData, areasData }) {
+export default function Users() {
   const [activeTab, setActiveTab] = useState("Usuarios");
+  const { toast, dismiss } = useToast(); // Añadir dismiss aquí
+  const toastRef = useRef(null);
+  const hasDataLoaded = useRef(false);
+
+  // Obtener estados de carga
+  const { 
+    data: usersData, 
+    error: errorUsers, 
+    isLoading: usersLoading 
+  } = useListUser();
+  
+  const { 
+    data: rolesData, 
+    error: errorRoles, 
+    isLoading: rolesLoading 
+  } = useListRol();
+  
+  const { 
+    data: areasData, 
+    error: errorAreas, 
+    isLoading: areasLoading 
+  } = useListDF();
+
+  const error = errorUsers || errorRoles || errorAreas;
+  const isLoading = usersLoading || rolesLoading || areasLoading;
+  const dataLoaded = usersData && rolesData && areasData;
+
+  useEffect(() => {
+    if (activeTab === "Usuarios") {
+      if (isLoading && !hasDataLoaded.current) {
+        // Crear nuevo toast de loading
+        toastRef.current = toast({
+          variant: "loading",
+          title: "Cargando datos...",
+          disableDismiss: true,
+          
+        });
+      } else if (!isLoading && toastRef.current) {
+        // Actualizar toast existente
+        const newToast = toastRef.current.update({
+          variant: error ? "error" : "success",
+          title: error ? "Error" : "Éxito",
+          description: error ? "Error al cargar datos." : "Datos cargados correctamente.",
+          disableDismiss: false,
+          
+        });
+        
+        // Mantener referencia actualizada
+        toastRef.current = newToast;
+        hasDataLoaded.current = true;
+      }
+    }
+  }, [isLoading, activeTab, error, toast]);
+
+  // Limpiar al cambiar pestaña (modificado)
+  useEffect(() => {
+    return () => {
+      if (toastRef.current) {
+        // Usar dismiss del objeto toast en lugar de por ID
+        toastRef.current.dismiss();
+        toastRef.current = null;
+      }
+    };
+  }, [activeTab]);
 
   return (
     <div className="p-2 space-y-4">
@@ -43,18 +110,18 @@ export default function Users({ usersData, rolesData, areasData }) {
 
       {activeTab === "Usuarios" && (
         <div>
-          {/* Se pasan los tres parámetros a ListUsers */}
-          <ListUsers 
-            usersData={usersData} 
-            rolesData={rolesData} 
-            areasData={areasData} 
-          />
+          {dataLoaded && (
+            <ListUsers
+              usersData={usersData}
+              rolesData={rolesData}
+              areasData={areasData}
+            />
+          )}
         </div>
       )}
 
       {activeTab === "importar" && (
         <div>
-          {/* Se pasa la función "importUserService.importUsers" como prop a FileUpload */}
           <FileUpload uploadService={importUserService.importUsers} />
         </div>
       )}

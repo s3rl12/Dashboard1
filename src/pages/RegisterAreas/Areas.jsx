@@ -39,12 +39,11 @@ export default function Areas() {
           <IconBuildingPlus className="size-4" aria-hidden="true" />
           Importar
         </TabNavigationLink>
- 
       </TabNavigation>
 
       {activeTab === "Áreas" && (
         <div>
-          {/* Se pasa la data de áreas a ListAreas */}
+          {/* Se pasa la data de áreas a AreasList */}
           <AreasList />
         </div>
       )}

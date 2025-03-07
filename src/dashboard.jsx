@@ -1,3 +1,4 @@
+// Dashboard.jsx
 import React from "react";
 import { Routes, Route } from "react-router-dom";
 import { useQueryClient } from '@tanstack/react-query';
@@ -13,24 +14,15 @@ import RolesPermissions from "./pages/RolesPermissions/RolesPermissions";
 import DocumentManager from "./pages/DocumentManager/DocumentManager";
 import RegisterAreas from "./pages/RegisterAreas/RegisterAreas";
 import Reports from "./pages/StatisticalReports/Reports";
-// Ojo: Este es el componente para la ruta "documentos"
+// Componente para la ruta "documentos"
 import Documents from "./pages/DocumentManager/Documents";
 import Users from "./pages/UserManagement/Users";
 import Areas from "./pages/RegisterAreas/Areas";
-// Importa los nuevos componentes para las rutas específicas de Estadísticas
+// Componentes para las rutas específicas de Estadísticas
 import WorkLoad from './pages/StatisticalFunctions/WorkLoad/WorkLoad';
-
 import CrimesHighestIncidence from './pages/StatisticalFunctions/CrimesHighestIncidence/CrimesHighestIncidence';
 
-
 export default function Dashboard() {
-  const queryClient = useQueryClient();
-  const carpetasData = queryClient.getQueryData(['carpetas-archivos']);
-  const usersData = queryClient.getQueryData(['list-user']); // Data de usuarios
-  const rolesData = queryClient.getQueryData(['list-rol']);   // Data de roles
-  const areasData = queryClient.getQueryData(['list-areas']);   // Data de áreas
-
-  // Se pasan como props a los componentes correspondientes en las rutas.
   return (
     <div className="flex h-screen bg-gray-100">
       <SidebarProvider defaultOpen={true}>
@@ -46,30 +38,27 @@ export default function Dashboard() {
 
           <main className="flex-1 p-4 overflow-auto">
             <Routes>
-              
               <Route path="estadisticas" element={<Reports />} />
 
               {/* Rutas nuevas para Estadísticas */}
               <Route path="estadisticas/WorkLoad" element={<WorkLoad />} />
               <Route path="estadisticas/CrimesHighestIncidence" element={<CrimesHighestIncidence />} />
 
-              
               <Route path="roles" element={<RolesPermissions />} />
               <Route path="areas" element={<RegisterAreas />} />
               <Route path="Area" element={<Areas />} />
-              
 
               {/* Se pasa la data de carpetas al componente “Documents” */}
               <Route
                 path="documentos"
-                element={<Documents carpetasData={carpetasData} />}
+                element={<Documents />}
               />
-              {/* Se pasan los tres parámetros a Users */}
+              {/* Se pasan roles y áreas; la data de usuarios se obtendrá internamente en Users */}
               <Route 
                 path="Agentes" 
-                element={<Users usersData={usersData} rolesData={rolesData} areasData={areasData} />} 
+                element={<Users />} 
               />
-              {/* Más sub-rutas si quieres */}
+              {/* Más sub-rutas si se requieren */}
             </Routes>
           </main>
         </div>

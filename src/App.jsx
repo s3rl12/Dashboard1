@@ -24,13 +24,11 @@ import fondoSVG from './assets/icons/fondo.svg';
 
 import { useQueryClient } from '@tanstack/react-query';
 import { fetchCarpetasArchivos } from './hooks/useCarpetasArchivos';
-import { fetchListUser } from './hooks/useListUser'; // Import para obtener usuarios
-import { fetchListRol } from './hooks/useListRol';   // Import para obtener roles
-import { fetchListDF } from './hooks/useListDF';       // Import para obtener áreas
+// Se elimina la importación y prefetch de fetchListUser para que se cargue de forma diferida en Users
+// import { fetchListUser } from './hooks/useListUser';
 
 const version = import.meta.env.VITE_VERSION || '1.1.1';
 
-// Estilos comunes para los contenedores de inputs y para los TextFields
 const commonBoxSx = {
   borderRadius: '10px',
   boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.1)',
@@ -70,28 +68,6 @@ function App() {
       // 2. Guardamos token/usuario en el AuthContext
       login({ user: { ...userData, permisos }, token });
 
-      // 3. Justo después de loguear, hacemos prefetch de las queries necesarias
-      await queryClient.prefetchQuery({
-        queryKey: ['carpetas-archivos'],
-        queryFn: fetchCarpetasArchivos,
-      });
-
-      await queryClient.prefetchQuery({
-        queryKey: ['list-user'],
-        queryFn: fetchListUser,
-      });
-      
-      await queryClient.prefetchQuery({
-        queryKey: ['list-rol'],
-        queryFn: fetchListRol,
-      });
-
-      // Nuevo: Prefetch de la lista de áreas usando useListDF
-      await queryClient.prefetchQuery({
-        queryKey: ['list-areas'],
-        queryFn: fetchListDF,
-      });
-
       // 4. Navegamos al Dashboard
       navigate('/dashboard');
     } catch (error) {
@@ -125,12 +101,12 @@ function App() {
         <div className="flex flex-row bg-white rounded-3xl shadow-md w-5/6 h-5/6 mx-auto items-center justify-center">
           {/* Panel izquierdo con información */}
           <div className="flex flex-col items-center justify-center rounded-l-2xl bg-[#152B52] w-1/2 h-full text-white px-8 py-16">
-            <h1 className="font-Quicksand text-9xl font-bold text-[#ACC8FA]">SIEF</h1>
+            <h1 className="font-Quicksand text-9xl font-bold text-[#ACC8FA]">SERF</h1>
             <h3 className="font-Quicksand text-lg font-semibold mb-4 text-center">
-              Sistema de Información <br />Estadística Fiscal (SIEF)
+              Sistema Estadistico <br />Reporte Fiscal (SERF)
             </h3>
             <p className="font-Quicksand text-center font-light leading-relaxed max-w-sm text-sm">
-              El Sistema de Información y Estadística Fiscal (SIEF) es una herramienta desarrollada para el análisis y
+              El Sistema Estadistico de Reporte Fiscal (SERF) es una herramienta desarrollada para el análisis y
               seguimiento del desempeño en la fiscalía. Facilita la generación de reportes detallados y rankings que
               permiten evaluar el rendimiento de fiscales, despachos y dependencias.
             </p>
