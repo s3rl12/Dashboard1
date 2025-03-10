@@ -1,49 +1,69 @@
-import React from 'react';
-import { Box, Typography } from '@mui/material';
-import { createTheme, ThemeProvider } from '@mui/material/styles'; // Asegúrate de importar ThemeProvider y createTheme
+// Reports.jsx
+import React, { useState } from "react";
+import { IconBuildings, IconBuildingPlus } from '@tabler/icons-react'
+import { TabNavigation, TabNavigationLink } from '../../../pages/DocumentManager/Documents-components/TabNavigation';
+import DeadlineControlReport from "./components/DeadlineControlReport";
+export default function DeadlineControl() {
+    const [activeTab, setActiveTab] = useState("Sede");
 
-// Define tu tema
-const theme = createTheme({
-    palette: {
-        primary: {
-            main: '#1976d2', // Color principal
-        },
-        secondary: {
-            main: '#dc004e', // Color secundario
-        },
-    },
-    typography: {
-        fontFamily: 'Roboto, Arial, sans-serif',
-        h4: {
-            fontWeight: 'bold', // Estilo para el h4
-        },
-    },
-});
-
-const StatisticalReports = ({ navigate }) => { // Recibe navigate como prop
     return (
-        <ThemeProvider theme={theme}> {/* Asegúrate de envolverlo con ThemeProvider */}
-            <Box
-                className="flex flex-col h-full w-full items-start p-5 gap-4"
-                sx={{
-                    flexGrow: 1, // Permite que ocupe todo el espacio disponible
-                    transition: 'all 0.3s ease-in-out', // Transición suave
-                }}
-            >
-                <Typography
-                    variant="h4"
-                    component="h1"
-                    gutterBottom
-                    fontWeight="bold"
-                >
-                    Reportes estadisticos
-                </Typography>
-                <Box className="flex flex-col h-full w-full">
-                    
-                </Box>
-            </Box>
-        </ThemeProvider>
-    );
-};
+        <div className="p-2 space-y-4">
+            <div>
+                <h3 className="text-tremor-title font-semibold text-tremor-content-strong dark:text-dark-tremor-content-strong">
+                    CONTROL DE PLAZOS
+                </h3>
+            </div>
 
-export default StatisticalReports;
+            <TabNavigation>
+                <TabNavigationLink
+                    className="inline-flex gap-2"
+                    href="#"
+                    active={activeTab === "Sede"}
+                    onClick={(e) => {
+                        e.preventDefault();
+                        setActiveTab("Sede");
+                    }}
+                >
+                    <IconBuildings className="size-4" aria-hidden="true" />
+                    Sede
+                </TabNavigationLink>
+
+                <TabNavigationLink
+                    className="inline-flex gap-2"
+                    href="#"
+                    active={activeTab === "Depedencia"}
+                    onClick={(e) => {
+                        e.preventDefault();
+                        setActiveTab("Depedencia");
+                    }}
+                >
+                    <IconBuildings className="size-4" aria-hidden="true" />
+                    Depedencia
+                </TabNavigationLink>
+
+                <TabNavigationLink
+                    className="inline-flex gap-2"
+                    href="#"
+                    active={activeTab === "Despacho"}
+                    onClick={(e) => {
+                        e.preventDefault();
+                        setActiveTab("Despacho");
+                    }}
+                >
+                    <IconBuildings className="size-4" aria-hidden="true" />
+                    Despacho
+                </TabNavigationLink>
+            </TabNavigation>
+
+            {activeTab === "Sede" && (
+                <DeadlineControlReport/>
+            )}
+            {activeTab === "Depedencia" && (
+                <p>cotenido</p>
+            )}
+            {activeTab === "Despacho" && (
+                <p>cotenido</p>
+            )}
+        </div>
+    );
+}

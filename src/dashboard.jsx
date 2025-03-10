@@ -21,7 +21,7 @@ import Areas from "./pages/RegisterAreas/Areas";
 // Componentes para las rutas específicas de Estadísticas
 import WorkLoad from './pages/StatisticalFunctions/WorkLoad/WorkLoad';
 import CrimesHighestIncidence from './pages/StatisticalFunctions/CrimesHighestIncidence/CrimesHighestIncidence';
-
+import DeadlineControl from "./pages/StatisticalFunctions/DeadlineControl/DeadlineControl";
 export default function Dashboard() {
   return (
     <div className="flex h-screen bg-gray-100">
@@ -43,7 +43,7 @@ export default function Dashboard() {
               {/* Rutas nuevas para Estadísticas */}
               <Route path="estadisticas/WorkLoad" element={<WorkLoad />} />
               <Route path="estadisticas/CrimesHighestIncidence" element={<CrimesHighestIncidence />} />
-
+              <Route path="estadisticas/DeadlineControl" element={<DeadlineControl/>} />
               <Route path="roles" element={<RolesPermissions />} />
               <Route path="areas" element={<RegisterAreas />} />
               <Route path="Area" element={<Areas />} />

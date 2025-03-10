@@ -158,11 +158,8 @@ export default function DependencyList({
   // Items del menú de reporte
   const radioItems = [
     { value: "alphabetical", label: "Carga laboral", hint: "A-Z" },
-    {
-      value: "reverse-alphabetical",
-      label: "Incidencia delitos",
-      hint: "Z-A",
-    },
+    { value: "reverse-alphabetical", label: "Incidencia delitos", hint: "Z-A" },
+    { value: "control-plazos", label: "Control plazos", hint: "Z-A" },
   ];
 
   const selectedLabel = sorting
@@ -185,7 +182,10 @@ export default function DependencyList({
       navigate("/dashboard/estadisticas/WorkLoad");
     } else if (sorting === "reverse-alphabetical") {
       navigate("/dashboard/estadisticas/CrimesHighestIncidence");
+    } else if (sorting === "control-plazos"){
+      navigate("/dashboard/estadisticas/DeadlineControl");
     }
+
   };
 
   // Filtrado de workspaces basado en el término ingresado en el Input (buscando en "type")
