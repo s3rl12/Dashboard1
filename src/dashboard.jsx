@@ -22,6 +22,9 @@ import Areas from "./pages/RegisterAreas/Areas";
 import WorkLoad from './pages/StatisticalFunctions/WorkLoad/WorkLoad';
 import CrimesHighestIncidence from './pages/StatisticalFunctions/CrimesHighestIncidence/CrimesHighestIncidence';
 import DeadlineControl from "./pages/StatisticalFunctions/DeadlineControl/DeadlineControl";
+import TaxBurden from "./pages/StatisticalFunctions/WorkLoad/components/TaxBurden";
+import TaxDetails from "./pages/StatisticalFunctions/TaxDetails/TaxDetails";
+
 export default function Dashboard() {
   return (
     <div className="flex h-screen bg-gray-100">
@@ -47,7 +50,9 @@ export default function Dashboard() {
               <Route path="roles" element={<RolesPermissions />} />
               <Route path="areas" element={<RegisterAreas />} />
               <Route path="Area" element={<Areas />} />
-
+              <Route path="Grafico" element={<DeadlineControl/>}/>
+              <Route path="Grafico2" element={<TaxBurden/>}/>
+              <Route path="Grafico3" element={<TaxDetails/>}/>
               {/* Se pasa la data de carpetas al componente “Documents” */}
               <Route
                 path="documentos"

@@ -2,16 +2,18 @@
 import React, { useState } from "react";
 import { IconBuildings, IconBuildingPlus } from '@tabler/icons-react'
 import { TabNavigation, TabNavigationLink } from '../../../pages/DocumentManager/Documents-components/TabNavigation';
-import DeadlineControlReport from "./components/DeadlineControlReport";
-import DeadlineControlE from "./components/DeadlineControlE";
-export default function DeadlineControl() {
+
+import DetailedTaxBurden from "./components/DetailedTaxBurden";
+import TaxBurdenReport from "./components/TaxBurdenReport";
+
+export default function TaxDetails() {
     const [activeTab, setActiveTab] = useState("Sede");
 
     return (
         <div className="p-2 space-y-4">
             <div>
                 <h3 className="text-tremor-title font-semibold text-tremor-content-strong dark:text-dark-tremor-content-strong">
-                    CONTROL DE PLAZOS
+                    DETALLADO FISCAL
                 </h3>
             </div>
 
@@ -57,10 +59,10 @@ export default function DeadlineControl() {
             </TabNavigation>
 
             {activeTab === "Sede" && (
-                <DeadlineControlReport/>
+                <TaxBurdenReport/>
             )}
             {activeTab === "Depedencia" && (
-                <DeadlineControlE />
+                <p>En mantenimiento...</p>
             )}
             {activeTab === "Despacho" && (
                 <p>En mantenimiento...</p>

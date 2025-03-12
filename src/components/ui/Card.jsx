@@ -10,7 +10,7 @@ const Card = React.forwardRef(function Card({ className, asChild, ...props }, re
       ref={ref}
       className={cx(
         // Base styles
-        "relative w-full rounded-lg border p-2 text-left shadow-sm",
+        "relative w-full rounded-lg border p-4 text-left shadow-sm",
         // Background color (light/dark)
         "bg-[#fff] white:bg-[#090E1A]",
         // Border color (light/dark)

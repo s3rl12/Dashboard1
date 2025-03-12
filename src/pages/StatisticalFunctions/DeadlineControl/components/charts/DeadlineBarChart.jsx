@@ -1,3 +1,5 @@
+
+
 // DeadlineBarChart.jsx
 import React, { useEffect, useRef } from "react";
 import * as echarts from "echarts";
@@ -31,7 +33,7 @@ export default function DeadlineBarChart() {
       },
       legend: {
         data: ["Dentro de plazos", "Plazos por vencer", "Plazos vencidos"],
-        top: 30,
+        top: 10,
       },
       grid: {
         left: "3%",
@@ -64,7 +66,7 @@ export default function DeadlineBarChart() {
       },
       yAxis: {
         type: "value",
-        name: "Cantidad de casos",
+
       },
       series: [
         {
@@ -72,18 +74,36 @@ export default function DeadlineBarChart() {
           type: "bar",
           data: [10, 7, 5, 9, 4],
           itemStyle: { color: "#008000" },
+          label: {
+            show: true,           // Muestra las etiquetas
+            position: "top",      // Ubicación de la etiqueta (encima de la barra)
+            fontSize: 10,         // Tamaño de fuente (opcional)
+            formatter: "{c}",     // Formato de la etiqueta (por defecto muestra el valor)
+          },
         },
         {
           name: "Plazos por vencer",
           type: "bar",
           data: [2, 3, 2, 4, 3],
           itemStyle: { color: "#FFD700" },
+          label: {
+            show: true,           // Muestra las etiquetas
+            position: "top",      // Ubicación de la etiqueta (encima de la barra)
+            fontSize: 10,         // Tamaño de fuente (opcional)
+            formatter: "{c}",     // Formato de la etiqueta (por defecto muestra el valor)
+          },
         },
         {
           name: "Plazos vencidos",
           type: "bar",
           data: [1, 2, 0, 1, 2],
           itemStyle: { color: "#FF0000" },
+          label: {
+            show: true,           // Muestra las etiquetas
+            position: "top",      // Ubicación de la etiqueta (encima de la barra)
+            fontSize: 10,         // Tamaño de fuente (opcional)
+            formatter: "{c}",     // Formato de la etiqueta (por defecto muestra el valor)
+          },
         },
       ],
     };

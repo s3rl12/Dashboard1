@@ -1,14 +1,17 @@
 import React from "react";
 import Card from "../../../../components/ui/Card";
-import FilterHeader from "./filterHeader";
-import SideContent from "./SideContent";
-import DeadlineBarChart from "./charts/DeadlineBarChart";
-import DeadlineBarChartY from "./charts/DeadlineBarChartY";
-import DeadlineBarChartI from "./charts/DeadlineBarChartI";
-import TableDeadline from "./charts/TableDeadline";
-import DeadlineHeader from "./charts/DeadlineHeader"; // DashboardHeader
+import FilterHeader from "../../DeadlineControl/components/filterHeader";
+import SideContent from '../../DeadlineControl/components/SideContent';
+import DeadlineBarChart from "../../DeadlineControl/components/charts/DeadlineBarChart";
+import DeadlineBarChartY from "../../DeadlineControl/components/charts/DeadlineBarChartY";
+import DeadlineBarChartI from "../../DeadlineControl/components/charts/DeadlineBarChartI";
+import TableDeadline from "../../DeadlineControl/components/charts/TableDeadline";
+import DeadlineHeader from '../../DeadlineControl/components/charts/DeadlineHeader';
+import ChartBarLine from "../../DeadlineControl/components/charts/ChartBarLine";
+import DeadlinedependenceB from "../../DeadlineControl/components/charts/DeadlinedependenceB";
+import ChartBar from '../../DeadlineControl/components/charts/ChartBar';
 
-export default function DeadlineControlReport() {
+export default function CargoReportS() {
     // Datos estáticos de ejemplo
     const dummyWorkspaces = [
         { name: "Dependencia 1", code: "SC", casos: 14, status: "active", telefono: "999 999 999" },
@@ -68,7 +71,7 @@ export default function DeadlineControlReport() {
                         </div>
                         <div className="h-72 flex justify-center items-center">
                             <div className="flex-1 w-full h-full">
-                                <DeadlineBarChart />
+                                <ChartBarLine />
                             </div>
                         </div>
                     </Card>
@@ -84,7 +87,7 @@ export default function DeadlineControlReport() {
                             </div>
                             <div className="h-72 bg-red-200 flex justify-center items-center">
                                 <div className="w-full h-full bg-white">
-                                    <DeadlineBarChartY />
+                                    <ChartBar />
                                 </div>
                             </div>
                         </Card>
@@ -98,7 +101,7 @@ export default function DeadlineControlReport() {
                             </div>
                             <div className="h-72 bg-red-200 flex justify-center items-center">
                                 <div className="w-full h-full bg-white">
-                                    <DeadlineBarChartI />
+                                    <DeadlinedependenceB />
                                 </div>
                             </div>
                         </Card>

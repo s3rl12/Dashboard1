@@ -49,6 +49,9 @@ const navigation2 = [
     children: [
       
       { name: "Reportes estadisticos", href: "/dashboard/estadisticas" },
+      { name: "Reportes nuevo", href: "/dashboard/grafico" },
+      { name: "Reportes nuevo2", href: "/dashboard/grafico2" },
+      { name: "Reportes nuevo3", href: "/dashboard/grafico3" },
     ],
   },
   {
