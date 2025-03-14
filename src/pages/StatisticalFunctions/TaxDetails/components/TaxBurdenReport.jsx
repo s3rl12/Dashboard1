@@ -14,7 +14,7 @@ export default function TaxBurdenReport() {
 
     return (
         <div className="p-2 space-y-2 min-h-screen">
-            <FilterHeader />
+            <FilterHeader pdfTargetId="detailedTaxBurden" />
 
             <div className="grid grid-cols-12 gap-3 h-full">
                 {/* Columna izquierda: Sede y Dependencias */}

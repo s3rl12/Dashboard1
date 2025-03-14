@@ -7,12 +7,7 @@ import { SidebarProvider } from "./components/dashboard/Sidebar";
 import { AppSidebar } from "./components/dashboard/AppSidebar";
 import { SidebarTrigger } from "./components/dashboard/Sidebar";
 import { Breadcrumbs } from "./components/dashboard/Breadcrumbs";
-
-import StatisticalReports from "./pages/StatisticalReports/StatisticalReports";
-import UserManagement from "./pages/UserManagement/UserManagement";
 import RolesPermissions from "./pages/RolesPermissions/RolesPermissions";
-import DocumentManager from "./pages/DocumentManager/DocumentManager";
-import RegisterAreas from "./pages/RegisterAreas/RegisterAreas";
 import Reports from "./pages/StatisticalReports/Reports";
 // Componente para la ruta "documentos"
 import Documents from "./pages/DocumentManager/Documents";
@@ -42,28 +37,21 @@ export default function Dashboard() {
           <main className="flex-1 p-4 overflow-auto">
             <Routes>
               <Route path="estadisticas" element={<Reports />} />
-
-              {/* Rutas nuevas para Estadísticas */}
               <Route path="estadisticas/WorkLoad" element={<WorkLoad />} />
               <Route path="estadisticas/CrimesHighestIncidence" element={<CrimesHighestIncidence />} />
               <Route path="estadisticas/DeadlineControl" element={<DeadlineControl/>} />
+              <Route path="estadisticas/TaxBurden" element={<TaxBurden/>} />
+              <Route path="estadisticas/TaxDetails" element={<TaxDetails/>} />
               <Route path="roles" element={<RolesPermissions />} />
-              <Route path="areas" element={<RegisterAreas />} />
               <Route path="Area" element={<Areas />} />
-              <Route path="Grafico" element={<DeadlineControl/>}/>
-              <Route path="Grafico2" element={<TaxBurden/>}/>
-              <Route path="Grafico3" element={<TaxDetails/>}/>
-              {/* Se pasa la data de carpetas al componente “Documents” */}
               <Route
                 path="documentos"
                 element={<Documents />}
               />
-              {/* Se pasan roles y áreas; la data de usuarios se obtendrá internamente en Users */}
               <Route 
                 path="Agentes" 
                 element={<Users />} 
               />
-              {/* Más sub-rutas si se requieren */}
             </Routes>
           </main>
         </div>

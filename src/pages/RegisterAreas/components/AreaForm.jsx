@@ -1,9 +1,8 @@
-// AreaForm.jsx
 import React, { useState } from "react";
 import { Divider } from "../../../components/ui/Divider";
 import { Button } from "../../../components/ui/Button";
 
-// Importamos los componentes refactorizados para cada tipo de área
+// Formularios específicos para cada tipo de área
 import HeadquartersForm from "./headquartersForm";
 import DependencyForm from "./dependencyForm";
 import DispatchForm from "./dispatchForm";
@@ -12,24 +11,27 @@ export default function AreaForm({ areaType, onSubmit, onCancel }) {
   // Estado local para almacenar los datos del formulario
   const [formData, setFormData] = useState({});
 
-  // Función genérica para actualizar el estado de los inputs
+  // Maneja cambios en inputs de texto
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Función para manejar los cambios en los componentes Select
+  // Maneja cambios en componentes <Select> (u otros casos especiales)
   const handleSelectChange = (name, value) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  // Envía los datos al padre al hacer clic en “Guardar”
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (onSubmit) onSubmit(formData);
-    // Aquí se puede agregar lógica de validación y envío
+    if (onSubmit) {
+      onSubmit(formData);
+    }
+    // Aquí podrías añadir validaciones extra antes de llamar onSubmit
   };
 
-  // Renderiza el formulario según el tipo de área utilizando los nuevos componentes
+  // Renderiza un formulario diferente según el tipo de área
   const renderFormByType = () => {
     switch (areaType) {
       case "Administracion sede":
@@ -69,7 +71,9 @@ export default function AreaForm({ areaType, onSubmit, onCancel }) {
         <Button type="button" variant="secondary" onClick={onCancel}>
           Cancelar
         </Button>
-        <Button type="submit">Guardar</Button>
+        <Button type="submit">
+          Guardar
+        </Button>
       </div>
     </form>
   );

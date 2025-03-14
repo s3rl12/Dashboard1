@@ -6,7 +6,7 @@ import logoMP from '../../../../../assets/icons/logoMP.svg';
 const Metric = ({ label, value, IconComponent, valueClassName = "text-xl" }) => {
   return (
     <div className="flex flex-col flex-1 items-center justify-center border-r-2 border-tremor-border dark:border-dark-tremor-border pr-3">
-      {label && <p className="text-sm text-center">{label}</p>}
+      {label && <p className="text-sm text-center py-2">{label}</p>}
       {IconComponent ? (
         <div className="flex items-center justify-center space-x-1.5">
           <IconComponent className="size-8 text-gray-600" aria-hidden="true" />

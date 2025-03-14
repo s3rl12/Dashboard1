@@ -160,6 +160,8 @@ export default function DependencyList({
     { value: "alphabetical", label: "Carga laboral", hint: "A-Z" },
     { value: "reverse-alphabetical", label: "Incidencia delitos", hint: "Z-A" },
     { value: "control-plazos", label: "Control plazos", hint: "Z-A" },
+    { value: "carga-fiscal", label: "Carga fiscal", hint: "Z-A" },
+    { value: "detallado-fiscal", label: "Detallado fiscal", hint: "Z-A" },
   ];
 
   const selectedLabel = sorting
@@ -184,6 +186,10 @@ export default function DependencyList({
       navigate("/dashboard/estadisticas/CrimesHighestIncidence");
     } else if (sorting === "control-plazos"){
       navigate("/dashboard/estadisticas/DeadlineControl");
+    } else if (sorting === "carga-fiscal"){
+      navigate("/dashboard/estadisticas/TaxBurden");
+    } else if (sorting === "detallado-fiscal"){
+      navigate("/dashboard/estadisticas/TaxDetails");
     }
 
   };

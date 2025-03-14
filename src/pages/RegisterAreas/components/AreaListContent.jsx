@@ -1,16 +1,21 @@
-// AreaListContent.jsx
 import React, { useMemo, useState, useEffect } from 'react';
-import { flexRender, getCoreRowModel, getSortedRowModel, getPaginationRowModel, useReactTable } from '@tanstack/react-table';
-import { Table, TableBody, TableCell, TableHead, TableHeaderCell, TableRow } from '@tremor/react';
+import {
+  flexRender,
+  getCoreRowModel,
+  getSortedRowModel,
+  getPaginationRowModel,
+  useReactTable
+} from '@tanstack/react-table';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeaderCell,
+  TableRow
+} from '@tremor/react';
 import { RiArrowLeftSLine, RiArrowRightSLine } from '@remixicon/react';
 import { Button } from '../../../components/ui/Button';
-import {
-  Select,
-  SelectItem,
-  SelectTrigger,
-  SelectContent,
-  SelectValue,
-} from "../../../components/dashboard/Select";
 import {
   Dialog,
   DialogTrigger,
@@ -27,17 +32,21 @@ import {
   DrawerDescription,
   DrawerBody,
   DrawerFooter,
-  DrawerClose,
+  DrawerClose
 } from '../../../components/ui/Drawer';
 import { Input } from '../../../components/ui/Input';
-import { Label } from '../../../components/ui/Label';
 import OptionalAlert from '../../../components/alert/OptionalAlert';
 import AreaForm from './AreaForm';
 
-// Importación de los nuevos formularios
+// Formularios para edición
 import HeadquartersForm from './headquartersForm';
 import DependencyForm from './dependencyForm';
 import DispatchForm from './dispatchForm';
+
+// IMPORTAR SERVICIOS (Ajusta rutas según tu estructura)
+import sedeService from '../../../services/api/sede-list/sedeService';
+import dependencyService from '../../../services/api/dependency-list/dependencyService';
+import dispatchesService from '../../../services/api/dispatches-list/dispatchesService';
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(' ');
@@ -57,19 +66,55 @@ function StatusBadge({ status }) {
       colorClasses = "bg-yellow-100 text-yellow-700";
       break;
   }
-  return <span className={`inline-flex items-center rounded-md px-2 py-1 text-sm font-medium ${colorClasses}`}>{status}</span>;
+  return (
+    <span
+      className={`inline-flex items-center rounded-md px-2 py-1 text-sm font-medium ${colorClasses}`}
+    >
+      {status}
+    </span>
+  );
 }
 
 export default function AreaListContent({ title, tableData }) {
-  // Se inicializa un estado local con la data recibida desde la prop
-  const [localTableData, setLocalTableData] = useState(tableData);
 
-  // Actualiza el estado local si la prop tableData cambia
+  const [localTableData, setLocalTableData] = useState(tableData);
+  const [searchText, setSearchText] = useState("");
   useEffect(() => {
     setLocalTableData(tableData);
   }, [tableData]);
 
-  // Definición de columnas según el título y la data transformada
+  const filteredData = useMemo(() => {
+    if (!searchText) return localTableData;
+
+    const lowerSearch = searchText.toLowerCase();
+
+    if (title === "Administracion sede") {
+      return localTableData.filter((item) =>
+        (item.combinedName || "").toLowerCase().includes(lowerSearch) ||
+        (item.ruc || "").toLowerCase().includes(lowerSearch)
+      );
+    } else if (title === "Administracion dependencia") {
+      return localTableData.filter((item) =>
+        (item.combinedFiscalia || "").toLowerCase().includes(lowerSearch) ||
+        (item.tipo_fiscalia || "").toLowerCase().includes(lowerSearch) ||
+        (item.ruc || "").toLowerCase().includes(lowerSearch)
+      );
+    } else if (title === "Administracion despacho") {
+      return localTableData.filter((item) =>
+        (item.combinedDespacho || "").toLowerCase().includes(lowerSearch) ||
+        (item.ruc || "").toLowerCase().includes(lowerSearch)
+      );
+    }
+
+    return localTableData;
+  }, [searchText, localTableData, title]);
+
+  // (columns definition remains the same)
+
+  // handleCreateArea remains the same
+
+  // Drawer states remain the sam
+
   const columns = useMemo(() => {
     if (title === "Administracion sede") {
       return [
@@ -123,7 +168,9 @@ export default function AreaListContent({ title, tableData }) {
                       text: "Esta acción no se puede revertir.",
                       onConfirm: async () => {
                         await new Promise((resolve) => setTimeout(resolve, 1000));
-                        setLocalTableData((prev) => prev.filter((item) => item.id !== rowData.id));
+                        setLocalTableData((prev) =>
+                          prev.filter((item) => item.id !== rowData.id)
+                        );
                       },
                     });
                   }}
@@ -187,7 +234,9 @@ export default function AreaListContent({ title, tableData }) {
                       text: "Esta acción no se puede revertir.",
                       onConfirm: async () => {
                         await new Promise((resolve) => setTimeout(resolve, 1000));
-                        setLocalTableData((prev) => prev.filter((item) => item.id !== rowData.id));
+                        setLocalTableData((prev) =>
+                          prev.filter((item) => item.id !== rowData.id)
+                        );
                       },
                     });
                   }}
@@ -246,7 +295,9 @@ export default function AreaListContent({ title, tableData }) {
                       text: "Esta acción no se puede revertir.",
                       onConfirm: async () => {
                         await new Promise((resolve) => setTimeout(resolve, 1000));
-                        setLocalTableData((prev) => prev.filter((item) => item.id !== rowData.id));
+                        setLocalTableData((prev) =>
+                          prev.filter((item) => item.id !== rowData.id)
+                        );
                       },
                     });
                   }}
@@ -262,13 +313,34 @@ export default function AreaListContent({ title, tableData }) {
     return [];
   }, [title, localTableData]);
 
+  // Maneja la creación de un nuevo área
+  const handleCreateArea = async (formData) => {
+    try {
+      let newArea;
+      if (title === "Administracion sede") {
+        newArea = await sedeService.createSede(formData);
+      } else if (title === "Administracion dependencia") {
+        newArea = await dependencyService.createDependency(formData);
+      } else if (title === "Administracion despacho") {
+        newArea = await dispatchesService.createDispatch(formData);
+      }
+      // Actualiza la tabla local (opcional)
+      setLocalTableData((prev) => [...prev, newArea]);
+      setIsDialogOpen(false);
+    } catch (error) {
+      console.error("Error al crear área:", error);
+      // Aquí podrías mostrar un toast o alerta de error
+    }
+  };
+
   // Estados para el Drawer, diálogo de edición y área seleccionada
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedArea, setSelectedArea] = useState(null);
 
   const table = useReactTable({
-    data: localTableData,
+    
+    data: filteredData,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -311,7 +383,10 @@ export default function AreaListContent({ title, tableData }) {
           name="search"
           type="search"
           className="flex-1 max-w-[400px]"
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
         />
+
         {/* Diálogo para crear nueva área */}
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
@@ -324,7 +399,12 @@ export default function AreaListContent({ title, tableData }) {
                 Completa los campos para agregar una nueva área.
               </DialogDescription>
             </DialogHeader>
-            <AreaForm areaType={title} onCancel={() => setIsDialogOpen(false)} />
+            {/* Llamamos a AreaForm, pasando onSubmit para crear el área */}
+            <AreaForm
+              areaType={title}
+              onCancel={() => setIsDialogOpen(false)}
+              onSubmit={handleCreateArea}
+            />
           </DialogContent>
         </Dialog>
       </div>
@@ -407,7 +487,9 @@ export default function AreaListContent({ title, tableData }) {
           </DrawerHeader>
           <DrawerBody>
             {!selectedArea ? (
-              <p className="text-sm text-gray-500">No se ha seleccionado ninguna área.</p>
+              <p className="text-sm text-gray-500">
+                No se ha seleccionado ninguna área.
+              </p>
             ) : (
               <div className="space-y-6">{renderEditForm()}</div>
             )}
@@ -418,7 +500,10 @@ export default function AreaListContent({ title, tableData }) {
                 Cancelar
               </Button>
             </DrawerClose>
-            <Button className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700" onClick={() => setIsDrawerOpen(false)}>
+            <Button
+              className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+              onClick={() => setIsDrawerOpen(false)}
+            >
               Guardar
             </Button>
           </DrawerFooter>

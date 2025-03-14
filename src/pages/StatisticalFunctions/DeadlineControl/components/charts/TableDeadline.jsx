@@ -44,7 +44,6 @@ export default function TableDeadline() {
                 <Input
                     placeholder="Search workspace..."
                     className="h-9 w-full rounded-tremor-small md:max-w-xs"
-
                 />
             </div>
             <Table className="mt-4">

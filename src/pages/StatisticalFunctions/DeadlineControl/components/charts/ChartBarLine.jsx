@@ -1,136 +1,106 @@
+// ChartBarLine.jsx
 import React, { useEffect, useRef } from "react";
 import * as echarts from "echarts";
-// Si necesitas compatibilidad con navegadores antiguos, puedes importar ResizeObserver de 'resize-observer-polyfill'
+// import ResizeObserver from 'resize-observer-polyfill'; // Si necesitas compatibilidad con navegadores antiguos
 
-export default function ChartBarLine() {
+export default function ChartBarLine({
+    title = "Título por defecto",
+    legendData = [],
+    xAxisData = [],
+    seriesData = [],
+}) {
     const chartRef = useRef(null);
     const chartInstanceRef = useRef(null);
+
+    // Función para agrupar palabras en líneas (por si deseas dividir texto en el eje X)
+    const chunkWords = (arr, size) => {
+        const result = [];
+        for (let i = 0; i < arr.length; i += size) {
+            result.push(arr.slice(i, i + size).join(" "));
+        }
+        return result;
+    };
 
     useEffect(() => {
         // Inicializa la instancia de ECharts en el contenedor
         const chartInstance = echarts.init(chartRef.current);
         chartInstanceRef.current = chartInstance;
 
-        // Función para agrupar palabras en líneas
-        const chunkWords = (arr, size) => {
-            const result = [];
-            for (let i = 0; i < arr.length; i += size) {
-                result.push(arr.slice(i, i + size).join(" "));
+        // Agregamos la configuración de etiqueta solo a las series tipo "bar"
+        const finalSeries = seriesData.map((serie) => {
+            if (serie.type === "bar") {
+                return {
+                    ...serie,
+                    label: {
+                        show: true,
+                        position: "top",  // O "top", según desees
+                        fontSize: 12,
+                        formatter: "{c}",
+                        ...serie.label, // Permite sobrescribir si el usuario pasa su propia config
+                    },
+                };
             }
-            return result;
-        };
+            return { ...serie };
+        });
 
         // Configuración del gráfico (barra y línea) con funcionalidad de axisLabel
         const option = {
+            title: {
+                text: title,
+                left: "center",
+                textStyle: {
+                    fontSize: 14,
+                },
+            },
             tooltip: {
                 trigger: "axis",
-                axisPointer: { type: "shadow" }
+                axisPointer: { type: "shadow" },
             },
             legend: {
-                data: ["casos resueltos", "casos ingresados"],
-                top: 10,
+                data: legendData,
+                top: 30,
             },
             grid: {
                 top: "15%",
                 left: "3%",
                 right: "4%",
                 bottom: "3%",
-                containLabel: true
+                containLabel: true,
             },
             xAxis: [
                 {
                     type: "category",
-                    data: [
-                        "FISCALIA PROVINCIAL ESPECIALIZADA CONTRA LA CRIMINALIDAD ORGANIZADA DE MADRE DE DIOS",
-                        "FISCALIA PROVINCIAL ESPECIALIZADA CONTRA LA CRIMINALIDAD ORGANIZADA DE MADRE DE DIOS",
-                        "FISCALIA PROVINCIAL ESPECIALIZADA CONTRA LA CRIMINALIDAD ORGANIZADA DE MADRE DE DIOS",
-                        "FISCALIA PROVINCIAL ESPECIALIZADA CONTRA LA CRIMINALIDAD ORGANIZADA DE MADRE DE DIOS",
-                        "FISCALIA PROVINCIAL ESPECIALIZADA CONTRA LA CRIMINALIDAD ORGANIZADA DE MADRE DE DIOS",
-                        "FISCALIA PROVINCIAL ESPECIALIZADA CONTRA LA CRIMINALIDAD ORGANIZADA DE MADRE DE DIOS",
-                        "FISCALIA PROVINCIAL ESPECIALIZADA CONTRA LA CRIMINALIDAD ORGANIZADA DE MADRE DE DIOS"
-                    ],
+                    data: xAxisData,
                     axisLabel: {
-                        fontSize: 10,
+                        fontSize: 12,
                         interval: 0, // mostrar todas las etiquetas
                         formatter: (value) => {
+                            // Ejemplo: si la etiqueta es muy larga, agrupa cada 5 palabras
                             const words = value.split(" ");
                             if (words.length <= 2) {
                                 return chunkWords(words, 1).join("\n");
                             }
                             const firstFive = words.slice(0, 5);
                             return chunkWords(firstFive, 1).join("\n") + "...";
-                        }
-                    }
-                }
+                        },
+                    },
+                },
             ],
             yAxis: [
                 {
-                    type: "value"
-                }
+                    type: "value",
+                },
             ],
-            series: [
-                // --- BARRAS: Casos resueltos ---
-                {
-                    name: "casos resueltos",
-                    type: "bar",
-                    stack: "Ad", // (opcional) para apilar
-                    emphasis: { focus: "series" },
-                    data: [220, 182, 191, 234, 290, 330, 310],
-                    label: {
-                        show: true,
-                        position: "top",
-                        formatter: "{c}"
-                    }
-                },
-                // --- LÍNEA: Casos resueltos ---
-                {
-                    name: "casos resueltos",
-                    type: "line",
-                    tooltip: { show: false },
-                    z: 10,
-                    data: [220, 182, 191, 234, 290, 330, 310].map(v => v + 35),
-                    smooth: true,
-                    lineStyle: {
-                        type: "dashed"
-                    },
-                    label: { show: false }
-                },
-                // --- BARRAS: Casos ingresados ---
-                {
-                    name: "casos ingresados",
-                    type: "bar",
-                    emphasis: { focus: "series" },
-                    data: [862, 1018, 964, 1026, 1679, 1600, 1570],
-                    label: {
-                        show: true,
-                        position: "top",
-                        formatter: "{c}"
-                    }
-                },
-                // --- LÍNEA: Casos ingresados ---
-                {
-                    name: "casos ingresados",
-                    type: "line",
-                    tooltip: { show: false },
-                    z: 10,
-                    data: [862, 1018, 964, 1026, 1679, 1600, 1570].map(v => v + 35),
-                    smooth: true,
-                    lineStyle: {
-                        type: "dashed"
-                    },
-                    label: { show: false }
-                }
-            ]
+            series: finalSeries,
         };
 
         // Asigna la opción al gráfico
         chartInstance.setOption(option);
 
-        // Función para ajustar el tamaño del gráfico
+        // Función para ajustar el tamaño del gráfico al cambiar el tamaño de ventana
         const handleResize = () => {
             chartInstance.resize();
         };
-
         window.addEventListener("resize", handleResize);
 
         // Observa cambios en el tamaño del contenedor
@@ -145,7 +115,7 @@ export default function ChartBarLine() {
             resizeObserver.disconnect();
             chartInstance.dispose();
         };
-    }, []);
+    }, [title, legendData, xAxisData, seriesData]);
 
     return (
         <div
