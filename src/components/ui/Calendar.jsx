@@ -8,7 +8,7 @@ import {
   RiArrowRightDoubleLine,
   RiArrowRightSLine,
 } from "@remixicon/react";
-import { addYears, format, isSameMonth } from "date-fns";
+import { addYears, format } from "date-fns";
 import {
   DayPicker,
   useDayPicker,
@@ -70,6 +70,7 @@ export function Calendar({
       weekStartsOn={weekStartsOn}
       numberOfMonths={numberOfMonths}
       locale={locale}
+      // Si deseas mostrar días fuera del mes incluso en multi mes, elimina la siguiente condición:
       showOutsideDays={numberOfMonths === 1}
       className={cx(className)}
       classNames={{
@@ -115,12 +116,10 @@ export function Calendar({
         Caption: (captionProps) => {
           const { goToMonth, nextMonth, previousMonth, currentMonth } =
             useNavigation();
-          const { numberOfMonths, fromDate, toDate } = useDayPicker();
+          const { fromDate, toDate } = useDayPicker();
           const displayMonth = captionProps.displayMonth;
 
-          // Ver si es "multi month"
-          const isMultiMonth = numberOfMonths > 1;
-
+          // Funciones para avanzar / retroceder años
           const goToPreviousYear = () => {
             const targetMonth = addYears(currentMonth, -1);
             if (
@@ -143,7 +142,7 @@ export function Calendar({
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1">
                 {/* Botón año atrás */}
-                {enableYearNavigation && !isMultiMonth && (
+                {enableYearNavigation && (
                   <NavigationButton
                     disabled={
                       disableNavigation ||
@@ -157,14 +156,12 @@ export function Calendar({
                   />
                 )}
                 {/* Botón mes atrás */}
-                {!isMultiMonth && (
-                  <NavigationButton
-                    disabled={disableNavigation || !previousMonth}
-                    aria-label="Go to previous month"
-                    onClick={() => previousMonth && goToMonth(previousMonth)}
-                    icon={RiArrowLeftSLine}
-                  />
-                )}
+                <NavigationButton
+                  disabled={disableNavigation || !previousMonth}
+                  aria-label="Go to previous month"
+                  onClick={() => previousMonth && goToMonth(previousMonth)}
+                  icon={RiArrowLeftSLine}
+                />
               </div>
 
               <div
@@ -177,16 +174,14 @@ export function Calendar({
 
               <div className="flex items-center gap-1">
                 {/* Botón mes adelante */}
-                {!isMultiMonth && (
-                  <NavigationButton
-                    disabled={disableNavigation || !nextMonth}
-                    aria-label="Go to next month"
-                    onClick={() => nextMonth && goToMonth(nextMonth)}
-                    icon={RiArrowRightSLine}
-                  />
-                )}
+                <NavigationButton
+                  disabled={disableNavigation || !nextMonth}
+                  aria-label="Go to next month"
+                  onClick={() => nextMonth && goToMonth(nextMonth)}
+                  icon={RiArrowRightSLine}
+                />
                 {/* Botón año adelante */}
-                {enableYearNavigation && !isMultiMonth && (
+                {enableYearNavigation && (
                   <NavigationButton
                     disabled={
                       disableNavigation ||

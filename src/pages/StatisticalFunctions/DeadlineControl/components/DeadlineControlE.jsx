@@ -92,7 +92,7 @@ export default function DeadlineControlE() {
                 <div id="DeadlineControlE" className="col-span-9 space-y-3">
                     {/* DashboardHeader (Header del reporte) */}
                     <div className="flex items-center justify-between bg-[#274E94] px-4">
-                        <h2 className="text-base font-semibold text-white uppercase text-gray-800 py-3">
+                        <h2 className="text-base font-semibold  uppercase text-white py-3">
                             CONTROL DE PLAZOS
                         </h2>
                         <span className="text-xs text-white">

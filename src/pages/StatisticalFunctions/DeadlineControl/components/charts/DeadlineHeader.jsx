@@ -1,3 +1,4 @@
+// DeadlineHeader.jsx
 import React from "react";
 import { IconUser, IconBuildings, IconCalendar, IconFileText } from "@tabler/icons-react";
 import logoMP from '../../../../../assets/icons/logoMP.svg';
@@ -23,20 +24,39 @@ const Metric = ({ label, value, IconComponent, valueClassName = "text-xl" }) => 
   );
 };
 
-export default function DeadlineHeader() {
+export default function DeadlineHeader({ generalSede }) {
+  console.log("datos:", generalSede?.Total_Fiscales);
+  console.log("datos:", generalSede?.Total_Dependencias);
+  // Obtener la fecha actual y formatearla en español
+  const currentDate = new Date();
+  const formattedDate = currentDate.toLocaleDateString("es-ES", {
+    weekday: "long",
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  });
+
   return (
     <div className="flex flex-row border-b border-tremor-border py-2 dark:border-dark-tremor-border">
       <div className="flex flex-row gap-3 mt-2 w-full">
-        <Metric label="Cantidad de casos ingresados" value="1250" IconComponent={IconFileText} />
-        <Metric label="Cantidad de fiscales" value="12" IconComponent={IconUser} />
-        <Metric label="Cantidad de dependencias" value="21" IconComponent={IconBuildings} />
+        <Metric 
+          label="Cantidad de casos ingresados" 
+          value={generalSede?.Casos_Ingresados ?? 0} 
+          IconComponent={IconFileText} 
+        />
+        <Metric 
+          label="Cantidad de fiscales" 
+          value={generalSede?.Total_Fiscales ?? 0} 
+          IconComponent={IconUser} 
+        />
+        <Metric 
+          label="Cantidad de dependencias" 
+          value={generalSede?.Total_Dependencias ?? 0} 
+          IconComponent={IconBuildings} 
+        />
         <Metric
           label="Fecha registro"
-          value={
-            <>
-              Lunes, 03 de marzo <br /> de 2025
-            </>
-          }
+          value={formattedDate}
           IconComponent={IconCalendar}
           valueClassName="text-sm"
         />
@@ -45,7 +65,6 @@ export default function DeadlineHeader() {
           value={<img src={logoMP} alt="Código Reporte" className="w-32 h-auto" />}
         />
         <Metric
-          label=""
           value={<img src={logoMP} alt="Logo" className="w-40 h-auto" />}
         />
       </div>

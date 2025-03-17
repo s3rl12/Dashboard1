@@ -78,11 +78,6 @@ export default function ListSede({ activeTab = "Areas fiscal" }) {
 
   return (
     <div className="space-y-4 pb-4">
-      {/* 
-        No bloqueamos la UI aunque no haya datos todavía;
-        se asume que React Query mostrará cached data o un array vacío
-        mientras isLoading es true.
-      */}
       {fetchedAreas?.map((sede) => (
         <Dialog key={sede.id}>
           <DialogTrigger asChild>
@@ -144,15 +139,14 @@ export default function ListSede({ activeTab = "Areas fiscal" }) {
                 Información de las dependencias asociadas a esta sede.
               </DialogDescription>
             </DialogHeader>
-            {/* Se pasa el arreglo de dependencias a DependencyList */}
-            <DependencyList dependencias={sede.dependencias} />
+            {/* Se pasa el arreglo de dependencias junto con el id de la sede */}
+            <DependencyList dependencias={sede.dependencias} id_sede={sede.id} />
             <DialogFooter>
               <DialogClose asChild>
                 <button className="px-4 py-2 border rounded hover:bg-gray-100">
                   Cancelar
                 </button>
               </DialogClose>
-              
             </DialogFooter>
           </DialogContent>
         </Dialog>

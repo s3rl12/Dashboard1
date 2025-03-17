@@ -20,6 +20,8 @@ import {
 } from "../../../components/dashboard/DropdownMenu";
 import { Button } from "@/components/dashboard/Button";
 import { useToast } from "../../../lib/useToast";
+// Importar el hook para llamar a la API de carga fiscal
+import { useCargaFiscal } from "../../../hooks/useCargaFiscal";
 
 // Diccionario de íconos para capacity
 const capacityIcon = {
@@ -49,21 +51,15 @@ function getRelativeTime(dateStr) {
 
 /**
  * Transforma cada dependencia a la estructura usada en el UI original (workspaces).
- * @param {Object} dependency - Objeto con {cod_depen, fiscalia, activo, despachos, updated_at}
- * @returns {Object} workspace - Objeto adaptado para la UI original
+ * Se agrega la propiedad "id" usando cod_depen para identificar la dependencia.
  */
 function transformDependencyToWorkspace(dependency) {
   return {
-    // Se usa cod_depen como "name" para mostrar en la tarjeta
+    id: dependency.cod_depen, // Se usa cod_depen como id
     name: dependency.cod_depen,
-    // Estado: "active" o "inactive"
     status: dependency.activo === 1 ? "active" : "inactive",
-    // type: fiscalia
     type: dependency.fiscalia,
-    // "database": se asigna el texto estático "Fiscal titular"
     database: "Fiscal titular",
-    // Se construye la capacidad con 3 items:
-    // "users": # de despachos, "storage": valor fijo 1, "lastEdited": tiempo relativo
     capacity: [
       {
         label: "users",
@@ -71,7 +67,7 @@ function transformDependencyToWorkspace(dependency) {
       },
       {
         label: "storage",
-        value: 1, // Valor estático para mostrar IconUsers con "1"
+        value: 1, // Valor estático
       },
       {
         label: "lastEdited",
@@ -82,32 +78,110 @@ function transformDependencyToWorkspace(dependency) {
 }
 
 /**
- * 
  * @param {Object} props
- * @param {Array} props.dependencias - Lista de dependencias proveniente de la sede seleccionada
+ * @param {Array} props.dependencias - Lista de dependencias de la sede seleccionada
  * @param {boolean} props.isLoading - Indica si se están cargando las dependencias
  * @param {Error|null} props.error - Error en la carga (si existe)
  * @param {string} props.activeTab - Nombre del tab actual (por ej. "Reports")
+ * @param {string|number} props.id_sede - Identificador de la sede seleccionada (desde ListSede)
  */
 export default function DependencyList({
   dependencias = [],
   isLoading = false,
   error = null,
   activeTab = "Reports",
+  id_sede,
 }) {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Referencia para el toast actual y un flag para saber si ya se cargó la data
+  // Referencia para el toast actual y flag para saber si ya se cargó la data
   const toastRef = useRef(null);
   const hasDataLoaded = useRef(false);
 
-  // Efecto para manejar la lógica de toasts al estilo "Users.jsx"
+  // Estados para Dropdown, búsqueda y resaltado
+  const [sorting, setSorting] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [highlightReportes, setHighlightReportes] = useState(false);
+
+  // Estado para almacenar la dependencia seleccionada para la llamada "carga-fiscal"
+  const [selectedDependency, setSelectedDependency] = useState(null);
+
+  // Cálculo de rango estático: último mes
+  const today = new Date();
+  const fe_inicio = today.toISOString().split("T")[0]; // Ej.: "2025-03-16"
+  const nextMonth = new Date(today);
+  nextMonth.setMonth(today.getMonth() + 1);
+  const fe_fin = nextMonth.toISOString().split("T")[0];  // Ej.: "2025-04-16"
+
+  // Configuración de la consulta para carga fiscal con un queryKey fijo
+  const { data: cargaData, isLoading: cargaLoading, error: cargaError, refetch } = useCargaFiscal(
+    selectedDependency ? {
+      id_sede,
+      id_dependencia: selectedDependency.id,
+      fe_inicio,
+      fe_fin,
+      estado: null,
+    } : {},
+    {
+      enabled: false, // Se activará de forma manual
+      queryKey: ["carga-fiscal"], // Forzar un queryKey constante para compartir la data
+    }
+  );
+
+  // Efecto para ejecutar refetch cuando se selecciona una dependencia
+  useEffect(() => {
+    if (selectedDependency) {
+      // Mostrar toast de carga y disparar la consulta
+      if (!toastRef.current) {
+        toastRef.current = toast({
+          variant: "loading",
+          title: "Cargando datos fiscales...",
+          disableDismiss: true,
+        });
+      } else {
+        toastRef.current.update({
+          variant: "loading",
+          title: "Cargando datos fiscales...",
+        });
+      }
+      refetch();
+    }
+  }, [selectedDependency, refetch, toast]);
+
+  // Efecto para detectar el resultado de la llamada y actuar (actualizar toast y navegar)
+  useEffect(() => {
+    if (!cargaLoading && selectedDependency) {
+      if (cargaError) {
+        if (toastRef.current) {
+          toastRef.current.update({
+            variant: "error",
+            title: "Error",
+            description: "Error al cargar datos fiscales.",
+            disableDismiss: false,
+          });
+        }
+      } else if (cargaData) {
+        if (toastRef.current) {
+          toastRef.current.update({
+            variant: "success",
+            title: "Éxito",
+            description: "Datos fiscales cargados correctamente.",
+            disableDismiss: false,
+          });
+        }
+        // Navegar a la ruta indicada tras un breve retardo
+        setTimeout(() => {
+          navigate("/dashboard/estadisticas/TaxBurden");
+        }, 1000);
+      }
+    }
+  }, [cargaLoading, cargaData, cargaError, selectedDependency, navigate]);
+
+  // Efecto para manejo de toasts durante la carga de dependencias (sin cambios)
   useEffect(() => {
     if (activeTab === "Reports") {
-      // Si estamos en la pestaña "Reports"
       if (isLoading && !hasDataLoaded.current) {
-        // Crear un toast de "loading" solo si no se ha cargado antes
         if (!toastRef.current) {
           toastRef.current = toast({
             variant: "loading",
@@ -115,8 +189,7 @@ export default function DependencyList({
             disableDismiss: true,
           });
         }
-      } else if (!isLoading && toastRef.current) {
-        // Si finalizó la carga y hay un toastRef => actualizarlo a success o error
+      } else if (!isLoading && toastRef.current && !hasDataLoaded.current) {
         const newToast = toastRef.current.update({
           variant: error ? "error" : "success",
           title: error ? "Error" : "Éxito",
@@ -131,7 +204,6 @@ export default function DependencyList({
     }
   }, [isLoading, error, activeTab, toast]);
 
-  // Cleanup para descartar el toast al cambiar de pestaña o desmontar
   useEffect(() => {
     return () => {
       if (toastRef.current) {
@@ -141,21 +213,13 @@ export default function DependencyList({
     };
   }, [activeTab]);
 
-  // Creamos un "regionData" ficticio con un arreglo "workspaces" mapeado desde dependencias
+  // Transformar dependencias a workspaces
   const regionData = {
     region: "Dependencies",
     workspaces: dependencias.map(transformDependencyToWorkspace),
   };
 
-  // Estados para los Dropdown Menus y para el Input de búsqueda
-  const [sorting, setSorting] = useState("");
-  const [date, setDate] = useState("last-30-days");
-  const [searchTerm, setSearchTerm] = useState("");
-
-  // Estado para resaltar el label "Reportes"
-  const [highlightReportes, setHighlightReportes] = useState(false);
-
-  // Items del menú de reporte
+  // Opciones del menú de reporte
   const radioItems = [
     { value: "alphabetical", label: "Carga laboral", hint: "A-Z" },
     { value: "reverse-alphabetical", label: "Incidencia delitos", hint: "Z-A" },
@@ -164,12 +228,8 @@ export default function DependencyList({
     { value: "detallado-fiscal", label: "Detallado fiscal", hint: "Z-A" },
   ];
 
-  const selectedLabel = sorting
-    ? radioItems.find((item) => item.value === sorting)?.label
-    : "Reportes";
-
-  // Maneja el clic en un card
-  const handleCardClick = () => {
+  // Manejo del clic en cada tarjeta (workspace)
+  const handleCardClick = (workspace) => {
     if (!sorting) {
       setHighlightReportes(true);
       toast?.({
@@ -180,21 +240,24 @@ export default function DependencyList({
       return;
     }
 
-    if (sorting === "alphabetical") {
-      navigate("/dashboard/estadisticas/WorkLoad");
-    } else if (sorting === "reverse-alphabetical") {
-      navigate("/dashboard/estadisticas/CrimesHighestIncidence");
-    } else if (sorting === "control-plazos"){
-      navigate("/dashboard/estadisticas/DeadlineControl");
-    } else if (sorting === "carga-fiscal"){
-      navigate("/dashboard/estadisticas/TaxBurden");
-    } else if (sorting === "detallado-fiscal"){
-      navigate("/dashboard/estadisticas/TaxDetails");
+    if (sorting !== "carga-fiscal") {
+      if (sorting === "alphabetical") {
+        navigate("/dashboard/estadisticas/WorkLoad");
+      } else if (sorting === "reverse-alphabetical") {
+        navigate("/dashboard/estadisticas/CrimesHighestIncidence");
+      } else if (sorting === "control-plazos") {
+        navigate("/dashboard/estadisticas/DeadlineControl");
+      } else if (sorting === "detallado-fiscal") {
+        navigate("/dashboard/estadisticas/TaxDetails");
+      }
+      return;
     }
 
+    // Para "carga-fiscal": establecer la dependencia seleccionada
+    setSelectedDependency(workspace);
   };
 
-  // Filtrado de workspaces basado en el término ingresado en el Input (buscando en "type")
+  // Filtrado de workspaces por búsqueda en "type"
   const filteredWorkspaces = regionData.workspaces.filter((workspace) =>
     workspace.type.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -204,7 +267,7 @@ export default function DependencyList({
       {/* Barra de herramientas superior */}
       <div className="block md:flex md:items-center md:justify-between pt-4">
         <Input
-          placeholder="Search workspace..."
+          placeholder="Buscar dependencia..."
           className="h-9 w-full rounded-tremor-small md:max-w-xs"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
@@ -215,7 +278,7 @@ export default function DependencyList({
             <DropdownMenuTrigger asChild>
               <Button
                 type="button"
-                className="flex items-center gap-x-2 rounded-tremor-small border border-tremor-border bg-tremor-background py-1 pl-3 pr-1.5 !text-tremor-default font-medium text-tremor-content-strong shadow-tremor-input transition hover:bg-tremor-background-muted hover:text-tremor-content-strong focus:z-10 focus:outline-none dark:border-dark-tremor-border dark:bg-gray-950 dark:text-dark-tremor-content-strong dark:shadow-dark-tremor-input hover:dark:bg-gray-950/50"
+                className="flex items-center gap-x-2 rounded-tremor-small border border-tremor-border bg-tremor-background py-1 pl-3 pr-1.5 !text-tremor-default font-medium text-tremor-content-strong shadow-tremor-input transition hover:bg-tremor-background-muted hover:text-tremor-content-strong focus:z-10 focus:outline-none dark:border-dark-tremor-border dark:bg-white-950 dark:text-dark-tremor-content-strong dark:shadow-dark-tremor-input hover:dark:bg-white-950/50"
               >
                 <IconArrowsUpDown
                   className="-ml-px size-5 shrink-0 text-tremor-content dark:text-dark-tremor-content"
@@ -223,18 +286,13 @@ export default function DependencyList({
                 />
                 Tipo de reporte:{" "}
                 <span
-                  className={`rounded bg-tremor-brand-faint px-2 py-1 text-tremor-label font-semibold 
-                  dark:bg-tremor-brand-subtle/10 dark:text-dark-tremor-brand 
-                  ${highlightReportes ? "text-blue-600" : "text-tremor-brand"}`}
+                  className={`rounded bg-tremor-brand-faint px-2 py-1 text-tremor-label font-semibold dark:bg-tremor-brand-subtle/10 dark:text-dark-tremor-brand ${highlightReportes ? "text-blue-600" : "text-tremor-brand"}`}
                 >
-                  {selectedLabel}
+                  {sorting ? radioItems.find((item) => item.value === sorting)?.label : "Reportes"}
                 </span>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent
-              className="!min-w-[calc(var(--radix-dropdown-menu-trigger-width))]"
-              align="start"
-            >
+            <DropdownMenuContent className="!min-w-[calc(var(--radix-dropdown-menu-trigger-width))]" align="start">
               <DropdownMenuRadioGroup
                 value={sorting}
                 onValueChange={(val) => {
@@ -243,11 +301,7 @@ export default function DependencyList({
                 }}
               >
                 {radioItems.map((item) => (
-                  <DropdownMenuRadioItem
-                    key={item.value}
-                    value={item.value}
-                    hint={item.hint}
-                  >
+                  <DropdownMenuRadioItem key={item.value} value={item.value} hint={item.hint}>
                     {item.label}
                   </DropdownMenuRadioItem>
                 ))}
@@ -274,11 +328,11 @@ export default function DependencyList({
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3">
         {filteredWorkspaces.map((workspace, index) => (
           <Card
-            key={`${workspace.name}-${index}`}
+            key={`${workspace.id}-${index}`}
             className="rounded-tremor-small p-4 cursor-pointer"
-            onClick={handleCardClick}
+            onClick={() => handleCardClick(workspace)}
           >
-            {/* Nombre y estado */}
+            {/* Fila superior: Nombre y estado */}
             <div className="flex items-center space-x-2">
               <h4 className="truncate text-sm font-medium text-tremor-content-strong dark:text-dark-tremor-content-strong">
                 <a href={workspace.href} className="focus:outline-none">
@@ -298,7 +352,7 @@ export default function DependencyList({
               )}
             </div>
 
-            {/* Descripción: fiscalía (type) y "Fiscal titular" (database) */}
+            {/* Fila inferior: Descripción */}
             <List className="mt-3 divide-none">
               <ListItem className="justify-start space-x-2 py-1">
                 <span className="font-medium text-tremor-content-strong dark:text-dark-tremor-content-strong">
@@ -313,7 +367,7 @@ export default function DependencyList({
               </ListItem>
             </List>
 
-            {/* Capacidad: # despachos (users), valor estático 1 (storage) y tiempo de actualización (lastEdited) */}
+            {/* Capacidad */}
             <div className="mt-5 flex flex-wrap gap-4">
               {workspace.capacity.map((item) => {
                 const Icon = capacityIcon[item.label];
