@@ -1,25 +1,25 @@
 // FilterHeader.jsx
 import React, { useState } from "react";
-import { format } from "date-fns"; // Para formatear fe_inicio y fe_fin
+import { format } from "date-fns";
 import { Input } from "../../../../components/ui/Input";
 import { DateRangePicker } from "../../../../components/ui/DatePicker";
 import { Button } from "../../../../components/ui/Button";
-import { IconFileDownload } from '@tabler/icons-react';
 import {
   Dialog,
-  DialogTrigger,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogDescription
-} from '../../../../components/ui/Dialog';
-import { generatePdfFromElement } from '../../TaxDetails/components/ViewPDF/pdfUtils';
+  DialogDescription,
+} from "../../../../components/ui/Dialog";
 
-// 1. Importar el hook para obtener las sedes y el hook para carga fiscal
+import { IconFileUpload, IconFileTypePdf } from "@tabler/icons-react";
+
 import { useListDF } from "../../../../hooks/useListDF";
-import { useCargaFiscal } from "../../../../hooks/useCargaFiscal";
+import { useToast } from "../../../../lib/useToast";
 
-// Importar componentes Select (para usar en SelectSearch)
+// Nueva importación:
+import { generatePdfFromMultipleElements } from "../../TaxDetails/components/ViewPDF/pdfUtils";
+
 import {
   Select,
   SelectTrigger,
@@ -28,31 +28,23 @@ import {
   SelectValue,
 } from "../../../../components/dashboard/Select";
 
-/**
- * Componente reutilizable que encapsula un Select con funcionalidad de búsqueda.
- * - Recibe un array de strings en `options`.
- * - Filtra en tiempo real según `searchText`.
- * - Llama a `onChange(value)` cuando el usuario selecciona un ítem.
- */
 const SelectSearch = ({ placeholder, options, onChange }) => {
   const [searchText, setSearchText] = useState("");
-
-  // Filtrar las opciones en tiempo real
   const filteredOptions = options.filter((opt) =>
-    opt.toLowerCase().includes(searchText.toLowerCase())
+    opt.label.toLowerCase().includes(searchText.toLowerCase())
   );
-
   return (
     <div className="w-80">
-      <Select onValueChange={(val) => {
-        setSearchText("");
-        onChange?.(val);
-      }}>
+      <Select
+        onValueChange={(val) => {
+          setSearchText("");
+          onChange?.(val);
+        }}
+      >
         <SelectTrigger className="w-full">
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
         <SelectContent className="max-h-60 overflow-y-auto">
-          {/* Input para filtrar */}
           <div className="px-2 py-1">
             <Input
               placeholder="Buscar..."
@@ -60,10 +52,9 @@ const SelectSearch = ({ placeholder, options, onChange }) => {
               onChange={(e) => setSearchText(e.target.value)}
             />
           </div>
-          {/* Listado de opciones filtradas */}
           {filteredOptions.map((option) => (
-            <SelectItem key={option} value={option}>
-              {option}
+            <SelectItem key={option.value} value={String(option.value)}>
+              {option.label}
             </SelectItem>
           ))}
         </SelectContent>
@@ -72,86 +63,117 @@ const SelectSearch = ({ placeholder, options, onChange }) => {
   );
 };
 
-export default function FilterHeader({ pdfTargetId }) {
-  // Estado para el PDF
+export default function FilterHeader({
+  // Antes tenías pdfTargetId, ahora en su lugar recibes un array:
+  containerIds = [],  
+  useCargaHook,
+}) {
   const [isPdfDialogOpen, setIsPdfDialogOpen] = useState(false);
   const [pdfUrl, setPdfUrl] = useState(null);
 
-  // 2. Llamar al hook useListDF para obtener las sedes y sus dependencias
-  const { data: sedes = [], isLoading, error } = useListDF();
+  const [isSearching, setIsSearching] = useState(false);
+  const { toast, dismiss } = useToast();
 
-  // 3. Estados locales para guardar la sede y dependencia seleccionadas
+  // Llamar a la API de sedes
+  const { data: sedes = [] } = useListDF();
+
   const [selectedSedeName, setSelectedSedeName] = useState("");
   const [selectedDepName, setSelectedDepName] = useState("");
+  const [dateRange, setDateRange] = useState(null);
 
-  // 4. Estados para el rango de fechas (fe_inicio, fe_fin)
-  const [dateRange, setDateRange] = useState({
-    from: new Date(new Date().setDate(new Date().getDate() - 10)),
-    to: new Date(),
-  });
-
-  // 5. Construir el array de opciones para el Select de Sede (usamos 'sede.nombre')
-  const sedeOptions = sedes.map((sede) => sede.nombre);
-
-  // 6. Buscar la sede seleccionada para filtrar dependencias
+  const sedeOptions = sedes.map((sede) => ({
+    label: sede.nombre,
+    value: sede.nombre,
+  }));
   const selectedSedeObj = sedes.find((sede) => sede.nombre === selectedSedeName);
 
-  // 7. Construir el array de opciones para el Select de Dependencia (usamos 'dep.fiscalia')
   const dependenciaOptions = selectedSedeObj
-    ? selectedSedeObj.dependencias.map((dep) => dep.fiscalia)
+    ? selectedSedeObj.dependencias.map((dep) => ({
+        label: dep.fiscalia,
+        value: dep.id,
+      }))
     : [];
 
-  // 8. Preparar el hook useCargaFiscal para hacer la llamada manual (enabled: false)
-  //    Al cambiar los parámetros, se refetch manualmente.
-  const { refetch } = useCargaFiscal(
+  // useCargaHook
+  const { refetch } = useCargaHook(
     {
-      // Convertir 'selectedSedeObj' a su id, si existe
       id_sede: selectedSedeObj ? selectedSedeObj.id : null,
-      // Formatear fe_inicio y fe_fin
-      fe_inicio: dateRange.from
-        ? format(dateRange.from, "yyyy-MM-dd 00:00:00")
-        : null,
-      fe_fin: dateRange.to
-        ? format(dateRange.to, "yyyy-MM-dd 23:59:59")
-        : null,
-      estado: null, // Dato estático
-      // Buscar la dependencia seleccionada (id)
-      id_dependencia: (() => {
-        if (!selectedDepName) return null;
-        if (!selectedSedeObj) return null;
-        // Buscar la dependencia cuyo 'fiscalia' coincida
-        const depObj = selectedSedeObj.dependencias.find(
-          (d) => d.fiscalia === selectedDepName
-        );
-        return depObj ? depObj.id : null;
-      })(),
+      fe_inicio: dateRange?.from ? format(dateRange.from, "yyyy-MM-dd 00:00:00") : null,
+      fe_fin: dateRange?.to ? format(dateRange.to, "yyyy-MM-dd 23:59:59") : null,
+      estado: null,
+      id_dependencia: selectedDepName ? Number(selectedDepName) : null,
     },
-    {
-      enabled: false, // Se activará manualmente al dar clic en "Buscar.."
-    }
+    { enabled: false }
   );
 
-  // Maneja el clic en "Imprimir"
+  // Nueva función para imprimir múltiples contenedores
   const handlePrintClick = async () => {
+    const loadingToast = toast({
+      variant: "loading",
+      title: "Generando PDF",
+      description: "Espere mientras se generan las páginas...",
+    });
+
     try {
-      const url = await generatePdfFromElement(pdfTargetId);
+      // Llamamos a la función para varios IDs
+      const url = await generatePdfFromMultipleElements(containerIds);
       setPdfUrl(url);
       setIsPdfDialogOpen(true);
+      dismiss(loadingToast.id);
     } catch (error) {
+      dismiss(loadingToast.id);
       console.error("Error generando PDF:", error);
+      toast({
+        variant: "error",
+        title: "Error generando PDF",
+        description: "Ocurrió un error al generar el PDF.",
+      });
     }
   };
 
-  // Función para manejar el clic en "Buscar.."
   const handleBuscar = async () => {
-    console.log("Filtros aplicados");
-    console.log("Sede:", selectedSedeName);
-    console.log("Dependencia:", selectedDepName);
-    console.log("Date Range:", dateRange);
+    if (!selectedSedeName) {
+      toast({
+        variant: "warning",
+        title: "Falta seleccionar sede",
+        description: "Por favor, seleccione una sede antes de buscar.",
+      });
+      return;
+    }
+    if (!dateRange?.from || !dateRange?.to) {
+      toast({
+        variant: "warning",
+        title: "Falta seleccionar rango de fecha",
+        description: "Por favor, seleccione un rango de fechas antes de buscar.",
+      });
+      return;
+    }
 
-    // Llamar a refetch para actualizar la data en 'carga-fiscal'
-    // CargoReportS se re-renderizará con los datos nuevos
-    await refetch();
+    setIsSearching(true);
+    const loadingToast = toast({
+      variant: "loading",
+      title: "Cargando",
+      description: "Realizando la búsqueda...",
+    });
+
+    try {
+      await refetch();
+      dismiss(loadingToast.id);
+      toast({
+        variant: "success",
+        title: "Búsqueda exitosa",
+        description: "La información se actualizó correctamente.",
+      });
+    } catch (error) {
+      dismiss(loadingToast.id);
+      toast({
+        variant: "error",
+        title: "Error en la búsqueda",
+        description: "Ocurrió un error al actualizar la información.",
+      });
+    } finally {
+      setIsSearching(false);
+    }
   };
 
   return (
@@ -163,59 +185,64 @@ export default function FilterHeader({ pdfTargetId }) {
 
       <div className="block md:flex md:items-center md:justify-between">
         <div className="flex items-center w-full gap-2">
-          {/* 7. Primer SelectSearch (Sede) */}
           <SelectSearch
             placeholder="Seleccione sede..."
             options={sedeOptions}
             onChange={(val) => {
               setSelectedSedeName(val);
-              // Resetear dependencia seleccionada al cambiar de sede
               setSelectedDepName("");
             }}
           />
-
-          {/* 8. Segundo SelectSearch (Dependencia), filtra por la sede seleccionada */}
           <SelectSearch
             placeholder="Seleccione dependencia..."
             options={dependenciaOptions}
             onChange={(val) => setSelectedDepName(val)}
           />
-
-          {/* DateRangePicker con navegación por año y mes */}
           <div className="lg:flex lg:items-center lg:space-x-3">
             <DateRangePicker
-              enableYearNavigation={true}
+              enableYearNavigation
               disableNavigation={false}
               value={dateRange}
-              onChange={setDateRange} // Actualiza el estado local
+              onChange={setDateRange}
               id="date_1"
               name="date_1"
               className="border-tremor-border dark:border-dark-tremor-border"
             />
           </div>
-
-          {/* Botón extra al final de la fila de filtros */}
           <Button
             variant="secondary"
             className="rounded-tremor-small py-1.5 px-3 font-medium"
             onClick={handleBuscar}
+            disabled={isSearching}
           >
             Buscar..
           </Button>
         </div>
-
-        {/* Botón "Imprimir" */}
-        <Button
-          variant="secondary"
-          className="flex items-center justify-center gap-x-1 rounded-tremor-small py-1.5 px-3 font-medium"
-          onClick={handlePrintClick}
-        >
-          <IconFileDownload
-            className="size-5 shrink-0 text-tremor-content dark:text-dark-tremor-content"
-            aria-hidden
-          />
-          Imprimir
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="secondary"
+            className="flex items-center justify-center gap-x-1 rounded-tremor-small py-1.5 px-3 font-medium"
+            disabled={isSearching}
+          >
+            <IconFileUpload
+              className="size-5 shrink-0 text-tremor-content dark:text-dark-tremor-content"
+              aria-hidden
+            />
+            Exportar
+          </Button>
+          <Button
+            variant="secondary"
+            className="flex items-center justify-center gap-x-1 rounded-tremor-small py-1.5 px-3 font-medium"
+            onClick={handlePrintClick}
+            disabled={isSearching}
+          >
+            <IconFileTypePdf
+              className="size-5 shrink-0 text-tremor-content dark:text-dark-tremor-content"
+              aria-hidden
+            />
+            Imprimir
+          </Button>
+        </div>
       </div>
 
       {/* Dialog para mostrar la previsualización del PDF */}
@@ -227,8 +254,6 @@ export default function FilterHeader({ pdfTargetId }) {
               Revisa el contenido antes de imprimir o descargar.
             </DialogDescription>
           </DialogHeader>
-
-          {/* Contenedor para el PDF (un <iframe> con src=pdfUrl) */}
           {pdfUrl ? (
             <iframe
               src={pdfUrl}

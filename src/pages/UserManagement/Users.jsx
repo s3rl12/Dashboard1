@@ -45,6 +45,7 @@ export default function Users() {
         toastRef.current = toast({
           variant: "loading",
           title: "Cargando datos...",
+          description: "Espere a que se cargen los datos",
           disableDismiss: true,
           
         });

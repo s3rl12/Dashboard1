@@ -36,9 +36,6 @@ const RecoverPassword = ({ open, onClose }) => {
                 body: JSON.stringify({ email }),
             });
 
-            console.log("Estado:", response.status);
-            console.log("Respuesta:", await response.text());
-
             if (response.ok) {
                 Swal.fire({
                     title: "Éxito",
@@ -70,7 +67,7 @@ const RecoverPassword = ({ open, onClose }) => {
         <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
             <DialogTitle>¿Olvidó su contraseña?</DialogTitle>
             <DialogContent>
-                <DialogContentText>
+                <DialogContentText className="pb-2">
                     Por favor, ingrese su correo electrónico institucional para que podamos notificar al administrador y ayudarle a recuperar su acceso.
                 </DialogContentText>
                 <TextField

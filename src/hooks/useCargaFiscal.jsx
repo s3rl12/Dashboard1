@@ -1,5 +1,5 @@
 // src/hooks/useCargaFiscal.jsx
-import { useQuery } from '@tanstack/react-query';
+import { useQuery } from "@tanstack/react-query";
 
 // Leer la IP del backend y el token desde localStorage
 const apiIp = import.meta.env.VITE_API;
@@ -19,7 +19,7 @@ export async function fetchCargaFiscal({
   id_dependencia 
 }) {
   const url = `http://${apiIp}/api/ges_reportes/cargaSede`;
-  
+
   const response = await fetch(url, {
     method: "POST",
     headers: {
@@ -51,22 +51,26 @@ export async function fetchCargaFiscal({
  * "params" debe ser un objeto con { id_sede, fe_inicio, fe_fin, estado, id_dependencia }
  * 
  * Ejemplo de uso:
- * const { data, isLoading, isError } = useCargaFiscal({
+ * const { data, isLoading, isError, refetch } = useCargaFiscal({
  *   id_sede: 6,
  *   fe_inicio: "2024-01-01 00:00:00",
  *   fe_fin: "2025-12-31 23:59:59",
  *   estado: null,
  *   id_dependencia: null
+ * }, {
+ *   enabled: false // si deseas controlarlo manualmente
  * });
  */
 export function useCargaFiscal(params, options = {}) {
   return useQuery({
-    queryKey: ['carga-fiscal', params],
+    // Clave fija para la caché: "carga-fiscal"
+    queryKey: ["carga-fiscal"],
+    // queryFn recibe los parámetros a través de una función
     queryFn: () => fetchCargaFiscal(params),
-    staleTime: Infinity,          // Nunca se marca "stale" durante la sesión
-    cacheTime: 1000 * 60 * 5,     // Se guarda en caché 5 minutos
-    refetchOnWindowFocus: false,  // No se refetch al cambiar de pestaña
-    refetchOnReconnect: false,    // No se refetch al reconectar
+    staleTime: Infinity,         // Nunca se marca "stale" durante la sesión
+    cacheTime: 1000 * 60 * 5,    // Se guarda en caché 5 minutos
+    refetchOnWindowFocus: false, // No se refetch al cambiar de pestaña
+    refetchOnReconnect: false,   // No se refetch al reconectar
     ...options,
   });
 }

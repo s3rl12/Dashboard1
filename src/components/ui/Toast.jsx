@@ -2,15 +2,13 @@
 
 import React from "react";
 import * as ToastPrimitives from "@radix-ui/react-toast";
-import {
-  RiCheckboxCircleFill,
-  RiCloseCircleFill,
-  RiErrorWarningFill,
-  RiInformationFill,
-  RiLoader2Fill,
-} from "@remixicon/react";
-import { cx } from "../../lib/utils";
 
+import { cx } from "../../lib/utils";
+import { IconLoader } from '@tabler/icons-react';
+import { IconAlertCircle } from '@tabler/icons-react';
+import { IconCircleCheck } from '@tabler/icons-react';
+import { IconInfoCircle } from '@tabler/icons-react'
+import { IconCircleX } from '@tabler/icons-react'
 /**
  * Proveedor de Toasts (usa @radix-ui/react-toast).
  * Envuelve la aplicación para que los toasts puedan mostrarse.
@@ -77,7 +75,7 @@ export const Toast = React.forwardRef(function Toast(
   switch (variant) {
     case "success":
       Icon = (
-        <RiCheckboxCircleFill
+        <IconCircleCheck
           className="size-5 shrink-0 text-emerald-600"
           aria-hidden="true"
         />
@@ -85,7 +83,7 @@ export const Toast = React.forwardRef(function Toast(
       break;
     case "warning":
       Icon = (
-        <RiErrorWarningFill
+        <IconAlertCircle
           className="size-5 shrink-0 text-amber-500"
           aria-hidden="true"
         />
@@ -93,7 +91,7 @@ export const Toast = React.forwardRef(function Toast(
       break;
     case "error":
       Icon = (
-        <RiCloseCircleFill
+        <IconCircleX
           className="size-5 shrink-0 text-red-600"
           aria-hidden="true"
         />
@@ -101,7 +99,7 @@ export const Toast = React.forwardRef(function Toast(
       break;
     case "loading":
       Icon = (
-        <RiLoader2Fill
+        <IconLoader
           className="size-5 shrink-0 animate-spin text-gray-600"
           aria-hidden="true"
         />
@@ -109,7 +107,7 @@ export const Toast = React.forwardRef(function Toast(
       break;
     default:
       Icon = (
-        <RiInformationFill
+        <IconInfoCircle
           className="size-5 shrink-0 text-blue-500"
           aria-hidden="true"
         />

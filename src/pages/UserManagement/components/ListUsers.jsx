@@ -1,4 +1,5 @@
 // src/pages/Users/components/ListUsers.jsx
+
 import React, { useMemo, useState, useEffect } from "react";
 import {
   flexRender,
@@ -44,11 +45,17 @@ import {
 import { Input } from "../../../components/ui/Input";
 import { Label } from "../../../components/ui/Label";
 import { Divider } from "../../../components/ui/Divider";
-import { Select, SelectTrigger, SelectContent, SelectItem } from "../../../components/dashboard/Select";
+import {
+  Select,
+  SelectTrigger,
+  SelectContent,
+  SelectItem,
+  SelectValue,
+} from "../../../components/dashboard/Select";
 import { RadioGroup } from "@headlessui/react";
 import { RiCheckboxCircleFill } from "@remixicon/react";
 import { DatePicker } from "../../../components/ui/DatePicker";
-import userListService from '../../../services/api/user-list/userListService';
+import userListService from "../../../services/api/user-list/userListService";
 import OptionalAlert from "../../../components/alert/OptionalAlert";
 import UserForm from "./UserForm";
 
@@ -71,34 +78,73 @@ function StatusBadge({ status }) {
       break;
   }
   return (
-    <span className={`inline-flex items-center rounded-md px-2 py-1 text-sm font-medium ${colorClasses}`}>
+    <span
+      className={`inline-flex items-center rounded-md px-2 py-1 text-sm font-medium ${colorClasses}`}
+    >
       {status}
     </span>
   );
 }
 
-export default function ListUsers({ usersData: propUsersData = [], rolesData = [], areasData = [] }) {
+export default function ListUsers({
+  usersData: propUsersData = [],
+  rolesData = [],
+  areasData = [],
+}) {
   // Se usa un estado local para manejar modificaciones (como eliminación)
   const [tableData, setTableData] = useState(propUsersData);
-
-  // Transformar rolesData en workspaces
-  const workspaces = rolesData.map((role) => {
-    const activePermissions = Object.values(role.permisos_fk || {}).filter(
-      (value) => value === 1
-    ).length;
-    return {
-      id: role.id,
-      title: role.roles,
-      description: role.descripcion,
-      users: `${activePermissions} permisos activos`,
-    };
-  });
 
   // Control del Drawer de edición
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
-  const [selectedWorkspace, setSelectedWorkspace] = useState(workspaces[0] || {});
+
+  // estado local para guardar el “workspace” (rol) seleccionado
+  const [editSelectedWorkspace, setEditSelectedWorkspace] = useState(null);
+
+  function buildWorkspaces(roles) {
+    return roles.map((role) => {
+      // Contar permisos activos
+      const permissionKeys = role.permisos_fk ? Object.keys(role.permisos_fk) : [];
+      const activeCount = permissionKeys.reduce((acc, key) => {
+        return acc + (role.permisos_fk[key] === 1 ? 1 : 0);
+      }, 0);
+
+      return {
+        id: role.id,
+        title: role.roles,
+        description: role.descripcion,
+        permissions: role.permisos_fk,
+        users: `${activeCount} permisos activos`,
+      };
+    });
+  }
+
+  // 3) Generar la lista de workspaces a partir de rolesData
+  const allWorkspaces = useMemo(() => buildWorkspaces(rolesData), [rolesData]);
+
+  useEffect(() => {
+    if (selectedUser) {
+      // Si el usuario tiene un roles_fk, buscarlo en rolesData
+      const userRoleId = selectedUser.roles_fk?.id;
+      if (userRoleId) {
+        // Buscar en rolesData el que coincida
+        const foundRole = rolesData.find((r) => r.id === userRoleId);
+        if (foundRole) {
+          // Transformarlo a workspace
+          const roleWorkspace = buildWorkspaces([foundRole])[0];
+          setEditSelectedWorkspace(roleWorkspace);
+        } else {
+          setEditSelectedWorkspace(null);
+        }
+      } else {
+        setEditSelectedWorkspace(null);
+      }
+    } else {
+      setEditSelectedWorkspace(null);
+    }
+  }, [selectedUser, rolesData]);
+
 
   // Función para “eliminar” un usuario (actualiza su estado a “Inactivo”)
   const handleDeleteUser = (rowData) => {
@@ -107,18 +153,11 @@ export default function ListUsers({ usersData: propUsersData = [], rolesData = [
       text: "¡No podrás revertir esto!",
       onConfirm: async () => {
         try {
-          // Llamar al servicio para eliminar en el backend
           await userListService.deleteUser(rowData.id);
-          
-          // Actualizar el estado local (eliminar el usuario de la tabla)
-          setTableData((prev) => prev.filter(user => user.id !== rowData.id));
-          
-          // Opcional: Mostrar feedback de éxito
+          setTableData((prev) => prev.filter((user) => user.id !== rowData.id));
           console.log("Usuario eliminado correctamente");
         } catch (error) {
-          // Manejar errores (ej: mostrar notificación)
           console.error("Error al eliminar usuario:", error.response?.data);
-          alert("No se pudo eliminar el usuario");
         }
       },
     });
@@ -149,26 +188,23 @@ export default function ListUsers({ usersData: propUsersData = [], rolesData = [
       },
       {
         header: "Rol",
-        // Se extrae el rol del objeto anidado roles_fk
         accessorFn: (row) => row.roles_fk?.roles || "Sin rol",
         enableSorting: false,
         meta: { align: "text-left" },
       },
       {
         header: "Despacho",
-        // Se muestra despacho_fk o un valor por defecto
         accessorFn: (row) => row.despacho_fk || "Sin despacho",
         enableSorting: false,
         meta: { align: "text-left" },
       },
       {
         header: "Estado",
-        accessorKey: "estado",
+        accessorKey: "activo",
         enableSorting: false,
         meta: { align: "text-left" },
         cell: ({ getValue }) => {
           const statusValue = getValue();
-          // Convertir el valor numérico en texto
           const statusText = statusValue === 1 ? "Activo" : "Inactivo";
           return <StatusBadge status={statusText} />;
         },
@@ -179,6 +215,7 @@ export default function ListUsers({ usersData: propUsersData = [], rolesData = [
         meta: { align: "text-right" },
         cell: ({ row }) => {
           const rowData = row.original;
+          const isInactive = rowData.activo === 0;
           return (
             <div className="inline-flex items-center gap-2">
               {/* Botón Editar -> abre Drawer */}
@@ -195,8 +232,9 @@ export default function ListUsers({ usersData: propUsersData = [], rolesData = [
               {/* Botón Eliminar */}
               <button
                 type="button"
-                className="inline-flex items-center rounded-md px-2 py-1.5 text-gray-600 ring-1 ring-inset ring-gray-200 hover:bg-gray-100"
                 onClick={() => handleDeleteUser(rowData)}
+                disabled={isInactive}
+                className={`inline-flex items-center rounded-md px-2 py-1.5 text-gray-600 ring-1 ring-inset ring-gray-200 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed`}
               >
                 <IconTrash className="size-4" aria-hidden />
               </button>
@@ -208,6 +246,7 @@ export default function ListUsers({ usersData: propUsersData = [], rolesData = [
     []
   );
 
+  // Configuración de la tabla con react-table
   const table = useReactTable({
     data: tableData,
     columns,
@@ -227,6 +266,87 @@ export default function ListUsers({ usersData: propUsersData = [], rolesData = [
   const pageSize = table.getState().pagination.pageSize;
   const startIndex = pageIndex * pageSize + 1;
   const endIndex = Math.min(startIndex + pageSize - 1, totalRows);
+
+  // ------------------------------------------------------------------------------------
+  // ESTADOS PARA LA EDICIÓN DE Sede/Dependencia/Despacho dentro del Drawer
+  // ------------------------------------------------------------------------------------
+  const [editSelectedSede, setEditSelectedSede] = useState("");
+  const [editSelectedDependencia, setEditSelectedDependencia] = useState("");
+  const [editSelectedDespacho, setEditSelectedDespacho] = useState("");
+
+  // Efecto que se dispara cada vez que se abre el Drawer con un nuevo "selectedUser"
+  useEffect(() => {
+    if (selectedUser) {
+      // Reiniciar los selects en caso no se encuentre nada
+      setEditSelectedSede("");
+      setEditSelectedDependencia("");
+      setEditSelectedDespacho("");
+
+      const despachoId = selectedUser.despacho_fk;
+      if (despachoId) {
+        // 1) Encontrar la sede que contenga esa dependencia con ese despacho
+        const foundSede = areasData.find((sede) =>
+          sede.dependencias?.some((dep) =>
+            dep.despachos?.some((d) => d.id === despachoId)
+          )
+        );
+        if (foundSede) {
+          setEditSelectedSede(String(foundSede.id));
+
+          // 2) Dentro de esa sede, encontrar la dependencia
+          const foundDep = foundSede.dependencias?.find((dep) =>
+            dep.despachos?.some((d) => d.id === despachoId)
+          );
+          if (foundDep) {
+            setEditSelectedDependencia(String(foundDep.id));
+
+            // 3) Dentro de esa dependencia, setear el despacho
+            const foundDesp = foundDep.despachos?.find(
+              (d) => d.id === despachoId
+            );
+            if (foundDesp) {
+              setEditSelectedDespacho(String(foundDesp.id));
+            }
+          }
+        }
+      }
+    } else {
+      // Si no hay selectedUser, limpiar
+      setEditSelectedSede("");
+      setEditSelectedDependencia("");
+      setEditSelectedDespacho("");
+    }
+  }, [selectedUser, areasData]);
+
+  // ------------------------------------------------------------------------------------
+  // Funciones de cambio para los Selects
+  // ------------------------------------------------------------------------------------
+  const handleChangeSede = (sedeId) => {
+    setEditSelectedSede(sedeId);
+    // Al cambiar la sede, limpiamos la dependencia y despacho
+    setEditSelectedDependencia("");
+    setEditSelectedDespacho("");
+  };
+
+  const handleChangeDependencia = (depId) => {
+    setEditSelectedDependencia(depId);
+    // Al cambiar la dependencia, limpiamos el despacho
+    setEditSelectedDespacho("");
+  };
+
+  const handleChangeDespacho = (despId) => {
+    setEditSelectedDespacho(despId);
+  };
+
+  // Para renderizar las opciones de dependencia y despacho, necesitamos
+  // encontrar la sede y dependencia actual
+  const currentSede = areasData.find((s) => String(s.id) === editSelectedSede);
+  const dependencias = currentSede?.dependencias || [];
+
+  const currentDep = dependencias.find(
+    (dep) => String(dep.id) === editSelectedDependencia
+  );
+  const despachos = currentDep?.despachos || [];
 
   return (
     <div className="flex items-start">
@@ -251,8 +371,11 @@ export default function ListUsers({ usersData: propUsersData = [], rolesData = [
                 Completa los campos para agregar un usuario.
               </DialogDescription>
             </DialogHeader>
-            <UserForm rolesData={rolesData} areasData={areasData} onCancel={() => setIsDialogOpen(false)} />
-
+            <UserForm
+              rolesData={rolesData}
+              areasData={areasData}
+              onCancel={() => setIsDialogOpen(false)}
+            />
           </DialogContent>
         </Dialog>
       </div>
@@ -262,10 +385,7 @@ export default function ListUsers({ usersData: propUsersData = [], rolesData = [
         <Table>
           <TableHead>
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow
-                key={headerGroup.id}
-                className="border-b border-gray-200"
-              >
+              <TableRow key={headerGroup.id} className="border-b border-gray-200">
                 {headerGroup.headers.map((header) => (
                   <TableHeaderCell
                     key={header.id}
@@ -343,6 +463,7 @@ export default function ListUsers({ usersData: propUsersData = [], rolesData = [
               Modifica los datos del usuario seleccionado
             </DrawerDescription>
           </DrawerHeader>
+
           <DrawerBody>
             {!selectedUser ? (
               <p className="text-sm text-gray-500">
@@ -353,14 +474,17 @@ export default function ListUsers({ usersData: propUsersData = [], rolesData = [
                 {/* Sección de edición de información personal */}
                 <section>
                   <h2 className="font-semibold text-gray-800 text-base">
-                    Personal information
+                    Informacion personal
                   </h2>
                   <p className="mt-1 text-sm text-gray-600">
-                    Lorem ipsum dolor sit amet, consetetur sadipscing elitr.
+                    Ingrese la información personal del usuario y otros datos de identificación.
                   </p>
                   <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div>
-                      <Label htmlFor="nombre" className="text-sm font-medium text-gray-700">
+                      <Label
+                        htmlFor="nombre"
+                        className="text-sm font-medium text-gray-700"
+                      >
                         Nombre <span className="text-red-500">*</span>
                       </Label>
                       <Input
@@ -373,7 +497,10 @@ export default function ListUsers({ usersData: propUsersData = [], rolesData = [
                       />
                     </div>
                     <div>
-                      <Label htmlFor="apellido" className="text-sm font-medium text-gray-700">
+                      <Label
+                        htmlFor="apellido"
+                        className="text-sm font-medium text-gray-700"
+                      >
                         Apellido <span className="text-red-500">*</span>
                       </Label>
                       <Input
@@ -386,7 +513,10 @@ export default function ListUsers({ usersData: propUsersData = [], rolesData = [
                       />
                     </div>
                     <div className="col-span-full">
-                      <Label htmlFor="correo" className="text-sm font-medium text-gray-700">
+                      <Label
+                        htmlFor="correo"
+                        className="text-sm font-medium text-gray-700"
+                      >
                         Correo <span className="text-red-500">*</span>
                       </Label>
                       <Input
@@ -401,7 +531,10 @@ export default function ListUsers({ usersData: propUsersData = [], rolesData = [
                     {/* ... Resto de campos para edición */}
                     {/* Row 3: DNI, Fecha */}
                     <div>
-                      <Label htmlFor="dni" className="text-sm font-medium text-gray-700">
+                      <Label
+                        htmlFor="dni"
+                        className="text-sm font-medium text-gray-700"
+                      >
                         DNI <span className="text-red-500">*</span>
                       </Label>
                       <Input
@@ -414,20 +547,28 @@ export default function ListUsers({ usersData: propUsersData = [], rolesData = [
                       />
                     </div>
                     <div>
-                      <Label className="text-sm font-medium text-gray-700">
+                      <Label
+                        htmlFor="fechaNacimiento"
+                        className="text-sm font-medium text-gray-700"
+                      >
                         Fecha de nacimiento <span className="text-red-500">*</span>
                       </Label>
-                      <DatePicker
-                        placeholder="Selecciona la fecha"
+                      <Input
+                        type="date"
+                        id="fechaNacimiento"
+                        name="fechaNacimiento"
                         className="mt-1"
-
-                      // Podrías setear un value, si tuviéramos la info
+                        value={selectedUser.fechaNacimiento}
+                        onChange={() => { }}
                       />
                     </div>
 
                     {/* Row 4: Teléfono */}
                     <div className="col-span-full">
-                      <Label htmlFor="telefono" className="text-sm font-medium text-gray-700">
+                      <Label
+                        htmlFor="telefono"
+                        className="text-sm font-medium text-gray-700"
+                      >
                         Teléfono <span className="text-red-500">*</span>
                       </Label>
                       <Input
@@ -442,7 +583,10 @@ export default function ListUsers({ usersData: propUsersData = [], rolesData = [
 
                     {/* Row 5: Dirección */}
                     <div className="col-span-full">
-                      <Label htmlFor="direccion" className="text-sm font-medium text-gray-700">
+                      <Label
+                        htmlFor="direccion"
+                        className="text-sm font-medium text-gray-700"
+                      >
                         Dirección
                       </Label>
                       <Input
@@ -455,14 +599,17 @@ export default function ListUsers({ usersData: propUsersData = [], rolesData = [
                       />
                     </div>
 
-                    {/* Row 6: Género*, Extensión*, Tipo Fiscal* (pero 2 col máx) */}
+                    {/* Row 6: Género*, Extensión*, Tipo Fiscal* */}
                     <div>
-                      <Label htmlFor="genero" className="text-sm font-medium text-gray-700">
+                      <Label
+                        htmlFor="genero"
+                        className="text-sm font-medium text-gray-700"
+                      >
                         Género <span className="text-red-500">*</span>
                       </Label>
                       <Select>
                         <SelectTrigger id="genero" className="mt-1 w-full">
-                          Selecciona
+                          <SelectValue placeholder="Selecciona" />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="varon">Varón</SelectItem>
@@ -471,7 +618,10 @@ export default function ListUsers({ usersData: propUsersData = [], rolesData = [
                       </Select>
                     </div>
                     <div>
-                      <Label htmlFor="extension" className="text-sm font-medium text-gray-700">
+                      <Label
+                        htmlFor="extension"
+                        className="text-sm font-medium text-gray-700"
+                      >
                         Extensión <span className="text-red-500">*</span>
                       </Label>
                       <Input
@@ -483,9 +633,11 @@ export default function ListUsers({ usersData: propUsersData = [], rolesData = [
                         onChange={() => { }}
                       />
                     </div>
-                    {/* Siguiente fila */}
                     <div className="col-span-full">
-                      <Label htmlFor="tipo-fiscal" className="text-sm font-medium text-gray-700">
+                      <Label
+                        htmlFor="tipo-fiscal"
+                        className="text-sm font-medium text-gray-700"
+                      >
                         Tipo Fiscal <span className="text-red-500">*</span>
                       </Label>
                       <Input
@@ -500,7 +652,10 @@ export default function ListUsers({ usersData: propUsersData = [], rolesData = [
 
                     {/* Row 7: Password*, Confirmar Password* */}
                     <div>
-                      <Label htmlFor="password" className="text-sm font-medium text-gray-700">
+                      <Label
+                        htmlFor="password"
+                        className="text-sm font-medium text-gray-700"
+                      >
                         Password <span className="text-red-500">*</span>
                       </Label>
                       <Input
@@ -514,7 +669,10 @@ export default function ListUsers({ usersData: propUsersData = [], rolesData = [
                       />
                     </div>
                     <div>
-                      <Label htmlFor="confirm-password" className="text-sm font-medium text-gray-700">
+                      <Label
+                        htmlFor="confirm-password"
+                        className="text-sm font-medium text-gray-700"
+                      >
                         Confirmar Password <span className="text-red-500">*</span>
                       </Label>
                       <Input
@@ -529,63 +687,92 @@ export default function ListUsers({ usersData: propUsersData = [], rolesData = [
                     </div>
                   </div>
                 </section>
+
                 <Divider className="my-5" />
 
-                {/* === Sección: Workspace settings (vertical) === */}
+                {/* Sección: Configuración del Espacio de Trabajo */}
                 <section>
                   <h2 className="font-semibold text-gray-800 text-base">
-                    Workspace settings
+                    Configuración del Espacio de Trabajo
                   </h2>
                   <p className="mt-1 text-sm text-gray-600">
-                    Lorem ipsum dolor sit amet, consetetur sadipscing elitr.
+                    Selecciona las areas al que estarás asignado dentro de la organización.
                   </p>
 
-                  {/* Todo en vertical: 1 col => grid-cols-1 */}
                   <div className="mt-3 grid grid-cols-1 gap-4">
-                    {/* Sede* */}
+                    {/* Sede */}
                     <div>
-                      <Label htmlFor="sede" className="text-sm font-medium text-gray-700">
+                      <Label
+                        htmlFor="sede"
+                        className="text-sm font-medium text-gray-700"
+                      >
                         Sede <span className="text-red-500">*</span>
                       </Label>
-                      <Select>
+                      <Select
+                        value={editSelectedSede}
+                        onValueChange={handleChangeSede}
+                      >
                         <SelectTrigger id="sede" className="mt-1 w-full">
-                          Selecciona la sede
+                          <SelectValue placeholder="Selecciona la sede" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="sede1">Sede 1</SelectItem>
-                          <SelectItem value="sede2">Sede 2</SelectItem>
+                          {areasData.map((sede) => (
+                            <SelectItem key={sede.id} value={String(sede.id)}>
+                              {sede.nombre} ({sede.cod_sede})
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     </div>
 
-                    {/* Dependencia* */}
+                    {/* Dependencia */}
                     <div>
-                      <Label htmlFor="dependencia" className="text-sm font-medium text-gray-700">
+                      <Label
+                        htmlFor="dependencia"
+                        className="text-sm font-medium text-gray-700"
+                      >
                         Dependencia <span className="text-red-500">*</span>
                       </Label>
-                      <Select>
+                      <Select
+                        value={editSelectedDependencia}
+                        onValueChange={handleChangeDependencia}
+                        disabled={!editSelectedSede}
+                      >
                         <SelectTrigger id="dependencia" className="mt-1 w-full">
-                          Selecciona la dependencia
+                          <SelectValue placeholder="Selecciona la dependencia" />
                         </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="dep1">Dependencia 1</SelectItem>
-                          <SelectItem value="dep2">Dependencia 2</SelectItem>
+                        <SelectContent className="max-h-60 overflow-y-auto">
+                          {dependencias.map((dep) => (
+                            <SelectItem key={dep.id} value={String(dep.id)}>
+                              {dep.nombre_fiscalia} ({dep.cod_depen})
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     </div>
 
-                    {/* Despacho* */}
+                    {/* Despacho */}
                     <div>
-                      <Label htmlFor="despacho" className="text-sm font-medium text-gray-700">
+                      <Label
+                        htmlFor="despacho"
+                        className="text-sm font-medium text-gray-700"
+                      >
                         Despacho <span className="text-red-500">*</span>
                       </Label>
-                      <Select>
+                      <Select
+                        value={editSelectedDespacho}
+                        onValueChange={handleChangeDespacho}
+                        disabled={!editSelectedDependencia}
+                      >
                         <SelectTrigger id="despacho" className="mt-1 w-full">
-                          Selecciona el despacho
+                          <SelectValue placeholder="Selecciona el despacho" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="desp1">Despacho 1</SelectItem>
-                          <SelectItem value="desp2">Despacho 2</SelectItem>
+                          {despachos.map((desp) => (
+                            <SelectItem key={desp.id} value={String(desp.id)}>
+                              {desp.nombre_despacho} ({desp.cod_despa})
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     </div>
@@ -602,24 +789,23 @@ export default function ListUsers({ usersData: propUsersData = [], rolesData = [
                   <p className="mt-1 text-sm text-gray-600">
                     Selecciona tu preferencia de acceso
                   </p>
+
                   <RadioGroup
-                    value={selectedWorkspace}
-                    onChange={setSelectedWorkspace}
-                    name="notificationSettings"
+                    value={editSelectedWorkspace}
+                    onChange={setEditSelectedWorkspace}
+                    name="rolesRadioGroup"
                     className="mt-4 space-y-4"
                   >
                     <RadioGroup.Label className="text-sm font-semibold text-gray-700">
                       Configuración de acceso al sistema
                     </RadioGroup.Label>
                     <div className="grid grid-cols-1 gap-4">
-                      {workspaces.map((item) => (
+                      {allWorkspaces.map((item) => (
                         <RadioGroup.Option
                           key={item.id}
                           value={item}
                           className={({ active }) =>
-                            `relative flex cursor-pointer rounded-lg border p-4 transition ${active
-                              ? "border-blue-500 ring-2 ring-blue-200"
-                              : "border-gray-200"
+                            `relative flex cursor-pointer rounded-lg border p-4 transition ${active ? "border-blue-500 ring-2 ring-blue-200" : "border-gray-200"
                             } bg-white`
                           }
                         >
@@ -630,11 +816,18 @@ export default function ListUsers({ usersData: propUsersData = [], rolesData = [
                                   <RadioGroup.Label className="block text-sm font-medium text-gray-700">
                                     {item.title}
                                   </RadioGroup.Label>
-                                  <p className="mt-1 text-sm text-gray-600">{item.description}</p>
+                                  <p className="mt-1 text-sm text-gray-600">
+                                    {item.description}
+                                  </p>
                                 </div>
-                                <span className="mt-4 text-sm font-medium text-gray-700">{item.users}</span>
+                                <span className="mt-4 text-sm font-medium text-gray-700">
+                                  {item.users}
+                                </span>
                               </div>
-                              <RiCheckboxCircleFill className={`size-5 shrink-0 text-blue-500 ${!checked ? "invisible" : ""}`} aria-hidden={true} />
+                              <RiCheckboxCircleFill
+                                className={`size-5 shrink-0 text-blue-500 ${!checked ? "invisible" : ""}`}
+                                aria-hidden={true}
+                              />
                             </>
                           )}
                         </RadioGroup.Option>
@@ -645,6 +838,7 @@ export default function ListUsers({ usersData: propUsersData = [], rolesData = [
               </div>
             )}
           </DrawerBody>
+
           <DrawerFooter>
             <DrawerClose asChild>
               <button className="rounded-md bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200">

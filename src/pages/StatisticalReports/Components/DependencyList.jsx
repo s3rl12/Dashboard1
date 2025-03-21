@@ -25,9 +25,9 @@ import { useCargaFiscal } from "../../../hooks/useCargaFiscal";
 
 // Diccionario de íconos para capacity
 const capacityIcon = {
-  users: IconBuildings,       // Ícono para la cantidad de despachos
-  storage: IconUsers,         // Ícono con valor estático 1
-  lastEdited: IconClockHour3, // Ícono para la fecha de actualización
+  users: IconBuildings,
+  storage: IconUsers,
+  lastEdited: IconClockHour3,
 };
 
 // Función para formatear el tiempo relativo desde updated_at
@@ -51,11 +51,10 @@ function getRelativeTime(dateStr) {
 
 /**
  * Transforma cada dependencia a la estructura usada en el UI original (workspaces).
- * Se agrega la propiedad "id" usando cod_depen para identificar la dependencia.
  */
 function transformDependencyToWorkspace(dependency) {
   return {
-    id: dependency.cod_depen, // Se usa cod_depen como id
+    id: dependency.id, // Se usa cod_depen como id
     name: dependency.cod_depen,
     status: dependency.activo === 1 ? "active" : "inactive",
     type: dependency.fiscalia,
@@ -67,7 +66,7 @@ function transformDependencyToWorkspace(dependency) {
       },
       {
         label: "storage",
-        value: 1, // Valor estático
+        value: 1,
       },
       {
         label: "lastEdited",
@@ -77,14 +76,6 @@ function transformDependencyToWorkspace(dependency) {
   };
 }
 
-/**
- * @param {Object} props
- * @param {Array} props.dependencias - Lista de dependencias de la sede seleccionada
- * @param {boolean} props.isLoading - Indica si se están cargando las dependencias
- * @param {Error|null} props.error - Error en la carga (si existe)
- * @param {string} props.activeTab - Nombre del tab actual (por ej. "Reports")
- * @param {string|number} props.id_sede - Identificador de la sede seleccionada (desde ListSede)
- */
 export default function DependencyList({
   dependencias = [],
   isLoading = false,
@@ -95,7 +86,6 @@ export default function DependencyList({
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Referencia para el toast actual y flag para saber si ya se cargó la data
   const toastRef = useRef(null);
   const hasDataLoaded = useRef(false);
 
@@ -104,35 +94,45 @@ export default function DependencyList({
   const [searchTerm, setSearchTerm] = useState("");
   const [highlightReportes, setHighlightReportes] = useState(false);
 
-  // Estado para almacenar la dependencia seleccionada para la llamada "carga-fiscal"
+  // Estado para almacenar la dependencia seleccionada
   const [selectedDependency, setSelectedDependency] = useState(null);
 
-  // Cálculo de rango estático: último mes
+  // Rango estático: último mes (simple ejemplo)
   const today = new Date();
-  const fe_inicio = today.toISOString().split("T")[0]; // Ej.: "2025-03-16"
+  const fe_inicio = today.toISOString().split("T")[0];
   const nextMonth = new Date(today);
   nextMonth.setMonth(today.getMonth() + 1);
-  const fe_fin = nextMonth.toISOString().split("T")[0];  // Ej.: "2025-04-16"
+  const fe_fin = nextMonth.toISOString().split("T")[0];
 
-  // Configuración de la consulta para carga fiscal con un queryKey fijo
+  // useCargaFiscal con clave fija
   const { data: cargaData, isLoading: cargaLoading, error: cargaError, refetch } = useCargaFiscal(
-    selectedDependency ? {
-      id_sede,
-      id_dependencia: selectedDependency.id,
-      fe_inicio,
-      fe_fin,
-      estado: null,
-    } : {},
+    selectedDependency
+      ? {
+          id_sede,
+          id_dependencia: selectedDependency.id,
+          fe_inicio,
+          fe_fin,
+          estado: null,
+        }
+      : {},
     {
-      enabled: false, // Se activará de forma manual
-      queryKey: ["carga-fiscal"], // Forzar un queryKey constante para compartir la data
+      enabled: false,
+      queryKey: ["carga-fiscal"],
     }
   );
 
-  // Efecto para ejecutar refetch cuando se selecciona una dependencia
+  // Efecto para disparar la consulta cuando se selecciona una dependencia
   useEffect(() => {
     if (selectedDependency) {
-      // Mostrar toast de carga y disparar la consulta
+      // Agregar el console.log aquí para mostrar los datos enviados al servidor
+      console.log("Enviando al servidor con useCargaFiscal:", {
+        id_sede,
+        id_dependencia: selectedDependency.id,
+        fe_inicio,
+        fe_fin,
+        estado: null,
+      });
+
       if (!toastRef.current) {
         toastRef.current = toast({
           variant: "loading",
@@ -147,9 +147,9 @@ export default function DependencyList({
       }
       refetch();
     }
-  }, [selectedDependency, refetch, toast]);
+  }, [selectedDependency, id_sede, fe_inicio, fe_fin, refetch, toast]);
 
-  // Efecto para detectar el resultado de la llamada y actuar (actualizar toast y navegar)
+  // Efecto para manejar el resultado de la llamada
   useEffect(() => {
     if (!cargaLoading && selectedDependency) {
       if (cargaError) {
@@ -170,7 +170,6 @@ export default function DependencyList({
             disableDismiss: false,
           });
         }
-        // Navegar a la ruta indicada tras un breve retardo
         setTimeout(() => {
           navigate("/dashboard/estadisticas/TaxBurden");
         }, 1000);
@@ -178,7 +177,7 @@ export default function DependencyList({
     }
   }, [cargaLoading, cargaData, cargaError, selectedDependency, navigate]);
 
-  // Efecto para manejo de toasts durante la carga de dependencias (sin cambios)
+  // Efecto para manejo de toasts durante la carga de dependencias
   useEffect(() => {
     if (activeTab === "Reports") {
       if (isLoading && !hasDataLoaded.current) {
@@ -228,7 +227,7 @@ export default function DependencyList({
     { value: "detallado-fiscal", label: "Detallado fiscal", hint: "Z-A" },
   ];
 
-  // Manejo del clic en cada tarjeta (workspace)
+  // Manejo del clic en cada tarjeta
   const handleCardClick = (workspace) => {
     if (!sorting) {
       setHighlightReportes(true);
@@ -257,7 +256,7 @@ export default function DependencyList({
     setSelectedDependency(workspace);
   };
 
-  // Filtrado de workspaces por búsqueda en "type"
+  // Filtrado de workspaces por búsqueda
   const filteredWorkspaces = regionData.workspaces.filter((workspace) =>
     workspace.type.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -286,13 +285,20 @@ export default function DependencyList({
                 />
                 Tipo de reporte:{" "}
                 <span
-                  className={`rounded bg-tremor-brand-faint px-2 py-1 text-tremor-label font-semibold dark:bg-tremor-brand-subtle/10 dark:text-dark-tremor-brand ${highlightReportes ? "text-blue-600" : "text-tremor-brand"}`}
+                  className={`rounded bg-tremor-brand-faint px-2 py-1 text-tremor-label font-semibold dark:bg-tremor-brand-subtle/10 dark:text-dark-tremor-brand ${
+                    highlightReportes ? "text-blue-600" : "text-tremor-brand"
+                  }`}
                 >
-                  {sorting ? radioItems.find((item) => item.value === sorting)?.label : "Reportes"}
+                  {sorting
+                    ? radioItems.find((item) => item.value === sorting)?.label
+                    : "Reportes"}
                 </span>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="!min-w-[calc(var(--radix-dropdown-menu-trigger-width))]" align="start">
+            <DropdownMenuContent
+              className="!min-w-[calc(var(--radix-dropdown-menu-trigger-width))]"
+              align="start"
+            >
               <DropdownMenuRadioGroup
                 value={sorting}
                 onValueChange={(val) => {
@@ -301,7 +307,11 @@ export default function DependencyList({
                 }}
               >
                 {radioItems.map((item) => (
-                  <DropdownMenuRadioItem key={item.value} value={item.value} hint={item.hint}>
+                  <DropdownMenuRadioItem
+                    key={item.value}
+                    value={item.value}
+                    hint={item.hint}
+                  >
                     {item.label}
                   </DropdownMenuRadioItem>
                 ))}

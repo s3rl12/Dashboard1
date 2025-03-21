@@ -1,4 +1,3 @@
-// ChartBarLine.jsx
 import React, { useEffect, useRef } from "react";
 import * as echarts from "echarts";
 // import ResizeObserver from 'resize-observer-polyfill'; // Si necesitas compatibilidad con navegadores antiguos
@@ -26,14 +25,14 @@ export default function ChartBarLine({
         const chartInstance = echarts.init(chartRef.current);
         chartInstanceRef.current = chartInstance;
 
-        // Agregamos la configuración de etiqueta solo a las series tipo "bar"
+        // Agregar configuración de etiqueta solo a las series tipo "bar"
         const finalSeries = seriesData.map((serie) => {
             if (serie.type === "bar") {
                 return {
                     ...serie,
                     label: {
                         show: true,
-                        position: "top",  // O "top", según desees
+                        position: "top", // O "top", según desees
                         fontSize: 12,
                         formatter: "{c}",
                         ...serie.label, // Permite sobrescribir si el usuario pasa su propia config
@@ -43,8 +42,16 @@ export default function ChartBarLine({
             return { ...serie };
         });
 
-        // Configuración del gráfico (barra y línea) con funcionalidad de axisLabel
+        // Configuración del gráfico (barra y línea) con funcionalidad de axisLabel y animación
         const option = {
+            // Propiedades de animación para la transición de datos
+            animation: true,
+            animationDuration: 1000,
+            animationDurationUpdate: 500,
+            animationEasing: "cubicInOut",
+            animationEasingUpdate: "cubicInOut",
+            animationThreshold: 2000,
+
             title: {
                 text: title,
                 left: "center",
@@ -81,7 +88,7 @@ export default function ChartBarLine({
                                 return chunkWords(words, 1).join("\n");
                             }
                             const firstFive = words.slice(0, 5);
-                            return chunkWords(firstFive, 1).join("\n") + "...";
+                            return chunkWords(firstFive, 5).join("\n") + "...";
                         },
                     },
                 },
@@ -103,7 +110,7 @@ export default function ChartBarLine({
         };
         window.addEventListener("resize", handleResize);
 
-        // Observa cambios en el tamaño del contenedor
+        // Usar ResizeObserver para detectar cambios en el contenedor (si lo requieres)
         const resizeObserver = new ResizeObserver(() => {
             chartInstance.resize();
         });
@@ -121,8 +128,8 @@ export default function ChartBarLine({
         <div
             ref={chartRef}
             style={{
-                width: "100%", // Se adapta al ancho del contenedor padre
-                height: "100%" // Se adapta al alto asignado externamente
+                width: "100%",  // Se adapta al ancho del contenedor padre
+                height: "100%"  // Se adapta al alto asignado externamente
             }}
         />
     );

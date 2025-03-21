@@ -2,28 +2,97 @@ import React from "react";
 import Card from "../../../../components/ui/Card";
 import FilterHeader from "./filterHeader";
 import SideContent from "./SideContent";
-import DeadlineBarChart from "./charts/DeadlineBarChart";
 import DeadlineBarChartY from "./charts/DeadlineBarChartY";
-import DeadlineBarChartI from "./charts/DeadlineBarChartI";
-import TableDeadline from "./charts/TableDeadline";
-import DeadlineHeader from "./charts/DeadlineHeader"; // DashboardHeader
-
+import DeadlineHeader from "./charts/DeadlineHeader";
+import { useDeadlineControl } from "../../../../hooks/useDeadlineControl";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAuth } from '../../../../context/AuthContext';
+const version = import.meta.env.VITE_VERSION || '1.1.1';
 export default function DeadlineControlReport() {
-    // Datos estáticos de ejemplo
-    const dummyWorkspaces = [
-        { name: "Dependencia 1", code: "SC", casos: 14, status: "active", telefono: "999 999 999" },
-        { name: "Dependencia 2", code: "D2", casos: 7, status: "inactive", telefono: "999 999 999" },
-        { name: "Dependencia 3", code: "D3", casos: 4, status: "active", telefono: "999 999 999" },
-    ];
+    const { user } = useAuth();
+    const fullName = user ? `${user.nombre} ${user.apellido}` : "Administrador";
+    const queryClient = useQueryClient();
+    const currentDate = new Date();
+    const formattedDate = currentDate.toLocaleDateString("es-ES", {
+        weekday: "long",
+        day: "2-digit",
+        month: "long",
+        year: "numeric",
+    });
+    const { data: apiData = {} } = useQuery({
+        queryKey: ["deadline-control"],
+        queryFn: async () => {
+            return queryClient.getQueryData(["deadline-control"]) ?? {};
+        },
+        staleTime: Infinity,
+    });
+
+    // 1) list_dependencias => Para SideContent
+    const listDependencias = apiData.list_dependencias || [];
+    const transformedWorkspaces = listDependencias.map((dep) => ({
+        name: dep.Nombre_Dep,
+        code: dep.Codigo_Sede,
+        casos: dep.Cantidad_Fiscales,
+        status: dep.Estado === "activo" ? "active" : "inactive",
+        telefono: dep.Telefono || "999-999-999",
+    }));
+
+    // 2) list_depen_plazo => gráfico "Fiscalias por su control de plazos"
+    const listPlazos = apiData.list_depen_plazo || [];
+    const xAxisDataPlazos = listPlazos.map((item) => item.Nombre_Dep || "");
+    const dataVerde = listPlazos.map((item) => item.Cantidad_Verde || 0);
+    const dataAmarillo = listPlazos.map((item) => item.Cantidad_Amarillo || 0);
+    const dataRojo = listPlazos.map((item) => item.Cantidad_Rojo || 0);
+
+    const numberOfPlazos = xAxisDataPlazos.length;
+    const hasManyPlazos = numberOfPlazos > 10;
+    const orientationPlazos = hasManyPlazos ? "vertical" : "horizontal";
+
+    // 3) list_depen_cantidad => gráfico "Fiscalias por ingreso de plazos por años"
+    const listCantidad = apiData.list_depen_cantidad || [];
+    const xAxisDataCantidad = listCantidad.map((dep) => dep.Nombre_Dep || "");
+
+    // Colores distintos para cada barra
+    const colorPalette = ["#5470C6", "#91CC75", "#FAC858", "#EE6666", "#73C0DE"];
+    const dataCantidad = listCantidad.map((dep, i) => ({
+        value: dep.Cantidad_Plazos ?? 0,
+        itemStyle: { color: colorPalette[i % colorPalette.length] },
+    }));
+
+    const numberOfCantidad = xAxisDataCantidad.length;
+    const hasManyCantidad = numberOfCantidad > 10;
+    const orientationCantidad = hasManyCantidad ? "vertical" : "horizontal";
+
+    // 4) anios_dependencia_color => "Reporte por años dependencia"
+    const aniosData = apiData.anios_dependencia_color || [];
+    const generalSedeColor = apiData.general_sede?.[0] || {};
+    const chartTitleColor = generalSedeColor.Nombre_Dep
+        ? generalSedeColor.Nombre_Dep
+        : "Reporte por años dependencia";
+
+    const xAxisDataAnios = aniosData.map((item) => item.Anio ?? "");
+    const dataVerdeAnios = aniosData.map((item) => item.Cantidad_Verde || 0);
+    const dataAmarilloAnios = aniosData.map((item) => item.Cantidad_Amarillo || 0);
+    const dataRojoAnios = aniosData.map((item) => item.Cantidad_Rojo || 0);
+
+    const numberOfAniosColor = xAxisDataAnios.length;
+    const hasManyAniosColor = numberOfAniosColor > 10;
+    const orientationAniosColor = hasManyAniosColor ? "vertical" : "horizontal";
 
     return (
         <div className="p-2 space-y-2 min-h-screen">
-            <FilterHeader pdfTargetId="DeadlineControlReport" />
+            <FilterHeader
+                containerIds={["DeadlineControlReport"]}
+                useCargaHook={useDeadlineControl}
+            />
 
-            <div className="grid grid-cols-12 gap-3 h-full">
-                {/* Columna izquierda: Sede y Dependencias */}
-                <div className="col-span-3 flex flex-col space-y-3 h-full">
-                    {/* Sede Seleccionada */}
+            {/* 
+        Quitar “h-full” en el grid y la columna derecha para 
+        que no se genere un ancho extra en el PDF.
+      */}
+            <div className="grid grid-cols-12 gap-3">
+                {/* Columna izquierda */}
+                <div className="col-span-3 space-y-3">
                     <Card>
                         <div className="border-b border-tremor-border dark:border-dark-tremor-border">
                             <h3 className="text-tremor-default font-medium text-tremor-content-strong dark:text-dark-tremor-content-strong">
@@ -36,156 +105,225 @@ export default function DeadlineControlReport() {
                                 Código: <span className="font-normal text-sm">SC</span>
                             </p>
                             <p className="font-medium text-base">
-                                Cantidad dependencias: <span className="font-normal text-sm">14</span>
+                                Cantidad dependencias:{" "}
+                                <span className="font-normal text-sm">
+                                    {listDependencias.length}
+                                </span>
                             </p>
                         </div>
                     </Card>
 
-                    {/* Dependencias relacionadas */}
                     <Card className="flex-1">
                         <div className="border-b border-tremor-border px-4 py-2 dark:border-dark-tremor-border">
                             <h3 className="text-tremor-default font-medium text-tremor-content-strong dark:text-dark-tremor-content-strong">
-                                Dependencias relacionadas
+                                Dependencias relacionadas:
                             </h3>
                         </div>
-                        <div className="p-2 h-full">
-                            <SideContent workspaces={dummyWorkspaces} />
+                        <div className="p-2">
+                            <SideContent workspaces={transformedWorkspaces} />
                         </div>
                     </Card>
                 </div>
 
-                {/* Columna derecha: DashboardHeader + Gráficos y Tabla */}
+                {/* Columna derecha */}
                 <div id="DeadlineControlReport" className="col-span-9 space-y-3">
-                    {/* DashboardHeader (Header del reporte) */}
+
+
+                    {/* Encabezado */}
                     <div className="flex items-center justify-between bg-[#274E94] px-4">
                         <h2 className="text-base font-semibold text-white uppercase py-3">
                             CONTROL DE PLAZOS
                         </h2>
-                        <span className="text-xs text-white">
-                            Fecha de actualización&nbsp;
-                            <strong>15/03/2025</strong>
-                        </span>
+                        <div className="text-xs text-white justify-items-end">
+                            <p>SERF: {version}</p>
+                            <span>
+                                Fecha de impresion:&nbsp;
+                                <strong>{formattedDate}</strong>
+                            </span>
+                        </div>
                     </div>
-                    {/* DashboardHeader (Header del reporte) */}
                     <DeadlineHeader />
 
-                    {/* Gráfico 1 */}
+                    {/* Gráfico 1: Fiscalias por su control de plazos */}
                     <Card>
-
-                        <div className="h-96 flex justify-center items-center">
-                            <div className="flex-1 w-full h-full">
+                        {hasManyPlazos ? (
+                            <div style={{ height: Math.max(400, numberOfPlazos * 40) }}>
                                 <DeadlineBarChartY
                                     title="Fiscalias por su control de plazos"
                                     legendData={["Dentro de plazos", "Plazos por vencer", "Plazos vencidos"]}
-                                    xAxisData={["FISCALIA PROVINCIAL ESPECIALIZADA CONTRA LA CRIMINALIDAD ORGANIZADA DE MADRE DE DIOS", "FISCALIA PROVINCIAL ESPECIALIZADA CONTRA LA CRIMINALIDAD ORGANIZADA DE MADRE DE DIOS", "FISCALIA PROVINCIAL ESPECIALIZADA CONTRA LA CRIMINALIDAD ORGANIZADA DE MADRE DE DIOS", "FISCALIA PROVINCIAL ESPECIALIZADA CONTRA LA CRIMINALIDAD ORGANIZADA DE MADRE DE DIOS", "FISCALIA PROVINCIAL ESPECIALIZADA CONTRA LA CRIMINALIDAD ORGANIZADA DE MADRE DE DIOS", "FISCALIA PROVINCIAL ESPECIALIZADA CONTRA LA CRIMINALIDAD ORGANIZADA DE MADRE DE DIOS", "FISCALIA PROVINCIAL ESPECIALIZADA CONTRA LA CRIMINALIDAD ORGANIZADA DE MADRE DE DIOS"]}
+                                    xAxisData={xAxisDataPlazos}
                                     seriesData={[
                                         {
                                             name: "Dentro de plazos",
                                             type: "bar",
-                                            data: [10, 7, 5, 9, 4, 4, 6],
+                                            data: dataVerde,
                                             itemStyle: { color: "#008000" },
                                         },
                                         {
                                             name: "Plazos por vencer",
                                             type: "bar",
-                                            data: [2, 3, 2, 4, 3, 4, 6],
+                                            data: dataAmarillo,
                                             itemStyle: { color: "#FFD700" },
                                         },
                                         {
                                             name: "Plazos vencidos",
                                             type: "bar",
-                                            data: [1, 2, 0, 1, 2, 4, 6],
+                                            data: dataRojo,
                                             itemStyle: { color: "#FF0000" },
                                         },
                                     ]}
+                                    orientation={orientationPlazos}
                                 />
                             </div>
-                        </div>
+                        ) : (
+                            <div className="h-96">
+                                <DeadlineBarChartY
+                                    title="Fiscalias por su control de plazos"
+                                    legendData={["Dentro de plazos", "Plazos por vencer", "Plazos vencidos"]}
+                                    xAxisData={xAxisDataPlazos}
+                                    seriesData={[
+                                        {
+                                            name: "Dentro de plazos",
+                                            type: "bar",
+                                            data: dataVerde,
+                                            itemStyle: { color: "#008000" },
+                                        },
+                                        {
+                                            name: "Plazos por vencer",
+                                            type: "bar",
+                                            data: dataAmarillo,
+                                            itemStyle: { color: "#FFD700" },
+                                        },
+                                        {
+                                            name: "Plazos vencidos",
+                                            type: "bar",
+                                            data: dataRojo,
+                                            itemStyle: { color: "#FF0000" },
+                                        },
+                                    ]}
+                                    orientation={orientationPlazos}
+                                />
+                            </div>
+                        )}
                     </Card>
 
-                    {/* Gráfico 2 y Gráfico 3 en dos columnas */}
-                    <div className="grid grid-cols-12 gap-3">
-                        {/* Gráfico 2 */}
-                        <Card className="col-span-6">
-                            <div className="h-80 bg-red-200 flex justify-center items-center">
-                                <div className="w-full h-full bg-white">
-                                    <DeadlineBarChartY
-                                        title="FISCALIA PROVINCIAL ESPECIALIZADA CONTRA LA CRIMINALIDAD ORGANIZADA DE MADRE DE DIOS"
-                                        legendData={["Dentro de plazos", "Plazos por vencer", "Plazos vencidos"]}
-                                        xAxisData={["2015", "2016", "2017", "2018", "2019"]}
-                                        seriesData={[
-                                            {
-                                                name: "Dentro de plazos",
-                                                type: "bar",
-                                                data: [10, 7, 5, 9, 4],
-                                                itemStyle: { color: "#008000" },
-                                            },
-                                            {
-                                                name: "Plazos por vencer",
-                                                type: "bar",
-                                                data: [2, 3, 2, 4, 3],
-                                                itemStyle: { color: "#FFD700" },
-                                            },
-                                            {
-                                                name: "Plazos vencidos",
-                                                type: "bar",
-                                                data: [1, 2, 0, 1, 2],
-                                                itemStyle: { color: "#FF0000" },
-                                            },
-                                        ]}
-                                    />
-                                </div>
-                            </div>
-                        </Card>
-
-                        {/* Gráfico 3 */}
-                        <Card className="col-span-6">
-
-                            <div className="h-80 bg-red-200 flex justify-center items-center">
-                                <div className="w-full h-full bg-white">
-                                    <DeadlineBarChartY
-                                        title="Fiscalias por ingreso de plazos por años"
-                                        legendData={["Dentro de plazos", "Plazos por vencer", "Plazos vencidos"]}
-                                        xAxisData={["FISCALIA PROVINCIAL ESPECIALIZADA CONTRA LA CRIMINALIDAD ORGANIZADA DE MADRE DE DIOS", "FISCALIA PROVINCIAL ESPECIALIZADA CONTRA LA CRIMINALIDAD ORGANIZADA DE MADRE DE DIOS", "2° FISCALIA PENAL SUPRAPROVINCIAL TRANSITORIA ESPECIALIZADA EN DERECHOS HUMANOS E INTERCULTURALIDAD-MADRE DE DIOS", "2° FISCALIA PENAL SUPRAPROVINCIAL TRANSITORIA ESPECIALIZADA EN DERECHOS HUMANOS E INTERCULTURALIDAD-MADRE DE DIOS", "2° FISCALIA PENAL SUPRAPROVINCIAL TRANSITORIA ESPECIALIZADA EN DERECHOS HUMANOS E INTERCULTURALIDAD-MADRE DE DIOS"]}
-                                        seriesData={[
-                                            {
-                                                name: "Dentro de plazos",
-                                                type: "bar",
-                                                data: [10, 7, 5, 9, 4],
-                                                itemStyle: { color: "#008000" },
-                                            },
-                                            {
-                                                name: "Plazos por vencer",
-                                                type: "bar",
-                                                data: [2, 3, 2, 4, 3],
-                                                itemStyle: { color: "#FFD700" },
-                                            },
-                                            {
-                                                name: "Plazos vencidos",
-                                                type: "bar",
-                                                data: [1, 2, 0, 1, 2],
-                                                itemStyle: { color: "#FF0000" },
-                                            },
-                                        ]}
-                                    />
-                                </div>
-                            </div>
-                        </Card>
-                    </div>
-
-                    {/* Tabla */}
+                    {/* Gráfico con anios_dependencia_color */}
                     <Card>
-                        <div className="border-b border-tremor-border  py-2 dark:border-dark-tremor-border">
-                            <h3 className="text-tremor-default font-medium text-tremor-content-strong dark:text-dark-tremor-content-strong">
-                                Tabla de contenido adicional
-                            </h3>
-                        </div>
-                        <div className="h-72 flex justify-center items-center">
-                            <div className="w-full h-full p-4">
-                                <TableDeadline />
+                        {hasManyAniosColor ? (
+                            <div style={{ height: Math.max(400, numberOfAniosColor * 40) }}>
+                                <DeadlineBarChartY
+                                    title={chartTitleColor}
+                                    legendData={["Dentro de plazos", "Plazos por vencer", "Plazos vencidos"]}
+                                    xAxisData={xAxisDataAnios}
+                                    seriesData={[
+                                        {
+                                            name: "Dentro de plazos",
+                                            type: "bar",
+                                            data: dataVerdeAnios,
+                                            itemStyle: { color: "#008000" },
+                                        },
+                                        {
+                                            name: "Plazos por vencer",
+                                            type: "bar",
+                                            data: dataAmarilloAnios,
+                                            itemStyle: { color: "#FFD700" },
+                                        },
+                                        {
+                                            name: "Plazos vencidos",
+                                            type: "bar",
+                                            data: dataRojoAnios,
+                                            itemStyle: { color: "#FF0000" },
+                                        },
+                                    ]}
+                                    orientation={orientationAniosColor}
+                                />
                             </div>
-                        </div>
+                        ) : (
+                            <div className="h-96">
+                                <DeadlineBarChartY
+                                    title={chartTitleColor}
+                                    legendData={["Dentro de plazos", "Plazos por vencer", "Plazos vencidos"]}
+                                    xAxisData={xAxisDataAnios}
+                                    seriesData={[
+                                        {
+                                            name: "Dentro de plazos",
+                                            type: "bar",
+                                            data: dataVerdeAnios,
+                                            itemStyle: { color: "#008000" },
+                                        },
+                                        {
+                                            name: "Plazos por vencer",
+                                            type: "bar",
+                                            data: dataAmarilloAnios,
+                                            itemStyle: { color: "#FFD700" },
+                                        },
+                                        {
+                                            name: "Plazos vencidos",
+                                            type: "bar",
+                                            data: dataRojoAnios,
+                                            itemStyle: { color: "#FF0000" },
+                                        },
+                                    ]}
+                                    orientation={orientationAniosColor}
+                                />
+                            </div>
+                        )}
                     </Card>
+
+                    {/* Gráfico: Fiscalias por ingreso de plazos por años */}
+                    <Card>
+                        {hasManyCantidad ? (
+                            <div style={{ height: Math.max(400, numberOfCantidad * 40) }}>
+                                <DeadlineBarChartY
+                                    title="Fiscalias por ingreso de plazos por años"
+                                    xAxisData={xAxisDataCantidad}
+                                    seriesData={[
+                                        {
+                                            name: "Plazos",
+                                            type: "bar",
+                                            data: dataCantidad,
+                                        },
+                                    ]}
+                                    orientation={orientationCantidad}
+                                />
+                            </div>
+                        ) : (
+                            <div className="h-96">
+                                <DeadlineBarChartY
+                                    title="Fiscalias por ingreso de plazos por años"
+                                    xAxisData={xAxisDataCantidad}
+                                    seriesData={[
+                                        {
+                                            name: "Plazos",
+                                            type: "bar",
+                                            data: dataCantidad,
+                                        },
+                                    ]}
+                                    orientation={orientationCantidad}
+                                />
+                            </div>
+                        )}
+                    </Card>
+
+
+                    <div className="flex items-center justify-between bg-[#274E94] px-4 py-2">
+                        <div className="text-xs text-white">
+                            <p className="font-semibold">
+                                Elaborado por el Área de Gestión e Indicadores
+                            </p>
+                            <p>
+                                Ministerio Público del Distrito Fiscal de Madre de Dios
+                            </p>
+                        </div>
+
+                        <div className="flex flex-col text-xs text-white justify-items-end">
+                            <span>Usuario:&nbsp;<strong>{fullName}</strong></span>
+                            <span>
+                                IP:&nbsp;
+                                <strong>192.168.1.56</strong>
+                            </span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

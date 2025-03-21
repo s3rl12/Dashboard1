@@ -11,6 +11,20 @@ export default function ChartPie({
   const chartRef = useRef(null);
   const chartInstanceRef = useRef(null);
 
+  // Función para formatear el título: inserta un salto de línea cada 4 palabras
+  const formatTitle = (str) => {
+    if (!str) return "";
+    const words = str.split(" ");
+    let formatted = "";
+    for (let i = 0; i < words.length; i++) {
+      formatted += words[i] + (((i + 1) % 4 === 0 && (i + 1) < words.length) ? "\n" : " ");
+    }
+    return formatted.trim();
+  };
+
+  // Se formatea el título recibido
+  const formattedTitle = formatTitle(title);
+
   useEffect(() => {
     // 1. Inicializar ECharts en el div
     const chartInstance = echarts.init(chartRef.current);
@@ -19,7 +33,7 @@ export default function ChartPie({
     // Nueva configuración para el gráfico de Pie
     const option = {
       title: {
-        text: title,
+        text: formattedTitle,
         subtext: subtext,
         left: "center",
         textStyle: {
@@ -37,7 +51,7 @@ export default function ChartPie({
         {
           name: seriesName,
           type: "pie",
-          radius: "60%",
+          radius: "30%",
           data: seriesData,
           emphasis: {
             itemStyle: {
@@ -48,7 +62,7 @@ export default function ChartPie({
           },
           label: {
             show: true,
-            fontSize: 14,
+            fontSize: 10,
             formatter: "{b} : {c}", // Muestra nombre y valor
           },
         },
@@ -76,7 +90,7 @@ export default function ChartPie({
       resizeObserver.disconnect();
       chartInstance.dispose();
     };
-  }, [title, subtext, seriesName, seriesData]);
+  }, [formattedTitle, subtext, seriesName, seriesData]);
 
   return (
     <div

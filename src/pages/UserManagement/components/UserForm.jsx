@@ -90,7 +90,7 @@ export default function UserForm({ rolesData = [], areasData = [], onCancel }) {
 
   // Estados para los campos controlados adicionales
   const [sexo, setSexo] = useState("");
-  const [fechaNacimiento, setFechaNacimiento] = useState(null);
+  const [fechaNacimiento, setFechaNacimiento] = useState("");
 
   // Estado para seleccionar workspace (roles)
   const [selectedWorkspace, setSelectedWorkspace] = useState(
@@ -173,9 +173,7 @@ export default function UserForm({ rolesData = [], areasData = [], onCancel }) {
     const password_confirmation = formElements["confirm-password"].value;
 
     // Convertir fecha de nacimiento a formato YYYY-MM-DD (si se seleccionó)
-    const fecha_nacimiento = fechaNacimiento
-      ? fechaNacimiento.toISOString().split("T")[0]
-      : "";
+    const fecha_nacimiento = fechaNacimiento ? new Date(fechaNacimiento).toISOString().split("T")[0] : "";
 
     // Se toman solo los IDs para el rol y el despacho
     const roles_fk = selectedWorkspace?.id || null;
@@ -317,13 +315,15 @@ export default function UserForm({ rolesData = [], areasData = [], onCancel }) {
               <Label className="text-tremor-default font-medium">
                 Fecha de nacimiento <span className="text-red-500">*</span>
               </Label>
-              <DatePicker
-                placeholder="Selecciona la fecha"
+              <Input
+                type="date"
                 className="mt-2"
-                value={fechaNacimiento}
-                onChange={setFechaNacimiento}
+                value={fechaNacimiento || ""}
+                onChange={(e) => setFechaNacimiento(e.target.value)}
               />
             </div>
+
+
             <div className="col-span-full sm:col-span-2">
               <Label htmlFor="telefono" className="text-tremor-default font-medium">
                 Teléfono <span className="text-red-500">*</span>
@@ -469,7 +469,13 @@ export default function UserForm({ rolesData = [], areasData = [], onCancel }) {
                 <SelectTrigger id="dependencia" className="mt-2 w-full">
                   <SelectValue placeholder="Selecciona dependencia" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="max-h-60 overflow-y-auto">
+                  <div className="px-2 py-1">
+                    <Input
+                      placeholder="Buscar..."
+
+                    />
+                  </div>
                   {currentSede?.dependencias?.map((dep) => (
                     <SelectItem key={dep.id} value={String(dep.id)}>
                       {dep.nombre_fiscalia} ({dep.cod_depen})
@@ -532,10 +538,9 @@ export default function UserForm({ rolesData = [], areasData = [], onCancel }) {
                   key={item.id}
                   value={item}
                   className={({ active }) =>
-                    `relative flex cursor-pointer rounded-lg border p-4 transition ${
-                      active
-                        ? "border-tremor-brand ring-2 ring-tremor-brand-muted dark:border-dark-tremor-brand-subtle"
-                        : "border-tremor-border dark:border-dark-tremor-border"
+                    `relative flex cursor-pointer rounded-lg border p-4 transition ${active
+                      ? "border-tremor-brand ring-2 ring-tremor-brand-muted dark:border-dark-tremor-brand-subtle"
+                      : "border-tremor-border dark:border-dark-tremor-border"
                     } bg-tremor-background dark:bg-dark-tremor-background`
                   }
                 >
@@ -555,9 +560,8 @@ export default function UserForm({ rolesData = [], areasData = [], onCancel }) {
                         </span>
                       </div>
                       <RiCheckboxCircleFill
-                        className={`size-5 shrink-0 text-tremor-brand dark:text-dark-tremor-brand ${
-                          !checked ? "invisible" : ""
-                        }`}
+                        className={`size-5 shrink-0 text-tremor-brand dark:text-dark-tremor-brand ${!checked ? "invisible" : ""
+                          }`}
                         aria-hidden={true}
                       />
                     </>

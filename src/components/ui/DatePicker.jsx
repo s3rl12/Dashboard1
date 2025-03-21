@@ -5,11 +5,11 @@ import React, { useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
 import { enUS } from "date-fns/locale";
 import * as PopoverPrimitives from "@radix-ui/react-popover";
-import { RiCalendar2Fill } from "@remixicon/react";
 
+import { IconCalendarMonth } from '@tabler/icons-react'
 import { Calendar } from "./Calendar"; // Ajusta la ruta a tu Calendar.jsx
 import { Button } from "./Button";     // Ajusta la ruta a tu botón
-import { cx } from "@/lib/utils";      // Ajusta o elimina según tu proyecto
+import { cx } from "@/lib/utils";       // Ajusta o elimina según tu proyecto
 
 ////////////////////////////////////////////////////////////////////////////////
 // Helper: formatear fecha sin horas
@@ -44,7 +44,6 @@ const Trigger = React.forwardRef(function Trigger(
           "text-gray-900",
           "hover:bg-gray-50",
           "disabled:pointer-events-none disabled:bg-gray-100 disabled:text-gray-400",
-          // Si deseas conservar algo de focus ring
           "focus:ring-2 focus:ring-blue-200",
           hasError && "ring-2 ring-red-200 border-red-500",
           className
@@ -52,7 +51,7 @@ const Trigger = React.forwardRef(function Trigger(
         disabled={disabled}
         {...props}
       >
-        <RiCalendar2Fill className="size-5 shrink-0 text-gray-800" />
+        <IconCalendarMonth className="size-5 shrink-0 text-gray-800" />
         <span className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-left text-gray-900">
           {children || <span className="text-gray-400">{placeholder}</span>}
         </span>
@@ -96,12 +95,91 @@ const CalendarPopover = React.forwardRef(function CalendarPopover(
 });
 
 ////////////////////////////////////////////////////////////////////////////////
-// SingleDatePicker (omitido para brevedad)
+// Implementación de SingleDatePicker
 ////////////////////////////////////////////////////////////////////////////////
-// ... definiciones ...
+function SingleDatePicker({
+  defaultValue,
+  value,
+  onChange,
+  presets,
+  disabled,
+  disabledDays,
+  locale = enUS,
+  placeholder = "Select date",
+  hasError,
+  align = "center",
+  className,
+  translations = {},
+  ...props
+}) {
+  const [open, setOpen] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(value ?? defaultValue ?? null);
+  const [month, setMonth] = useState(selectedDate);
+
+  useEffect(() => {
+    setSelectedDate(value ?? defaultValue ?? null);
+  }, [value, defaultValue]);
+
+  useEffect(() => {
+    if (selectedDate) {
+      setMonth(selectedDate);
+    }
+  }, [selectedDate]);
+
+  const displayDate = useMemo(() => {
+    if (!selectedDate) return null;
+    return format(selectedDate, "dd MMM, yyyy", { locale });
+  }, [selectedDate, locale]);
+
+  const onApply = () => {
+    setOpen(false);
+    onChange?.(selectedDate);
+  };
+
+  const onCancel = () => {
+    setOpen(false);
+  };
+
+  return (
+    <PopoverPrimitives.Root open={open} onOpenChange={setOpen}>
+      <Trigger
+        placeholder={placeholder}
+        disabled={disabled}
+        className={className}
+        hasError={hasError}
+      >
+        {displayDate}
+      </Trigger>
+      <CalendarPopover align={align}>
+        <div className="flex flex-col">
+          <Calendar
+            mode="single"
+            selected={selectedDate}
+            onSelect={setSelectedDate}
+            month={month}
+            onMonthChange={setMonth}
+            numberOfMonths={1}
+            disabled={disabledDays}
+            locale={locale}
+            initialFocus
+            {...props}
+          />
+          <div className="border-t border-gray-200 p-3 flex items-center justify-end gap-x-2">
+            <Button variant="secondary" type="button" onClick={onCancel}>
+              {translations.cancel ?? "Cancel"}
+            </Button>
+            <Button variant="primary" type="button" onClick={onApply}>
+              {translations.apply ?? "Apply"}
+            </Button>
+          </div>
+        </div>
+      </CalendarPopover>
+    </PopoverPrimitives.Root>
+  );
+}
 
 ////////////////////////////////////////////////////////////////////////////////
-// RangeDatePicker con Aislamiento de configuración de año y mes
+// Implementación de RangeDatePicker (ya definida)
 ////////////////////////////////////////////////////////////////////////////////
 function RangeDatePicker({
   defaultValue,
@@ -110,11 +188,10 @@ function RangeDatePicker({
   presets,
   disabled,
   disabledDays,
-  // Aislar configuración de año y mes
   disableNavigation = false,
   enableYearNavigation = false,
   locale = enUS,
-  placeholder = "Select date range",
+  placeholder = "Seleccione la fecha del reporte",
   hasError,
   translations = {},
   align = "center",
@@ -185,7 +262,6 @@ function RangeDatePicker({
       <CalendarPopover align={align}>
         <div className="flex">
           <div className="flex flex-col overflow-x-auto sm:flex-row sm:items-start">
-            {/* Presets (opcional) */}
             {presets?.length > 0 && (
               <div className="relative flex h-16 w-full items-center sm:h-full sm:w-40 border-b border-gray-200 sm:border-b-0 sm:border-r overflow-auto">
                 <div className="absolute px-3 sm:inset-0 sm:left-0 sm:p-2">
@@ -193,7 +269,6 @@ function RangeDatePicker({
                 </div>
               </div>
             )}
-
             <div className="overflow-x-auto">
               <Calendar
                 mode="range"
@@ -203,9 +278,8 @@ function RangeDatePicker({
                 onMonthChange={setMonth}
                 numberOfMonths={2}
                 disabled={disabledDays}
-                // AQUI se habilita la navegación
-                disableNavigation={disableNavigation}       // Mes
-                enableYearNavigation={enableYearNavigation} // Año
+                disableNavigation={disableNavigation}
+                enableYearNavigation={enableYearNavigation}
                 locale={locale}
                 initialFocus
                 classNames={{
@@ -213,7 +287,6 @@ function RangeDatePicker({
                 }}
                 {...props}
               />
-
               <div className="border-t border-gray-200 p-3 sm:flex sm:items-center sm:justify-between">
                 <p className="tabular-nums text-gray-900">
                   <span className="text-gray-700">
@@ -222,20 +295,10 @@ function RangeDatePicker({
                   <span className="font-medium">{displayRange}</span>
                 </p>
                 <div className="mt-2 flex items-center gap-x-2 sm:mt-0">
-                  <Button
-                    variant="secondary"
-                    className="h-8 w-full sm:w-fit"
-                    type="button"
-                    onClick={onCancel}
-                  >
+                  <Button variant="secondary" className="h-8 w-full sm:w-fit" type="button" onClick={onCancel}>
                     {translations.cancel ?? "Cancel"}
                   </Button>
-                  <Button
-                    variant="primary"
-                    className="h-8 w-full sm:w-fit"
-                    type="button"
-                    onClick={onApply}
-                  >
+                  <Button variant="primary" className="h-8 w-full sm:w-fit" type="button" onClick={onApply}>
                     {translations.apply ?? "Apply"}
                   </Button>
                 </div>
@@ -252,11 +315,9 @@ function RangeDatePicker({
 // Exports: DatePicker y DateRangePicker
 ////////////////////////////////////////////////////////////////////////////////
 export function DatePicker({ presets, ...props }) {
-  // ...
   return <SingleDatePicker presets={presets} {...props} />;
 }
 
 export function DateRangePicker({ presets, ...props }) {
-  // ...
   return <RangeDatePicker presets={presets} {...props} />;
 }

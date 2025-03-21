@@ -1,6 +1,6 @@
 // Documents.jsx
 import React, { useState } from "react";
-import { Callout } from "./Documents-components/Callout";
+
 import { TabNavigation, TabNavigationLink } from "./Documents-components/TabNavigation";
 import { useCarpetasArchivos } from "../../hooks/useCarpetasArchivos";
 import { IconFilePlus, IconFolderOpen } from "@tabler/icons-react";
@@ -9,8 +9,8 @@ import DocumentFolders from "./Documents-components/components/DocumentFolders";
 export default function Documents() {
   // Estado local para saber cuál pestaña está activa
   const [activeTab, setActiveTab] = useState("carpetas");
-const { 
-    data: carpetasData, 
+  const {
+    data: carpetasData,
   } = useCarpetasArchivos();
   return (
     <div className="p-2 space-y-4">
@@ -46,7 +46,7 @@ const {
           <IconFilePlus className="size-4" aria-hidden="true" />
           Importar
         </TabNavigationLink>
-  
+
       </TabNavigation>
 
       {/* Contenido condicional según la pestaña activa */}
