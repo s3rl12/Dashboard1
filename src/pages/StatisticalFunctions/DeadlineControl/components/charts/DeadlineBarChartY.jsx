@@ -1,3 +1,4 @@
+// DeadlineBarChartY.jsx
 import React, { useEffect, useRef } from "react";
 import * as echarts from "echarts";
 
@@ -6,7 +7,8 @@ export default function DeadlineBarChartY({
   legendData = [],
   xAxisData = [],
   seriesData = [],
-  orientation = "horizontal", // <-- por defecto "horizontal"
+  orientation = "horizontal", // por defecto "horizontal"
+  onDataURLReady, // nuevo callback para pasar el dataURL
 }) {
   const chartRef = useRef(null);
 
@@ -37,8 +39,6 @@ export default function DeadlineBarChartY({
     let yAxisConfig = {};
 
     if (orientation === "vertical") {
-      // Gráfico “vertical”: el eje categórico va en Y
-      // xAxis => value, yAxis => category
       xAxisConfig = { type: "value" };
       yAxisConfig = {
         type: "category",
@@ -47,16 +47,13 @@ export default function DeadlineBarChartY({
           fontSize: 10,
           interval: 0,
           formatter: (value) => {
-            // Dividir el label en bloques de 4 palabras y usar salto de línea
             const words = value.split(" ");
-            const chunked = chunkWords(words, 15); // agrupa cada 4 palabras
-            return chunked.join("\n");            // une con salto de línea
+            const chunked = chunkWords(words, 15);
+            return chunked.join("\n");
           },
         },
       };
     } else {
-      // Gráfico “horizontal”: el eje categórico va en X
-      // xAxis => category, yAxis => value
       xAxisConfig = {
         type: "category",
         data: xAxisData,
@@ -64,7 +61,6 @@ export default function DeadlineBarChartY({
           fontSize: 10,
           interval: 0,
           formatter: (value) => {
-            // Ejemplo para recortar a 5 palabras + "..."
             const words = value.split(" ");
             if (words.length <= 2) {
               return chunkWords(words, 1).join("\n");
@@ -81,18 +77,13 @@ export default function DeadlineBarChartY({
       title: {
         text: multilineTitle,
         left: "center",
-        textStyle: {
-          fontSize: 14,
-        },
+        textStyle: { fontSize: 14 },
       },
       tooltip: {
         trigger: "axis",
         axisPointer: { type: "shadow" },
       },
-      legend: {
-        data: legendData,
-        top: 20,
-      },
+      legend: { data: legendData, top: 20 },
       grid: {
         top: "15%",
         left: "3%",
@@ -106,8 +97,6 @@ export default function DeadlineBarChartY({
         ...serie,
         label: {
           show: true,
-          // Para “vertical” es mejor que la etiqueta vaya a la derecha (“right”),
-          // para “horizontal” en la parte superior (“top”).
           position: orientation === "vertical" ? "right" : "top",
           fontSize: 10,
           formatter: "{c}",
@@ -118,12 +107,21 @@ export default function DeadlineBarChartY({
 
     chartInstance.setOption(option);
 
+    // Esperar un poco para asegurarnos de que el gráfico se renderizó y capturarlo
+    setTimeout(() => {
+      const dataURL = chartInstance.getDataURL({
+        type: "png",
+        pixelRatio: 2,
+        backgroundColor: "#fff",
+      });
+      if (onDataURLReady) {
+        onDataURLReady(dataURL);
+      }
+    }, 500);
+
     const handleResize = () => chartInstance.resize();
     window.addEventListener("resize", handleResize);
-
-    const resizeObserver = new ResizeObserver(() => {
-      chartInstance.resize();
-    });
+    const resizeObserver = new ResizeObserver(() => chartInstance.resize());
     resizeObserver.observe(chartRef.current);
 
     return () => {
@@ -131,7 +129,7 @@ export default function DeadlineBarChartY({
       resizeObserver.disconnect();
       chartInstance.dispose();
     };
-  }, [title, legendData, xAxisData, seriesData, orientation]);
+  }, [title, legendData, xAxisData, seriesData, orientation, onDataURLReady]);
 
   return (
     <div

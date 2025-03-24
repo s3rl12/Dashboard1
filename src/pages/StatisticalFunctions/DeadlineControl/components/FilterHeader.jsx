@@ -17,8 +17,8 @@ import { IconFileUpload, IconFileTypePdf } from "@tabler/icons-react";
 import { useListDF } from "../../../../hooks/useListDF";
 import { useToast } from "../../../../lib/useToast";
 
-// Nueva importación:
-import { generatePdfFromMultipleElements } from "../../TaxDetails/components/ViewPDF/pdfUtils";
+// Nueva importación: PDFViewer de React-PDF
+import { PDFViewer } from "@react-pdf/renderer";
 
 import {
   Select,
@@ -64,12 +64,16 @@ const SelectSearch = ({ placeholder, options, onChange }) => {
 };
 
 export default function FilterHeader({
-  // Antes tenías pdfTargetId, ahora en su lugar recibes un array:
-  containerIds = [],  
+  // Recibe además los nuevos props para el PDF TaxBurdenSchemeD
+  containerIds = [],
   useCargaHook,
+  taxPdfComponent: TaxPdfComponent,
+  taxPdfData,
 }) {
   const [isPdfDialogOpen, setIsPdfDialogOpen] = useState(false);
   const [pdfUrl, setPdfUrl] = useState(null);
+  // Nuevo estado para el PDF usando TaxBurdenSchemeD
+  const [isTaxPdfDialogOpen, setIsTaxPdfDialogOpen] = useState(false);
 
   const [isSearching, setIsSearching] = useState(false);
   const { toast, dismiss } = useToast();
@@ -106,7 +110,7 @@ export default function FilterHeader({
     { enabled: false }
   );
 
-  // Nueva función para imprimir múltiples contenedores
+  // Función para imprimir usando html2canvas/jsPDF (ya existente)
   const handlePrintClick = async () => {
     const loadingToast = toast({
       variant: "loading",
@@ -115,7 +119,6 @@ export default function FilterHeader({
     });
 
     try {
-      // Llamamos a la función para varios IDs
       const url = await generatePdfFromMultipleElements(containerIds);
       setPdfUrl(url);
       setIsPdfDialogOpen(true);
@@ -129,6 +132,19 @@ export default function FilterHeader({
         description: "Ocurrió un error al generar el PDF.",
       });
     }
+  };
+
+  // Nueva función para mostrar el PDF basado en TaxBurdenSchemeD
+  const handleTaxPdfClick = () => {
+    if (!taxPdfData || Object.keys(taxPdfData).length === 0) {
+      toast({
+        variant: "warning",
+        title: "No hay datos para generar el PDF",
+        description: "No se encontraron datos de dependencia.",
+      });
+      return;
+    }
+    setIsTaxPdfDialogOpen(true);
   };
 
   const handleBuscar = async () => {
@@ -242,10 +258,21 @@ export default function FilterHeader({
             />
             Imprimir
           </Button>
+          <Button
+            variant="secondary"
+            className="flex items-center justify-center gap-x-1 rounded-tremor-small py-1.5 px-3 font-medium"
+            onClick={handleTaxPdfClick}
+          >
+            <IconFileTypePdf
+              className="size-5 shrink-0 text-tremor-content dark:text-dark-tremor-content"
+              aria-hidden
+            />
+            PDF
+          </Button>
         </div>
       </div>
 
-      {/* Dialog para mostrar la previsualización del PDF */}
+      {/* Dialog para mostrar la previsualización del PDF generado con html2canvas/jsPDF */}
       <Dialog open={isPdfDialogOpen} onOpenChange={setIsPdfDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -260,6 +287,25 @@ export default function FilterHeader({
               title="Previsualización PDF"
               style={{ width: "100%", height: "80vh" }}
             />
+          ) : (
+            <p>Cargando PDF...</p>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Nuevo Dialog para mostrar el PDF generado con TaxBurdenSchemeD */}
+      <Dialog open={isTaxPdfDialogOpen} onOpenChange={setIsTaxPdfDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Vista Previa PDF - Tax Burden Scheme D</DialogTitle>
+            <DialogDescription>
+              Revisa el contenido generado antes de imprimir o descargar.
+            </DialogDescription>
+          </DialogHeader>
+          {taxPdfData && Object.keys(taxPdfData).length > 0 ? (
+            <PDFViewer style={{ width: "100%", height: "80vh" }}>
+              <TaxPdfComponent {...taxPdfData} />
+            </PDFViewer>
           ) : (
             <p>Cargando PDF...</p>
           )}

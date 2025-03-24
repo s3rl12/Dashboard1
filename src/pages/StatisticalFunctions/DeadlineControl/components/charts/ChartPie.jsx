@@ -1,12 +1,12 @@
 import React, { useEffect, useRef } from "react";
 import * as echarts from "echarts";
-// import ResizeObserver from 'resize-observer-polyfill'; // Si necesitas compatibilidad con navegadores antiguos
 
 export default function ChartPie({
   title,
   subtext,
   seriesName = "Access From",
   seriesData = [],
+  onDataURLReady, // nuevo prop para pasar el dataURL
 }) {
   const chartRef = useRef(null);
   const chartInstanceRef = useRef(null);
@@ -22,22 +22,20 @@ export default function ChartPie({
     return formatted.trim();
   };
 
-  // Se formatea el título recibido
   const formattedTitle = formatTitle(title);
 
   useEffect(() => {
-    // 1. Inicializar ECharts en el div
+    // Inicializar ECharts en el div
     const chartInstance = echarts.init(chartRef.current);
     chartInstanceRef.current = chartInstance;
 
-    // Nueva configuración para el gráfico de Pie
     const option = {
       title: {
         text: formattedTitle,
         subtext: subtext,
         left: "center",
         textStyle: {
-          fontSize: 14,  // <-- aplicamos el nuevo prop en el tamaño de fuente
+          fontSize: 14,
         },
       },
       tooltip: {
@@ -63,41 +61,45 @@ export default function ChartPie({
           label: {
             show: true,
             fontSize: 10,
-            formatter: "{b} : {c}", // Muestra nombre y valor
+            formatter: "{b} : {c}",
           },
         },
       ],
     };
 
-    // Asignar opciones
     chartInstance.setOption(option);
 
-    // 2. Ajustar gráfica al cambiar tamaño de ventana
-    const handleResize = () => {
-      chartInstance.resize();
-    };
-    window.addEventListener("resize", handleResize);
+    // Esperar brevemente para que el gráfico se renderice y capturar el dataURL
+    setTimeout(() => {
+      const dataURL = chartInstance.getDataURL({
+        type: "png",
+        pixelRatio: 2,
+        backgroundColor: "#fff",
+      });
+      if (onDataURLReady) {
+        onDataURLReady(dataURL);
+      }
+    }, 500);
 
-    // 3. Usar ResizeObserver para detectar cambios en el contenedor (si lo requieres)
-    const resizeObserver = new ResizeObserver(() => {
-      chartInstance.resize();
-    });
+    // Ajustar el gráfico al cambiar el tamaño
+    const handleResize = () => chartInstance.resize();
+    window.addEventListener("resize", handleResize);
+    const resizeObserver = new ResizeObserver(() => chartInstance.resize());
     resizeObserver.observe(chartRef.current);
 
-    // Cleanup
     return () => {
       window.removeEventListener("resize", handleResize);
       resizeObserver.disconnect();
       chartInstance.dispose();
     };
-  }, [formattedTitle, subtext, seriesName, seriesData]);
+  }, [formattedTitle, subtext, seriesName, seriesData, onDataURLReady]);
 
   return (
     <div
       ref={chartRef}
       style={{
-        width: "100%",  // Ajuste dinámico al ancho del padre
-        height: "100%", // Ocupa todo el alto que se le asigne externamente
+        width: "100%",
+        height: "100%",
       }}
     />
   );

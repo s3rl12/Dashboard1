@@ -125,7 +125,7 @@ export default function DeadlineControlE() {
                                 },
                                 total: {
                                     quantity: f.Total_Colores ?? 0,
-                                    percentage: `${Number(f.Porcentaje_Verde || 0) + Number(f.Porcentaje_Amarillo || 0) + Number(f.Porcentaje_Rojo || 0)}%`,
+                                    percentage: `${Number(f.Porcentaje_Verde || 0) + Number(f.Porcentaje_Amarillo || 0) + Number(f.Porcentaje_Rojo || 0)}`,
                                     label: "Candidad de plazos ingresados",
                                 },
                             },

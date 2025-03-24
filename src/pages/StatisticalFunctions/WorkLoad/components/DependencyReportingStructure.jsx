@@ -44,6 +44,11 @@ export default function DependencyReportingStructure({
         seriesData: [],
     },
     estadoChartData = { xAxisData: [], legendData: [], seriesData: [] },
+    onBarChartDataURL,
+    onChartPieDataURL,
+    onDeadlineBDataURL,
+    onEtapasChartDataURL,
+    onEstadoChartDataURL,
 }) {
     const { user } = useAuth();
     const fullName = user ? `${user.nombre} ${user.apellido}` : "Administrador";
@@ -134,6 +139,7 @@ export default function DependencyReportingStructure({
                                                     },
                                                 ]}
                                                 orientation={orientation}
+                                                onDataURLReady={onBarChartDataURL}
                                             />
                                         </div>
                                     </div>
@@ -168,6 +174,7 @@ export default function DependencyReportingStructure({
                                                     },
                                                 ]}
                                                 orientation={orientation}
+                                                onDataURLReady={onBarChartDataURL}
                                             />
                                         </div>
                                     </div>
@@ -186,6 +193,7 @@ export default function DependencyReportingStructure({
                                         title="PORCENTAJE FISCAL POR CASOS RESUELTOS DEL ULTIMO MES"
                                         seriesName="Fiscales"
                                         seriesData={pieChartData}
+                                        onDataURLReady={onChartPieDataURL}
                                     />
                                 </div>
                             </div>
@@ -198,6 +206,7 @@ export default function DependencyReportingStructure({
                                         title="RANKING 5 FISCALES CON MAYOR CASOS RESUELTOS"
                                         yAxisData={rankingData.yAxisRanking}
                                         seriesData={rankingData.seriesRanking}
+                                        onDataURLReady={onDeadlineBDataURL}
                                     />
                                 </div>
                             </div>
@@ -213,6 +222,7 @@ export default function DependencyReportingStructure({
                                             title="CANTIDAD DE ETAPAS POR DEPENDENCIA"
                                             xAxisData={etapasChartData.xAxisData}
                                             seriesData={etapasChartData.seriesData}
+                                            onDataURLReady={onEtapasChartDataURL} 
                                         />
                                     </div>
                                 </div>
@@ -225,6 +235,7 @@ export default function DependencyReportingStructure({
                                             title="ESTADO DE CASOS POR ESTADO FISCAL"
                                             xAxisData={estadoChartData.xAxisData}
                                             seriesData={estadoChartData.seriesData}
+                                            onDataURLReady={onEstadoChartDataURL} 
                                         />
                                     </div>
                                 </div>
@@ -242,6 +253,7 @@ export default function DependencyReportingStructure({
                                     title="CANTIDAD DE ETAPAS POR DEPENDENCIA"
                                     xAxisData={etapasChartData.xAxisData}
                                     seriesData={etapasChartData.seriesData}
+                                    onDataURLReady={onEtapasChartDataURL}
                                 />
                             </div>
                         </div>
@@ -254,6 +266,7 @@ export default function DependencyReportingStructure({
                                     title="ESTADO DE CASOS POR ESTADO FISCAL"
                                     xAxisData={estadoChartData.xAxisData}
                                     seriesData={estadoChartData.seriesData}
+                                    onDataURLReady={onEstadoChartDataURL} 
                                 />
                             </div>
                         </div>

@@ -50,6 +50,40 @@ export default function DependencyReportingStructureDC({
         Total_Dependencias: generalDependencia.Total_Despachos ?? 0,
     };
 
+    // Se utiliza la lista_general_fiscal (arreglo de objetos con datos de cada fiscal)
+    const listaFiscal = dependencyData?.data_general_carga?.lista_general_fiscal || [];
+    const xAxisData = listaFiscal.map((f) => f.Fiscal || "Sin nombre");
+    const dentroPlazosData = listaFiscal.map((f) => f.Cantidad_Verde ?? 0);
+    const porVencerData = listaFiscal.map((f) => f.Cantidad_Amarillo ?? 0);
+    const vencidosData = listaFiscal.map((f) => f.Cantidad_Rojo ?? 0);
+
+    // DATOS PARA EL GRÁFICO "ESTADO DE CASOS POR AÑOS"
+    const aniosPlazos = dependencyData?.data_general_carga?.anios_plazos || [];
+    const xAxisDataAnios = aniosPlazos.map((item) => item.Anio || "Sin año");
+    const dentroPlazosAniosData = aniosPlazos.map((item) => item.Cantidad_Verde ?? 0);
+    const porVencerAniosData = aniosPlazos.map((item) => item.Cantidad_Amarillo ?? 0);
+    const vencidosAniosData = aniosPlazos.map((item) => item.Cantidad_Rojo ?? 0);
+
+    // EXTRAER DATOS PARA "TOTAL DE PLAZOS" Y CHARTPIE (contenido del semáforo)
+    // EXTRAER DATOS PARA "TOTAL DE PLAZOS" Y CHARTPIE (contenido del semáforo)
+    const plazoGeneral = dependencyData?.data_general_carga?.plazo_general_dependencia?.[0] || {};
+    const totalVencidos = plazoGeneral.Cantidad_Rojo ?? 0;
+    const totalPorVencer = plazoGeneral.Cantidad_Amarillo ?? 0;
+    const totalDentro = plazoGeneral.Cantidad_Verde ?? 0;
+
+    // EXTRAER datos para "Dependencias y Casos"
+const listFiscalPlazo = dependencyData?.data_general_carga?.list_fiscal_plazo || [];
+const yAxisDataFiscales = listFiscalPlazo.map((item) => item.Fiscal || "Sin nombre");
+const seriesDataFiscales = listFiscalPlazo.map((item) => Number(item.Plazos_Ingresados) || 0);
+
+// Datos para "ESTADOS DE CASOS POR ETAPAS"
+const etapaPlazos = dependencyData?.data_general_carga?.etapa_plazos || [];
+const xAxisDataEtapas = etapaPlazos.map((item) => item.Etapa || "Sin etapa");
+const dentroPlazosEtapasData = etapaPlazos.map((item) => item.Cantidad_Verde ?? 0);
+const porVencerEtapasData = etapaPlazos.map((item) => item.Cantidad_Amarillo ?? 0);
+const vencidosEtapasData = etapaPlazos.map((item) => item.Cantidad_Rojo ?? 0);
+
+
     // El headerTitle se obtiene del campo Nombre de general_dependencia
     const headerTitle = generalDependencia.Nombre || "";
 
@@ -106,30 +140,24 @@ export default function DependencyReportingStructureDC({
                                             "Plazos por vencer",
                                             "Plazos vencidos",
                                         ]}
-                                        xAxisData={[
-                                            "QUISPE YCHUHUAYTA GILMAR MARTIN",
-                                            "QUISPE YCHUHUAYTA GILMAR MARTIN",
-                                            "QUISPE YCHUHUAYTA GILMAR MARTIN",
-                                            "QUISPE YCHUHUAYTA GILMAR MARTIN",
-                                            "QUISPE YCHUHUAYTA GILMAR MARTIN",
-                                        ]}
+                                        xAxisData={xAxisData}
                                         seriesData={[
                                             {
                                                 name: "Dentro de plazos",
                                                 type: "bar",
-                                                data: [10, 7, 5, 9, 4, 4, 6],
+                                                data: dentroPlazosData,
                                                 itemStyle: { color: "#008000" },
                                             },
                                             {
                                                 name: "Plazos por vencer",
                                                 type: "bar",
-                                                data: [2, 3, 2, 4, 3, 4, 6],
+                                                data: porVencerData,
                                                 itemStyle: { color: "#FFD700" },
                                             },
                                             {
                                                 name: "Plazos vencidos",
                                                 type: "bar",
-                                                data: [1, 2, 0, 1, 2, 4, 6],
+                                                data: vencidosData,
                                                 itemStyle: { color: "#FF0000" },
                                             },
                                         ]}
@@ -150,24 +178,24 @@ export default function DependencyReportingStructureDC({
                                             "Plazos por vencer",
                                             "Plazos vencidos",
                                         ]}
-                                        xAxisData={["2016", "2017", "2018", "2019", "2020"]}
+                                        xAxisData={xAxisDataAnios}
                                         seriesData={[
                                             {
                                                 name: "Dentro de plazos",
                                                 type: "bar",
-                                                data: [10, 7, 5, 9, 4, 4, 6],
+                                                data: dentroPlazosAniosData,
                                                 itemStyle: { color: "#008000" },
                                             },
                                             {
                                                 name: "Plazos por vencer",
                                                 type: "bar",
-                                                data: [2, 3, 2, 4, 3, 4, 6],
+                                                data: porVencerAniosData,
                                                 itemStyle: { color: "#FFD700" },
                                             },
                                             {
                                                 name: "Plazos vencidos",
                                                 type: "bar",
-                                                data: [1, 2, 0, 1, 2, 4, 6],
+                                                data: vencidosAniosData,
                                                 itemStyle: { color: "#FF0000" },
                                             },
                                         ]}
@@ -185,25 +213,26 @@ export default function DependencyReportingStructureDC({
                 <Card className="col-span-6">
                     <div className="h-80 bg-red-200 flex justify-center items-center">
                         <div className="w-full h-full bg-white flex flex-col items-center justify-evenly">
+                            {/* Contenido: Total de Plazos con semáforo */}
                             <div className="flex flex-col items-center space-y-2">
                                 <h3 className="text-center text-sm font-bold">TOTAL DE PLAZOS</h3>
                                 <div className="flex flex-row items-center space-x-2">
                                     <img src={semaforo} alt="Código Reporte" className="w-32 h-auto" />
                                     <div className="flex flex-col">
                                         <h4 className="text-gray-600 text-xs">Plazo vencidos</h4>
-                                        <span className="text-lg font-medium">1277</span>
+                                        <span className="text-lg font-medium">{totalVencidos}</span>
                                         <h4 className="text-gray-600 text-xs">Plazo por vencer</h4>
-                                        <span className="text-lg font-medium">21</span>
+                                        <span className="text-lg font-medium">{totalPorVencer}</span>
                                         <h4 className="text-gray-600 text-xs">Dentro del plazo</h4>
-                                        <span className="text-lg font-medium">90</span>
+                                        <span className="text-lg font-medium">{totalDentro}</span>
                                     </div>
                                 </div>
                             </div>
                             <ChartPie
                                 seriesData={[
-                                    { value: 1277, name: "Plazo vencidos", itemStyle: { color: "#FF0000" } },
-                                    { value: 21, name: "Plazo por vencer", itemStyle: { color: "#FFD700" } },
-                                    { value: 90, name: "Dentro del plazo", itemStyle: { color: "#008000" } },
+                                    { value: totalVencidos, name: "Plazo vencidos", itemStyle: { color: "#FF0000" } },
+                                    { value: totalPorVencer, name: "Plazo por vencer", itemStyle: { color: "#FFD700" } },
+                                    { value: totalDentro, name: "Dentro del plazo", itemStyle: { color: "#008000" } },
                                 ]}
                             />
                         </div>
@@ -215,64 +244,15 @@ export default function DependencyReportingStructureDC({
                         <div className="w-full h-full bg-white">
                             <DeadlinedependenceB
                                 title="Dependencias y Casos"
-                                yAxisData={[
-                                    "QUISPE YCHUHUAYTA GILMAR MARTIN",
-                                    "QUISPE YCHUHUAYTA GILMAR MARTIN",
-                                    "QUISPE YCHUHUAYTA GILMAR MARTIN",
-                                ]}
-                                seriesData={[10, 20, 5]}
+                                yAxisData={yAxisDataFiscales}
+                                seriesData={seriesDataFiscales}
                             />
                         </div>
                     </div>
                 </Card>
             </div>
 
-            {/* Tercera fila: Gráficos 2 y 3 */}
-            <div className="grid grid-cols-12 gap-3">
-                {/* Gráfico 2: Estados de Casos por Estado Fiscal */}
-                <Card className="col-span-6">
-                    <div className="h-80 bg-red-200 flex justify-center items-center">
-                        <div className="w-full h-full bg-white">
-                            <DeadlineBarChartY
-                                title="ESTADOS DE CASOS POR ESTADO FISCAL"
-                                legendData={[
-                                    "Dentro de plazos",
-                                    "Plazos por vencer",
-                                    "Plazos vencidos",
-                                ]}
-                                xAxisData={[
-                                    "ASIGNADO PNP",
-                                    "CON INVESTIGACION PRELIMINAR",
-                                    "CONCLUSION INV. PREPARATORIA",
-                                    "EN CALIFICACION",
-                                    "FORMALIZA INVESTIGACION PREPARATORIA",
-                                ]}
-                                seriesData={[
-                                    {
-                                        name: "Dentro de plazos",
-                                        type: "bar",
-                                        data: [10, 7, 5, 9, 4, 4, 6],
-                                        itemStyle: { color: "#008000" },
-                                    },
-                                    {
-                                        name: "Plazos por vencer",
-                                        type: "bar",
-                                        data: [2, 3, 2, 4, 3, 4, 6],
-                                        itemStyle: { color: "#FFD700" },
-                                    },
-                                    {
-                                        name: "Plazos vencidos",
-                                        type: "bar",
-                                        data: [1, 2, 0, 1, 2, 4, 6],
-                                        itemStyle: { color: "#FF0000" },
-                                    },
-                                ]}
-                            />
-                        </div>
-                    </div>
-                </Card>
-                {/* Gráfico 3: Estados de Casos por Etapas */}
-                <Card className="col-span-6">
+            <Card className="col-span-6">
                     <div className="h-80 bg-red-200 flex justify-center items-center">
                         <div className="w-full h-full bg-white">
                             <DeadlineBarChartY
@@ -282,28 +262,24 @@ export default function DependencyReportingStructureDC({
                                     "Plazos por vencer",
                                     "Plazos vencidos",
                                 ]}
-                                xAxisData={[
-                                    "CALIFICACION",
-                                    "INVESTIGACION PRELIMINAR",
-                                    "INVESTIGACION PREPARATORIA",
-                                ]}
+                                xAxisData={xAxisData}
                                 seriesData={[
                                     {
                                         name: "Dentro de plazos",
                                         type: "bar",
-                                        data: [10, 7, 5, 9, 4, 4, 6],
+                                        data: dentroPlazosData,
                                         itemStyle: { color: "#008000" },
                                     },
                                     {
                                         name: "Plazos por vencer",
                                         type: "bar",
-                                        data: [2, 3, 2, 4, 3, 4, 6],
+                                        data: porVencerData,
                                         itemStyle: { color: "#FFD700" },
                                     },
                                     {
                                         name: "Plazos vencidos",
                                         type: "bar",
-                                        data: [1, 2, 0, 1, 2, 4, 6],
+                                        data: vencidosData,
                                         itemStyle: { color: "#FF0000" },
                                     },
                                 ]}
@@ -311,21 +287,6 @@ export default function DependencyReportingStructureDC({
                         </div>
                     </div>
                 </Card>
-            </div>
-
-            {/* Tercera fila: Tabla de contenido adicional */}
-            <Card>
-                <div className="border-b border-tremor-border py-2 dark:border-dark-tremor-border">
-                    <h3 className="text-tremor-default font-medium text-tremor-content-strong dark:text-dark-tremor-content-strong">
-                        Tabla de contenido adicional
-                    </h3>
-                </div>
-                <div className="h-72 flex justify-center items-center">
-                    <div className="w-full h-full p-4">
-                        <TableDeadline />
-                    </div>
-                </div>
-            </Card>
 
             {/* Pie de Página */}
             <div className="flex items-center justify-between bg-[#274E94] px-4 py-2">
