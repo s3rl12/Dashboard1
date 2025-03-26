@@ -225,6 +225,7 @@ export default function DependencyList({
     { value: "control-plazos", label: "Control plazos", hint: "Z-A" },
     { value: "carga-fiscal", label: "Carga fiscal", hint: "Z-A" },
     { value: "detallado-fiscal", label: "Detallado fiscal", hint: "Z-A" },
+    { value: "incidencia-delitos", label: "Incidencia delitos", hint: "Z-A" },
   ];
 
   // Manejo del clic en cada tarjeta
@@ -240,15 +241,14 @@ export default function DependencyList({
     }
 
     if (sorting !== "carga-fiscal") {
-      if (sorting === "alphabetical") {
-        navigate("/dashboard/estadisticas/WorkLoad");
-      } else if (sorting === "reverse-alphabetical") {
-        navigate("/dashboard/estadisticas/CrimesHighestIncidence");
-      } else if (sorting === "control-plazos") {
+      if (sorting === "control-plazos") {
         navigate("/dashboard/estadisticas/DeadlineControl");
       } else if (sorting === "detallado-fiscal") {
         navigate("/dashboard/estadisticas/TaxDetails");
+      } else if (sorting === "incidencia-delitos") {
+        navigate("/dashboard/estadisticas/CrimeIncidence");
       }
+
       return;
     }
 

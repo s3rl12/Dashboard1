@@ -39,7 +39,7 @@ function LogoIcon() {
 
 // Rutas principales
 const navigation = [
-  { name: "Home", href: "/", icon: IconHome },
+  { name: "Home", href: "/dashboard/Home", icon: IconHome },
   { name: "Inbox", href: "/inbox", icon: IconChartCandle, notifications: 2 },
 ];
 
@@ -59,6 +59,7 @@ const navigation2 = [
     icon: IconUser,
     children: [
       { name: "Usuarios", href: "/dashboard/Agentes" },
+      { name: "Fiscales", href: "/dashboard/Fiscales" },
       { name: "Roles y permisos", href: "/dashboard/roles" },
       { name: "Historial de actividad", href: "/sales/insights" },
     ],

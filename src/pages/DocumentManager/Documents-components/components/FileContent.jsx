@@ -1,3 +1,4 @@
+// FileContent.jsx
 import React, { useMemo, useState } from "react";
 import {
   flexRender,
@@ -15,10 +16,7 @@ import {
   TableRow,
 } from "@tremor/react";
 import { IconTrash, IconPencil, IconFileZip } from "@tabler/icons-react";
-import {
-  RiArrowLeftSLine,
-  RiArrowRightSLine,
-} from "@remixicon/react";
+import { RiArrowLeftSLine, RiArrowRightSLine } from "@remixicon/react";
 
 // Ajusta la ruta a tu Drawer
 import {
@@ -58,48 +56,61 @@ export default function FileContent({ archivos = [] }) {
       onConfirm: async () => {
         // Simulamos proceso asíncrono:
         await new Promise((resolve) => setTimeout(resolve, 1000));
-
         // Removemos el archivo del state local
-        setFileData((prev) => prev.filter((f) => f.id !== file.id));
+        setFileData((prev) => prev.filter((f) => f.usuario.id !== file.usuario.id));
       },
     });
   };
 
-  // Columnas de la tabla (se elimina la columna "Tipo", y se formatea la fecha)
+  // Columnas de la tabla actualizadas
   const columns = useMemo(
     () => [
       {
         header: "Nombre",
-        accessorKey: "nombre",
+        id: "nombre",
         enableSorting: false,
         meta: { align: "text-left" },
-        cell: ({ getValue }) => (
-          <div className="inline-flex items-center gap-2">
-            <IconFileZip className="size-4 text-gray-600" aria-hidden />
-            <span>{getValue()}</span>
-          </div>
-        ),
+        cell: ({ row }) => {
+          const user = row.original.usuario;
+          return (
+            <div className="inline-flex flex-col">
+              <span className="font-medium text-sm text-gray-800">{user.nombre}</span>
+              <span className="text-sm text-gray-500">{user.email}</span>
+            </div>
+          );
+        },
+      },
+      {
+        header: "Código de archivo",
+        id: "codigo",
+        enableSorting: false,
+        meta: { align: "text-left" },
+        cell: ({ row }) => {
+          // Se asume que archivos_del_usuario es un array y se toma el primero
+          const codigo = row.original.usuario.archivos_del_usuario?.[0]?.codigo || "N/A";
+          return <span>{codigo}</span>;
+        },
       },
       {
         header: "Tamaño",
-        accessorKey: "peso_arch",
+        id: "tamanio",
         enableSorting: false,
         meta: { align: "text-left" },
+        cell: ({ row }) => {
+          const peso = row.original.usuario.archivos_del_usuario?.[0]?.peso_arch || "N/A";
+          return <span>{peso}</span>;
+        },
       },
       {
         header: "Fecha de creación",
-        accessorKey: "created_at",
+        id: "fecha",
         enableSorting: false,
         meta: { align: "text-right" },
-        // Formateamos la fecha en "yyyy-mm-dd"
-        cell: ({ getValue }) => {
-          const rawDate = getValue() || ""; // p.ej. "2025-02-18T15:34:11.000000Z"
-          if (!rawDate) return ""; // Por si no viene fecha
-
+        cell: ({ row }) => {
+          const rawDate = row.original.usuario.archivos_del_usuario?.[0]?.created_at || "";
+          if (!rawDate) return "";
           const dateObj = new Date(rawDate);
-          // Si es inválida, podrías devolver un texto
           if (isNaN(dateObj.getTime())) return "Fecha inválida";
-
           const yyyy = dateObj.getFullYear();
           const mm = String(dateObj.getMonth() + 1).padStart(2, "0");
           const dd = String(dateObj.getDate()).padStart(2, "0");
@@ -111,7 +122,7 @@ export default function FileContent({ archivos = [] }) {
         id: "actions",
         meta: { align: "text-right" },
         cell: ({ row }) => {
-          const fileRow = row.original; // { id, nombre, peso_arch, ... }
+          const fileRow = row.original;
           return (
             <div className="inline-flex items-center space-x-1">
               {/* Botón Editar (Drawer) */}
@@ -143,7 +154,7 @@ export default function FileContent({ archivos = [] }) {
 
   // Configuramos la tabla con React Table
   const table = useReactTable({
-    data: fileData, // la data local
+    data: fileData,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -151,7 +162,7 @@ export default function FileContent({ archivos = [] }) {
     initialState: {
       pagination: {
         pageIndex: 0,
-        pageSize: 3, // si quieres mostrar 5 archivos por página
+        pageSize: 3,
       },
     },
   });
@@ -164,14 +175,12 @@ export default function FileContent({ archivos = [] }) {
   const endIndex = Math.min(startIndex + pageSize - 1, totalRows);
 
   const handleSave = () => {
-    // Lógica al guardar en el Drawer
     setIsDrawerOpen(false);
   };
 
   return (
     <>
       <div className="flex items-baseline justify-between gap-4">
-        {/* Sección izquierda: Título y texto */}
         <div className="flex flex-col items-start space-y-2">
           <h4 className="font-semibold text-tremor-content-strong dark:text-dark-tremor-content-strong">
             Archivos
@@ -180,45 +189,24 @@ export default function FileContent({ archivos = [] }) {
             Lista de archivos de la carpeta
           </p>
         </div>
-
-        {/* Sección derecha: Tabla */}
         <div className="flex-1 overflow-auto">
           <Table>
             <TableHead>
               {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow
-                  key={headerGroup.id}
-                  className="border-b border-tremor-border dark:border-dark-tremor-border"
-                >
+                <TableRow key={headerGroup.id} className="border-b border-tremor-border dark:border-dark-tremor-border">
                   {headerGroup.headers.map((header) => (
-                    <TableHeaderCell
-                      key={header.id}
-                      className={classNames(header.column.columnDef.meta.align)}
-                    >
-                      {flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
+                    <TableHeaderCell key={header.id} className={classNames(header.column.columnDef.meta.align)}>
+                      {flexRender(header.column.columnDef.header, header.getContext())}
                     </TableHeaderCell>
                   ))}
                 </TableRow>
               ))}
             </TableHead>
-
             <TableBody>
               {table.getPaginationRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  className="group hover:bg-tremor-background-muted hover:dark:bg-dark-tremor-background-muted"
-                >
+                <TableRow key={row.id} className="group hover:bg-tremor-background-muted hover:dark:bg-dark-tremor-background-muted">
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell
-                      key={cell.id}
-                      className={classNames(
-                        cell.column.columnDef.meta.align,
-                        "relative"
-                      )}
-                    >
+                    <TableCell key={cell.id} className={classNames(cell.column.columnDef.meta.align, "relative")}>
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
                   ))}
@@ -226,8 +214,6 @@ export default function FileContent({ archivos = [] }) {
               ))}
             </TableBody>
           </Table>
-
-          {/* Controles de paginación */}
           <div className="mt-4 flex items-center justify-between">
             <p className="text-tremor-default text-tremor-content dark:text-dark-tremor-content">
               Showing{" "}
@@ -239,29 +225,21 @@ export default function FileContent({ archivos = [] }) {
                 {totalRows}
               </span>
             </p>
-
             <div className="inline-flex items-center rounded-lg border border-gray-200 px-1 shadow-sm dark:border-gray-200">
               <button
                 onClick={() => table.previousPage()}
                 disabled={!table.getCanPreviousPage()}
                 className="p-1 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <RiArrowLeftSLine
-                  className="size-5 text-gray-600 dark:text-gray-300"
-                  aria-hidden="true"
-                />
+                <RiArrowLeftSLine className="size-5 text-gray-600 dark:text-gray-300" aria-hidden="true" />
                 <span className="sr-only">Previous</span>
               </button>
-
               <button
                 onClick={() => table.nextPage()}
                 disabled={!table.getCanNextPage()}
                 className="p-1 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <RiArrowRightSLine
-                  className="size-5 text-gray-600 dark:text-gray-300"
-                  aria-hidden="true"
-                />
+                <RiArrowRightSLine className="size-5 text-gray-600 dark:text-gray-300" aria-hidden="true" />
                 <span className="sr-only">Next</span>
               </button>
             </div>
@@ -269,7 +247,6 @@ export default function FileContent({ archivos = [] }) {
         </div>
       </div>
 
-      {/* Drawer para editar un archivo */}
       <Drawer
         open={isDrawerOpen}
         onOpenChange={(open) => {
@@ -281,30 +258,23 @@ export default function FileContent({ archivos = [] }) {
       >
         <DrawerContent className="sm:max-w-md">
           <DrawerHeader>
-            <DrawerTitle>
-              {selectedFile?.nombre ?? "Editar archivo"}
-            </DrawerTitle>
+            <DrawerTitle>{selectedFile?.usuario?.nombre ?? "Editar archivo"}</DrawerTitle>
             <DrawerDescription>
               {selectedFile
-                ? `Tamaño: ${selectedFile.peso_arch}`
+                ? `Tamaño: ${selectedFile.usuario.archivos_del_usuario?.[0]?.peso_arch || ""}`
                 : ""}
             </DrawerDescription>
           </DrawerHeader>
-
           <DrawerBody>
             <FileUploadForm />
           </DrawerBody>
-
           <DrawerFooter>
             <DrawerClose asChild>
               <button className="rounded-md bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200">
                 Cancelar
               </button>
             </DrawerClose>
-            <button
-              onClick={handleSave}
-              className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
-            >
+            <button onClick={handleSave} className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">
               Guardar
             </button>
           </DrawerFooter>

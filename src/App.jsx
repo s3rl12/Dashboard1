@@ -21,11 +21,8 @@ import LoginService from './services/api/login-list/LoginService';
 import { useAuth } from "./context/AuthContext";
 import logoMP from './assets/icons/logoMP.svg';
 import fondoSVG from './assets/icons/fondo.svg';
-
 import { useQueryClient } from '@tanstack/react-query';
-import { fetchCarpetasArchivos } from './hooks/useCarpetasArchivos';
-// Se elimina la importación y prefetch de fetchListUser para que se cargue de forma diferida en Users
-// import { fetchListUser } from './hooks/useListUser';
+
 
 const version = import.meta.env.VITE_VERSION || '1.1.1';
 

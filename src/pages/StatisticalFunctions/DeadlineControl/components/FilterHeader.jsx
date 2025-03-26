@@ -11,12 +11,9 @@ import {
   DialogTitle,
   DialogDescription,
 } from "../../../../components/ui/Dialog";
-
 import { IconFileUpload, IconFileTypePdf } from "@tabler/icons-react";
-
 import { useListDF } from "../../../../hooks/useListDF";
 import { useToast } from "../../../../lib/useToast";
-
 // Nueva importación: PDFViewer de React-PDF
 import { PDFViewer } from "@react-pdf/renderer";
 
@@ -64,21 +61,19 @@ const SelectSearch = ({ placeholder, options, onChange }) => {
 };
 
 export default function FilterHeader({
-  // Recibe además los nuevos props para el PDF TaxBurdenSchemeD
   containerIds = [],
   useCargaHook,
   taxPdfComponent: TaxPdfComponent,
   taxPdfData,
+  // Nuevo parámetro
+  cantidadDelitos,
 }) {
   const [isPdfDialogOpen, setIsPdfDialogOpen] = useState(false);
   const [pdfUrl, setPdfUrl] = useState(null);
-  // Nuevo estado para el PDF usando TaxBurdenSchemeD
   const [isTaxPdfDialogOpen, setIsTaxPdfDialogOpen] = useState(false);
-
   const [isSearching, setIsSearching] = useState(false);
   const { toast, dismiss } = useToast();
 
-  // Llamar a la API de sedes
   const { data: sedes = [] } = useListDF();
 
   const [selectedSedeName, setSelectedSedeName] = useState("");
@@ -98,14 +93,15 @@ export default function FilterHeader({
       }))
     : [];
 
-  // useCargaHook
+  // Actualización del objeto de parámetros: se renombra id_sede a id_sedes y se agrega cantidadDelitos si existe
   const { refetch } = useCargaHook(
     {
-      id_sede: selectedSedeObj ? selectedSedeObj.id : null,
+      id_sedes: selectedSedeObj ? selectedSedeObj.id : null,
       fe_inicio: dateRange?.from ? format(dateRange.from, "yyyy-MM-dd 00:00:00") : null,
       fe_fin: dateRange?.to ? format(dateRange.to, "yyyy-MM-dd 23:59:59") : null,
       estado: null,
       id_dependencia: selectedDepName ? Number(selectedDepName) : null,
+      ...(cantidadDelitos ? { cantidadDelitos } : {}),
     },
     { enabled: false }
   );
@@ -272,7 +268,7 @@ export default function FilterHeader({
         </div>
       </div>
 
-      {/* Dialog para mostrar la previsualización del PDF generado con html2canvas/jsPDF */}
+      {/* Dialog para previsualizar PDF generado con html2canvas/jsPDF */}
       <Dialog open={isPdfDialogOpen} onOpenChange={setIsPdfDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -293,7 +289,7 @@ export default function FilterHeader({
         </DialogContent>
       </Dialog>
 
-      {/* Nuevo Dialog para mostrar el PDF generado con TaxBurdenSchemeD */}
+      {/* Dialog para previsualizar PDF basado en TaxBurdenSchemeD */}
       <Dialog open={isTaxPdfDialogOpen} onOpenChange={setIsTaxPdfDialogOpen}>
         <DialogContent>
           <DialogHeader>

@@ -29,7 +29,8 @@ export default function DocumentFolders({ carpetasData = [] }) {
               </span>
             </AccordionTrigger>
             <AccordionContent>
-              <FileContent archivos={folder.archivos} />
+              {/* Se envía la sección "usuarios_archivos" */}
+              <FileContent archivos={folder.usuarios_archivos} />
             </AccordionContent>
           </AccordionItem>
         ))}

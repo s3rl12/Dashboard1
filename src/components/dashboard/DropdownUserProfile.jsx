@@ -15,19 +15,22 @@ import {
   DropdownMenuSubMenuTrigger,
   DropdownMenuTrigger,
 } from "./DropdownMenu";
-
+const apiIp = import.meta.env.VITE_API;
 import { useTheme } from "next-themes";
 import { IconSunHigh, IconMoon, IconDeviceDesktop, IconArrowUpRight } from '@tabler/icons-react';
-// Importar useAuth para obtener la información del usuario
+// Importar useAuth para obtener la información del usuario y logout
 import { useAuth } from "../../context/AuthContext";
+// Usar useNavigate de react-router-dom en lugar de next/navigation
+import { useNavigate } from "react-router-dom";
 
 export function DropdownUserProfile({ children, align = "start" }) {
   // Manejo de tema (opcional con next-themes)
   const [mounted, setMounted] = useState(false);
   const { theme, setTheme } = useTheme();
 
-  // Obtener usuario del contexto
-  const { user } = useAuth();
+  // Obtener usuario, logout y token del contexto
+  const { user, logout, token } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     setMounted(true);
@@ -35,6 +38,33 @@ export function DropdownUserProfile({ children, align = "start" }) {
 
   if (!mounted) {
     return null;
+  }
+
+  // Función para manejar el "Sign out"
+  async function handleSignOut() {
+    try {
+      // Disparar un evento global para que Dashboard muestre el LoadingBackdrop a pantalla completa
+      window.dispatchEvent(new Event('logout:start'));
+      
+      // Llamada a la API de logout, asumiendo método POST
+      const res = await fetch(`http://${apiIp}/api/logout/`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (!res.ok) {
+        throw new Error("Error al cerrar sesión en el servidor");
+      }
+      // Limpiar la sesión usando logout() del AuthContext
+      logout();
+      // Redirigir al usuario a la ruta raíz (por ejemplo, App.jsx)
+      navigate("/");
+    } catch (error) {
+      console.error("Error en logout:", error);
+      // Opcional: Se podría disparar otro evento para indicar error (por ejemplo, 'logout:error')
+      window.dispatchEvent(new Event('logout:error'));
+    }
   }
 
   return (
@@ -84,10 +114,8 @@ export function DropdownUserProfile({ children, align = "start" }) {
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem>
-            <a href="#" className="w-full">
-              Sign out
-            </a>
+          <DropdownMenuItem onClick={handleSignOut}>
+            Sign out
           </DropdownMenuItem>
         </DropdownMenuGroup>
       </DropdownMenuContent>

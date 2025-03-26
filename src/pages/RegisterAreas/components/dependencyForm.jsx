@@ -9,6 +9,9 @@ import {
   SelectValue,
 } from '../../../components/dashboard/Select';
 
+// Importamos el Switch (asegúrate de la ruta correcta)
+import { Switch } from '../../../components/ui/Switch';
+
 // Importamos el hook para obtener la lista de áreas
 import { useListDF } from '../../../hooks/useListDF';
 
@@ -141,6 +144,46 @@ const DependencyForm = ({ formData, onChange, onSelectChange }) => {
             </SelectContent>
           </Select>
         )}
+      </div>
+
+      {/* Quinta fila: Switches para opciones (orden vertical) */}
+      <div className="space-y-4 mt-4">
+        {/* Switch para Habilitar carga laboral */}
+        <div className="flex items-center space-x-2">
+          <Switch
+            checked={formData.carga === 1}
+            onCheckedChange={(checked) =>
+              onSelectChange("carga", checked ? 1 : 0)
+            }
+          />
+          <Label className="text-tremor-default font-medium">
+            Habilitar carga laboral
+          </Label>
+        </div>
+        {/* Switch para Habilitar control plazos */}
+        <div className="flex items-center space-x-2">
+          <Switch
+            checked={formData.plazo === 1}
+            onCheckedChange={(checked) =>
+              onSelectChange("plazo", checked ? 1 : 0)
+            }
+          />
+          <Label className="text-tremor-default font-medium">
+            Habilitar control plazos
+          </Label>
+        </div>
+        {/* Switch para Habilitar Incidencia delitos */}
+        <div className="flex items-center space-x-2">
+          <Switch
+            checked={formData.delitos === 1}
+            onCheckedChange={(checked) =>
+              onSelectChange("delitos", checked ? 1 : 0)
+            }
+          />
+          <Label className="text-tremor-default font-medium">
+            Habilitar Incidencia delitos
+          </Label>
+        </div>
       </div>
     </div>
   );
