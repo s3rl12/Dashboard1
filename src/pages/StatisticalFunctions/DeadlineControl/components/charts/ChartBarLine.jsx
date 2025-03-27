@@ -87,8 +87,8 @@ export default function ChartBarLine({
                             if (words.length <= 2) {
                                 return chunkWords(words, 1).join("\n");
                             }
-                            const firstFive = words.slice(0, 5);
-                            return chunkWords(firstFive, 5).join("\n") + "...";
+                            const firstFive = words.slice(0, 3);
+                            return chunkWords(firstFive, 3).join("\n") + "...";
                         },
                     },
                 },

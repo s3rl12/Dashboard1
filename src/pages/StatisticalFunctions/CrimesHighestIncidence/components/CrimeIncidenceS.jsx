@@ -26,10 +26,7 @@ export default function CrimeIncidenceS() {
         month: "long",
         year: "numeric",
     });
-    const subSections = [
-        { text: "E.P.A.P.P.(EXPOSICION O ABANDONO PELIG.)", value: 100 },
-        { text: "E.P.A.P.P.(EXPOSICION O ABANDONO PELIG.)", value: 200 },
-    ];
+    
     const reportType = "S";
 
     // Leer la data de "incidencia-delito" desde la caché de React Query

@@ -16,7 +16,7 @@ import { useListDF } from "../../../../hooks/useListDF";
 import { useToast } from "../../../../lib/useToast";
 // Nueva importación: PDFViewer de React-PDF
 import { PDFViewer } from "@react-pdf/renderer";
-
+import { generatePdfFromMultipleElements } from "../../TaxDetails/components/ViewPDF/pdfUtils";
 import {
   Select,
   SelectTrigger,
@@ -88,9 +88,9 @@ export default function FilterHeader({
 
   const dependenciaOptions = selectedSedeObj
     ? selectedSedeObj.dependencias.map((dep) => ({
-        label: dep.fiscalia,
-        value: dep.id,
-      }))
+      label: dep.fiscalia,
+      value: dep.id,
+    }))
     : [];
 
   // Actualización del objeto de parámetros: se renombra id_sede a id_sedes y se agrega cantidadDelitos si existe

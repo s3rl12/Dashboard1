@@ -322,23 +322,23 @@ export default function CargoReportD() {
                                 name: fiscalName,
                                 metrics: {
                                     dentroPlazo: {
-                                        percentage: 0,
+                                        
                                         quantity: f.Casos_Ingresados ?? 0,
                                         label: "Casos Ingresados",
                                     },
                                     porVencer: {
-                                        percentage: 0,
+                                        
                                         quantity: f.Casos_Tramite ?? 0,
                                         label: "Casos Tramite",
                                     },
                                     vencidos: {
-                                        percentage: 0,
+                                        
                                         quantity: f.Casos_Resueltos ?? 0,
                                         label: "Casos Resueltos",
                                     },
                                     total: {
                                         percentage: productividad,
-                                        quantity: 0,
+                                        
                                         label: "Productividad Fiscal",
                                     },
                                 },

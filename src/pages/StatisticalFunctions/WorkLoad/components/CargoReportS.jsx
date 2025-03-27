@@ -25,11 +25,8 @@ export default function CargoReportS() {
     year: "numeric",
   });
   // Lista estática de ejemplo para el select
-  const staticOptions = ["Opción A", "Opción B", "Opción C", "Opción D", "Opción E"];
-  const filteredOptions = staticOptions.filter((opt) =>
-    opt.toLowerCase().includes(searchText.toLowerCase())
-  );
-  const reportType = "D";
+
+  const reportType = "S";
   // Leer la data de "carga-fiscal" desde la caché de React Query (sin refetch adicional)
   const queryClient = useQueryClient();
   const { data: apiData = {} } = useQuery({
@@ -41,13 +38,12 @@ export default function CargoReportS() {
     staleTime: Infinity,
   });
 
-  // 1. Extraer code_barras
-  const codeBarras = apiData.code_barras || ""; // Si no existe, usar string vacío
 
-  // 2. Extraer data_generalSede
+
+  // 2. Extraer data_generalSede: ahora se extrae el primer elemento del array
   const generalSede = apiData.data_generalSede?.[0] || {
-    Nombre: "Sede central",
-    Total_Dependencias: "14",
+    Nombre: "Sin valor",
+    Total_Dependencias: "x",
   };
 
   // 3. Extraer list_dependencias
@@ -100,6 +96,7 @@ export default function CargoReportS() {
               </h3>
             </div>
             <div className="h-40 p-2">
+              {/* Se utiliza el valor dinámico obtenido de general_sede */}
               <h2 className="font-medium text-base">{generalSede.Nombre}</h2>
               <p className="font-medium text-base">
                 Código: <span className="font-normal text-sm">SC</span>
@@ -144,7 +141,7 @@ export default function CargoReportS() {
           </div>
 
           {/* Se pasa generalSede y code_barras a DeadlineHeader */}
-          <DeadlineHeader generalSede={generalSede} code_barras={codeBarras} reportType={reportType} />
+          <DeadlineHeader generalSede={generalSede} reportType={reportType} headerTitle={generalSede.Nombre} />
 
           {/* Gráfico 1 */}
           <Card>
@@ -186,62 +183,45 @@ export default function CargoReportS() {
             </div>
           </Card>
 
-          {/* Gráfico 2 y Gráfico 3 en dos columnas */}
-          <div className="grid grid-cols-12 gap-3">
-            {/* Gráfico 2 */}
-            <Card className="col-span-6">
-              <div className="h-96 flex justify-center items-center">
-                <div className="w-full h-full bg-white">
-                  <DeadlineBarChartY
-                    title={depTitle}
-                    legendData={["casos resueltos", "casos ingresados"]}
-                    xAxisData={xAxisDataAnio}
-                    seriesData={[
-                      {
-                        name: "casos resueltos",
-                        type: "bar",
-                        data: casosResueltosAnio,
-                        itemStyle: { color: "#91CC75" },
-                      },
-                      {
-                        name: "casos ingresados",
-                        type: "bar",
-                        data: casosIngresadosAnio,
-                        itemStyle: { color: "#5470C6" },
-                      },
-                    ]}
-                  />
-                </div>
-              </div>
-            </Card>
-
-            {/* Gráfico 3 */}
-            <Card className="col-span-6">
-              <div className="h-96 flex justify-center items-center">
-                <div className="w-full h-full bg-white">
-                  <DeadlinedependenceB
-                    title="Ranking de 5 dependencias con mayor casos resueltos *"
-                    yAxisData={yAxisRanking}
-                    seriesData={seriesRanking}
-                  />
-                </div>
-              </div>
-            </Card>
-          </div>
-
-          {/* Tabla */}
-          <Card>
-            <div className="border-b border-tremor-border py-2 dark:border-dark-tremor-border">
-              <h3 className="text-tremor-default font-medium text-tremor-content-strong dark:text-dark-tremor-content-strong">
-                Tabla de contenido adicional
-              </h3>
-            </div>
-            <div className="h-72 flex justify-center items-center">
-              <div className="w-full h-full p-4">
-                <TableDeadline />
+          {/* Gráfico 2 */}
+          <Card className="col-span-6">
+            <div className="h-96 flex justify-center items-center">
+              <div className="w-full h-full bg-white">
+                <DeadlineBarChartY
+                  title={depTitle}
+                  legendData={["casos resueltos", "casos ingresados"]}
+                  xAxisData={xAxisDataAnio}
+                  seriesData={[
+                    {
+                      name: "casos resueltos",
+                      type: "bar",
+                      data: casosResueltosAnio,
+                      itemStyle: { color: "#91CC75" },
+                    },
+                    {
+                      name: "casos ingresados",
+                      type: "bar",
+                      data: casosIngresadosAnio,
+                      itemStyle: { color: "#5470C6" },
+                    },
+                  ]}
+                />
               </div>
             </div>
           </Card>
+          {/* Gráfico 3 */}
+          <Card className="col-span-6">
+            <div className="h-96 flex justify-center items-center">
+              <div className="w-full h-full bg-white">
+                <DeadlinedependenceB
+                  title="Ranking de 5 dependencias con mayor casos resueltos *"
+                  yAxisData={yAxisRanking}
+                  seriesData={seriesRanking}
+                />
+              </div>
+            </div>
+          </Card>
+
           <div className="flex items-center justify-between bg-[#274E94] px-4 py-2">
             <div className="text-xs text-white">
               <p className="font-semibold">
@@ -261,7 +241,6 @@ export default function CargoReportS() {
             </div>
           </div>
         </div>
-
       </div>
     </div>
   );

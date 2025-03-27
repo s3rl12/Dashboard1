@@ -72,16 +72,16 @@ export default function DependencyReportingStructureDC({
     const totalDentro = plazoGeneral.Cantidad_Verde ?? 0;
 
     // EXTRAER datos para "Dependencias y Casos"
-const listFiscalPlazo = dependencyData?.data_general_carga?.list_fiscal_plazo || [];
-const yAxisDataFiscales = listFiscalPlazo.map((item) => item.Fiscal || "Sin nombre");
-const seriesDataFiscales = listFiscalPlazo.map((item) => Number(item.Plazos_Ingresados) || 0);
+    const listFiscalPlazo = dependencyData?.data_general_carga?.list_fiscal_plazo || [];
+    const yAxisDataFiscales = listFiscalPlazo.map((item) => item.Fiscal || "Sin nombre");
+    const seriesDataFiscales = listFiscalPlazo.map((item) => Number(item.Plazos_Ingresados) || 0);
 
-// Datos para "ESTADOS DE CASOS POR ETAPAS"
-const etapaPlazos = dependencyData?.data_general_carga?.etapa_plazos || [];
-const xAxisDataEtapas = etapaPlazos.map((item) => item.Etapa || "Sin etapa");
-const dentroPlazosEtapasData = etapaPlazos.map((item) => item.Cantidad_Verde ?? 0);
-const porVencerEtapasData = etapaPlazos.map((item) => item.Cantidad_Amarillo ?? 0);
-const vencidosEtapasData = etapaPlazos.map((item) => item.Cantidad_Rojo ?? 0);
+    // Datos para "ESTADOS DE CASOS POR ETAPAS"
+    const etapaPlazos = dependencyData?.data_general_carga?.etapa_plazos || [];
+    const xAxisDataEtapas = etapaPlazos.map((item) => item.Etapa || "Sin etapa");
+    const dentroPlazosEtapasData = etapaPlazos.map((item) => item.Cantidad_Verde ?? 0);
+    const porVencerEtapasData = etapaPlazos.map((item) => item.Cantidad_Amarillo ?? 0);
+    const vencidosEtapasData = etapaPlazos.map((item) => item.Cantidad_Rojo ?? 0);
 
 
     // El headerTitle se obtiene del campo Nombre de general_dependencia
@@ -213,7 +213,7 @@ const vencidosEtapasData = etapaPlazos.map((item) => item.Cantidad_Rojo ?? 0);
                 <Card className="col-span-6">
                     <div className="h-80 bg-red-200 flex justify-center items-center">
                         <div className="w-full h-full bg-white flex flex-col items-center justify-evenly">
-                            {/* Contenido: Total de Plazos con semáforo */}
+                            {/* Contenedor: Total de Plazos con semáforo */}
                             <div className="flex flex-col items-center space-y-2">
                                 <h3 className="text-center text-sm font-bold">TOTAL DE PLAZOS</h3>
                                 <div className="flex flex-row items-center space-x-2">
@@ -253,40 +253,40 @@ const vencidosEtapasData = etapaPlazos.map((item) => item.Cantidad_Rojo ?? 0);
             </div>
 
             <Card className="col-span-6">
-                    <div className="h-80 bg-red-200 flex justify-center items-center">
-                        <div className="w-full h-full bg-white">
-                            <DeadlineBarChartY
-                                title="ESTADOS DE CASOS POR ETAPAS"
-                                legendData={[
-                                    "Dentro de plazos",
-                                    "Plazos por vencer",
-                                    "Plazos vencidos",
-                                ]}
-                                xAxisData={xAxisData}
-                                seriesData={[
-                                    {
-                                        name: "Dentro de plazos",
-                                        type: "bar",
-                                        data: dentroPlazosData,
-                                        itemStyle: { color: "#008000" },
-                                    },
-                                    {
-                                        name: "Plazos por vencer",
-                                        type: "bar",
-                                        data: porVencerData,
-                                        itemStyle: { color: "#FFD700" },
-                                    },
-                                    {
-                                        name: "Plazos vencidos",
-                                        type: "bar",
-                                        data: vencidosData,
-                                        itemStyle: { color: "#FF0000" },
-                                    },
-                                ]}
-                            />
-                        </div>
+                <div className="h-80 bg-red-200 flex justify-center items-center">
+                    <div className="w-full h-full bg-white">
+                        <DeadlineBarChartY
+                            title="ESTADOS DE CASOS POR ETAPAS"
+                            legendData={[
+                                "Dentro de plazos",
+                                "Plazos por vencer",
+                                "Plazos vencidos",
+                            ]}
+                            xAxisData={xAxisData}
+                            seriesData={[
+                                {
+                                    name: "Dentro de plazos",
+                                    type: "bar",
+                                    data: dentroPlazosData,
+                                    itemStyle: { color: "#008000" },
+                                },
+                                {
+                                    name: "Plazos por vencer",
+                                    type: "bar",
+                                    data: porVencerData,
+                                    itemStyle: { color: "#FFD700" },
+                                },
+                                {
+                                    name: "Plazos vencidos",
+                                    type: "bar",
+                                    data: vencidosData,
+                                    itemStyle: { color: "#FF0000" },
+                                },
+                            ]}
+                        />
                     </div>
-                </Card>
+                </div>
+            </Card>
 
             {/* Pie de Página */}
             <div className="flex items-center justify-between bg-[#274E94] px-4 py-2">

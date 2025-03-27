@@ -12,7 +12,7 @@ const token = localStorage.getItem(import.meta.env.VITE_AUTH_TOKEN_KEY);
  * "data_generalSede", "graf_ingreso_caso_depens", "ranking_dependencias", etc.
  */
 export async function fetchCargaFiscal({ 
-  id_sede, 
+  id_sedes, 
   fe_inicio, 
   fe_fin, 
   estado, 
@@ -27,7 +27,7 @@ export async function fetchCargaFiscal({
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({
-      id_sede,
+      id_sedes,
       fe_inicio,
       fe_fin,
       estado,

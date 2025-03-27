@@ -59,7 +59,7 @@ export default function DeadlinedependenceB({
           interval: 0,
           formatter: (value) => {
             const words = value.split(" ");
-            return chunkWords(words, 3).join("\n");
+            return chunkWords(words, 5).join("\n");
           },
         },
       },

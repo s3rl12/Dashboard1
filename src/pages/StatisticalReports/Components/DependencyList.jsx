@@ -220,12 +220,10 @@ export default function DependencyList({
 
   // Opciones del menú de reporte
   const radioItems = [
-    { value: "alphabetical", label: "Carga laboral", hint: "A-Z" },
-    { value: "reverse-alphabetical", label: "Incidencia delitos", hint: "Z-A" },
     { value: "control-plazos", label: "Control plazos", hint: "Z-A" },
     { value: "carga-fiscal", label: "Carga fiscal", hint: "Z-A" },
-    { value: "detallado-fiscal", label: "Detallado fiscal", hint: "Z-A" },
     { value: "incidencia-delitos", label: "Incidencia delitos", hint: "Z-A" },
+    { value: "detallado-fiscal", label: "Detallado fiscal", hint: "Z-A" },
   ];
 
   // Manejo del clic en cada tarjeta

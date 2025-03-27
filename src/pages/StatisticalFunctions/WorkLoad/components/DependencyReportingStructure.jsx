@@ -60,7 +60,7 @@ export default function DependencyReportingStructure({
         year: "numeric",
     });
     // Detectar si hay muchos fiscales
-    const hasManyFiscales = workspaces.length > 10;
+    const hasManyFiscales = workspaces.length >= 10;
     const orientation = hasManyFiscales ? "vertical" : "horizontal";
 
     return (
