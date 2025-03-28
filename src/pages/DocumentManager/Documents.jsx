@@ -6,21 +6,23 @@ import { IconFilePlus, IconFolderOpen } from "@tabler/icons-react";
 import FileUploadFuctions from "./Documents-components/components/FileUploadFuctions";
 import DocumentFolders from "./Documents-components/components/DocumentFolders";
 import { useToast } from "../../lib/useToast"; // Asegúrate de ajustar la ruta según tu estructura
+import AlertError from "../../components/alert/AlertError"; // Asegúrate de ajustar la ruta según tu estructura
 
 export default function Documents() {
   // Estado local para saber cuál pestaña está activa
   const [activeTab, setActiveTab] = useState("carpetas");
-  
+
   // Obtención de datos de carpetas, incluyendo isLoading y error
   const { data: carpetasData, isLoading, error } = useCarpetasArchivos();
-  
+
   // Hook para mostrar toasts
   const { toast } = useToast();
-  
+
   // Referencia para el toast actual y para controlar si ya se cargaron los datos
   const toastRef = useRef(null);
   const hasDataLoaded = useRef(false);
-  
+  const errorShown = useRef(false); // Para evitar mostrar múltiples alertas de error
+
   // Efecto para mostrar y actualizar el toast durante la carga de datos
   useEffect(() => {
     if (isLoading && !hasDataLoaded.current && !toastRef.current) {
@@ -44,7 +46,16 @@ export default function Documents() {
       hasDataLoaded.current = true;
     }
   }, [isLoading, error, toast]);
-  
+
+  // Efecto para mostrar el AlertError si se produce un error y evitar mostrarlo varias veces
+  useEffect(() => {
+    if (error && !isLoading && !errorShown.current) {
+      errorShown.current = true;
+      // Se invoca AlertError pasando el error capturado
+      AlertError({ error });
+    }
+  }, [error, isLoading]);
+
   // Efecto de limpieza para descartar el toast al desmontar el componente
   useEffect(() => {
     return () => {
@@ -53,9 +64,10 @@ export default function Documents() {
         toastRef.current = null;
       }
       hasDataLoaded.current = false;
+      errorShown.current = false;
     };
   }, []);
-  
+
   return (
     <div className="p-2 space-y-4">
       {/* 1. Título */}

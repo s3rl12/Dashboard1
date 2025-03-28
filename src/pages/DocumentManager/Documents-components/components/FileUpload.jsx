@@ -200,90 +200,16 @@ export default function FileUpload({ uploadService }) {
     <div className="sm:mx-auto sm:max-w-full">
       <form action="#" method="post" onSubmit={handleUpload}>
         <h2 className="font-semibold text-tremor-content-strong dark:text-dark-tremor-content-strong">
-          Set up your first cloud storage
+          Importación de Archivos
         </h2>
         <p className="mt-2 text-tremor-default leading-6 text-tremor-content dark:text-dark-tremor-content">
-          Lorem ipsum dolor sit amet, consetetur sadipscing elitr.
+          Seleccione y cargue su archivo. Recuerde importar el archivo cuando sea requerido.
         </p>
 
-        <div className="flex w-full items-baseline justify-between gap-4">
-          <InputSearch />
-          <Filters
-            selectedFilter={selectedFilter}
-            setSelectedFilter={setSelectedFilter}
-          />
-        </div>
+
 
         <div className="mt-2 grid grid-cols-1 gap-4 sm:grid-cols-6">
-          <div className="col-span-full">
-            <div className="mt-2 flex flex-col gap-4 sm:flex-row sm:items-end">
-              {/* Select 1 */}
-              <Select value={select1} onValueChange={setSelect1}>
-                <SelectTrigger className="w-48">
-                  <SelectValue placeholder="Select 1" />
-                </SelectTrigger>
-                <SelectContent>
-                  {data.map((item) => (
-                    <SelectItem key={item.value} value={item.value}>
-                      {item.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
 
-              {/* Select 2 */}
-              <Select value={select2} onValueChange={setSelect2}>
-                <SelectTrigger className="w-48">
-                  <SelectValue placeholder="Select 2" />
-                </SelectTrigger>
-                <SelectContent>
-                  {data.map((item) => (
-                    <SelectItem key={item.value} value={item.value}>
-                      {item.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              {/* Select 3 */}
-              <Select value={select3} onValueChange={setSelect3}>
-                <SelectTrigger className="w-48">
-                  <SelectValue placeholder="Select 3" />
-                </SelectTrigger>
-                <SelectContent>
-                  {data.map((item) => (
-                    <SelectItem key={item.value} value={item.value}>
-                      {item.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              {/* Select 4 */}
-              <Select value={select4} onValueChange={setSelect4}>
-                <SelectTrigger className="w-48">
-                  <SelectValue placeholder="Select 4" />
-                </SelectTrigger>
-                <SelectContent>
-                  {data.map((item) => (
-                    <SelectItem key={item.value} value={item.value}>
-                      {item.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              {/* Botón para resetear selects */}
-              <Button
-                type="button"
-                variant="secondary"
-                className="whitespace-nowrap"
-                onClick={resetAllSelects}
-              >
-                Reset all
-              </Button>
-            </div>
-          </div>
 
           {/* Sección de Drag & Drop */}
           <div className="col-span-full">
@@ -291,7 +217,7 @@ export default function FileUpload({ uploadService }) {
               htmlFor="file-upload-2"
               className="text-tremor-default font-medium text-tremor-content-strong dark:text-dark-tremor-content-strong"
             >
-              File(s) upload
+              Carga de archivos
             </label>
             <div
               {...getRootProps()}
@@ -308,12 +234,12 @@ export default function FileUpload({ uploadService }) {
                   aria-hidden
                 />
                 <div className="mt-4 flex text-tremor-default leading-6 text-tremor-content dark:text-dark-tremor-content">
-                  <p>Drag and drop or</p>
+                  <p>Arrastre y suelte o seleccione</p>
                   <label
                     htmlFor="file-upload-2"
                     className="relative cursor-pointer rounded-tremor-small pl-1 font-medium text-tremor-brand hover:underline hover:underline-offset-4 dark:text-dark-tremor-brand"
                   >
-                    <span>choose file(s)</span>
+                    <span>el archivo</span>
                     <input
                       {...getInputProps()}
                       id="file-upload-2"
@@ -322,13 +248,13 @@ export default function FileUpload({ uploadService }) {
                       className="sr-only"
                     />
                   </label>
-                  <p className="pl-1">to upload</p>
+                  <p className="pl-1">que desea cargar</p>
                 </div>
               </div>
             </div>
             <p className="mt-2 text-tremor-label leading-5 text-tremor-content dark:text-dark-tremor-content sm:flex sm:items-center sm:justify-between">
-              <span>All file types are allowed to upload.</span>
-              <span className="pl-1 sm:pl-0">Max. size per file: 50MB</span>
+              <span>Se permite cargar solo tipo de archivos .xls</span>
+              <span className="pl-1 sm:pl-0">Tamaño máximo por archivo: 50 MB</span>
             </p>
             {filesList.length > 0 && (
               <>
@@ -345,12 +271,12 @@ export default function FileUpload({ uploadService }) {
 
         <Divider className="my-4" />
 
-        <div className="flex items-center justify-end space-x-3">         
+        <div className="flex items-center justify-end space-x-3">
           <button
             type="submit"
             className="whitespace-nowrap rounded-tremor-small bg-tremor-brand px-4 py-2 text-tremor-default font-medium text-tremor-brand-inverted shadow-tremor-input transition-all hover:bg-tremor-brand-emphasis dark:bg-dark-tremor-brand dark:text-dark-tremor-brand-inverted dark:shadow-dark-tremor-input dark:hover:bg-dark-tremor-brand-emphasis"
           >
-            Upload
+            Subir archivo
           </button>
         </div>
       </form>

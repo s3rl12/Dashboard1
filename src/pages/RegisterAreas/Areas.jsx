@@ -5,7 +5,7 @@ import FileUpload from "../DocumentManager/Documents-components/components/FileU
 import { IconBuildings, IconBuildingPlus } from "@tabler/icons-react";
 import { RiExchange2Line } from "@remixicon/react";
 import AreasList from './components/AreasList';
-
+import ImportAreasService from "../../services/api/exportAreas-list/ImportAreasService";
 export default function Areas() {
   const [activeTab, setActiveTab] = useState("Áreas");
 
@@ -51,7 +51,7 @@ export default function Areas() {
       {activeTab === "importar" && (
         <div>
           {/* Se pasa la función de importación de áreas, si existe */}
-          <FileUpload />
+          <FileUpload uploadService={ImportAreasService.ImportAreasService} />
         </div>
       )}
     </div>
