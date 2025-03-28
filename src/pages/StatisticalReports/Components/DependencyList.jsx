@@ -316,17 +316,6 @@ export default function DependencyList({
               </DropdownMenuRadioGroup>
             </DropdownMenuContent>
           </DropdownMenu>
-
-          {/* Segundo Control: Date filter */}
-          <DateRangePicker
-            defaultValue={{
-              from: new Date(new Date().setDate(new Date().getDate() - 10)),
-              to: new Date(),
-            }}
-            id="date_1"
-            name="date_1"
-            className=" border-tremor-border dark:border-dark-tremor-border"
-          />
         </div>
       </div>
 

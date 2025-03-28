@@ -7,7 +7,58 @@ import DeadlineBarChartY from "../../DeadlineControl/components/charts/DeadlineB
 // Versión dinámica de ChartPie
 import ChartPie from "../../DeadlineControl/components/charts/ChartPie";
 import ChartGauge from "../../DeadlineControl/components/charts/Chartgauge";
-export default function DetailedTaxBurden() {
+
+export default function DetailedTaxBurden({ hoja_fiscal }) {
+  // Extraer general_fiscal (primer elemento) para mostrar datos generales
+  const generalFiscal =
+    hoja_fiscal?.general_fiscal && hoja_fiscal.general_fiscal.length > 0
+      ? hoja_fiscal.general_fiscal[0]
+      : null;
+
+  // Asignar los valores; si no hay datos se usa "N/A"
+  const fiscalName = generalFiscal?.Fiscal || "N/A";
+  const dependencia = generalFiscal?.Dependencia || "N/A";
+  const despacho = generalFiscal?.Despacho || "N/A";
+  const porcentaje = generalFiscal?.Porcentaje_Fiscal_Avanzado || "N/A";
+
+  // Extraer datos de anioFiscal para el gráfico de barras
+  const anioFiscal = hoja_fiscal?.anioFiscal || [];
+  const xAxisData = anioFiscal.map((item) => item.Anio);
+  const seriesData = [
+    {
+      name: "Casos Ingresados",
+      type: "bar",
+      data: anioFiscal.map((item) => Number(item.Casos_Ingresados)),
+      itemStyle: { color: "#1E87F0" },
+    },
+    {
+      name: "Casos resueltos",
+      type: "bar",
+      data: anioFiscal.map((item) => Number(item.Casos_Resueltos)),
+      itemStyle: { color: "#FA9E00" },
+    },
+    {
+      name: "Casos en trámites",
+      type: "bar",
+      data: anioFiscal.map((item) => Number(item.Casos_Tramite)),
+      itemStyle: { color: "#08B714" },
+    },
+  ];
+
+  // Extraer datos de cant_estado_fiscal para el gráfico Pie "Total de casos por condición"
+  const cantEstadoFiscal = hoja_fiscal?.cant_estado_fiscal || [];
+  const pieSeriesData = cantEstadoFiscal.map((item) => ({
+    value: Number(item.Cantidad),
+    name: item.Condicion,
+  }));
+
+  // Extraer datos de mes_actual_carga para el gráfico Pie "Casos por mes actual"
+  const mesActualData = hoja_fiscal?.mes_actual_carga || [];
+  const mesActualSeriesData = mesActualData.map((item) => ({
+    value: Number(item.Cantidad),
+    name: item.Condicion,
+  }));
+
   return (
     <div
       id="detailedTaxBurden"
@@ -52,24 +103,19 @@ export default function DetailedTaxBurden() {
                     <td className="border-b border-r border-gray-300 p-1 py-2 font-medium align-top">
                       Nombre:
                     </td>
-                    <td className="border-b border-gray-300 p-1 py-2">
-                      CAMACHO CCORRA MARCOS EMERSON EMERSON
-                    </td>
+                    <td className="border-b border-gray-300 p-1 py-2">{fiscalName}</td>
                   </tr>
                   <tr>
                     <td className="border-b border-r border-gray-300 p-1 py-2 font-medium align-top">
                       Dependencia:
                     </td>
-                    <td className="border-b border-gray-300 p-1 py-2">
-                      2° FISCALÍA PENAL SUPRA/PROVINCIAL TRANSITORIA ESPECIALIZADA EN
-                      DERECHOS HUMANOS E INTERCULTURALIDAD - MADRE DE DIOS
-                    </td>
+                    <td className="border-b border-gray-300 p-1 py-2">{dependencia}</td>
                   </tr>
                   <tr>
                     <td className="border-r border-gray-300 p-1 py-2 font-medium align-top">
                       Despacho:
                     </td>
-                    <td className="border-gray-300 p-1 py-2">1° Despacho</td>
+                    <td className="border-gray-300 p-1 py-2">{despacho}</td>
                   </tr>
                 </tbody>
               </table>
@@ -102,12 +148,16 @@ export default function DetailedTaxBurden() {
         <tbody>
           {/* 1.ª Sección (100%) */}
           <tr>
-            <td colSpan={1} className="border border-gray-300 p-2" style={{ width: "100%" }}>
+            <td
+              colSpan={1}
+              className="border border-gray-300 p-2"
+              style={{ width: "100%" }}
+            >
               <table className="w-full border-collapse">
                 <tbody>
                   <tr>
                     <td>
-                      <TaxBurdenHeader />
+                      <TaxBurdenHeader generalFiscal={generalFiscal} />
                     </td>
                   </tr>
                 </tbody>
@@ -115,49 +165,34 @@ export default function DetailedTaxBurden() {
             </td>
           </tr>
 
-          {/* 2.ª Sección (70% / 30%) => Se incrementa la altura con h-96 */}
+          {/* 2.ª Sección (70% / 30%) */}
           <tr>
             <td colSpan={1} className="border border-gray-300 p-0 h-96">
               <table className="w-full h-full border-collapse">
                 <tbody>
                   <tr>
-                    {/* Casos de condición por años */}
                     <td className="p-2" style={{ width: "70%" }}>
                       <DeadlineBarChartY
                         title="Casos de condición por años"
-                        legendData={["Casos Ingresados", "Casos resueltos", "Casos en trámites"]}
-                        xAxisData={["2015", "2016", "2017", "2018", "2019"]}
-                        seriesData={[
-                          {
-                            name: "Casos Ingresados",
-                            type: "bar",
-                            data: [10, 7, 5, 9, 4],
-                            itemStyle: { color: "#1E87F0" },
-                          },
-                          {
-                            name: "Casos resueltos",
-                            type: "bar",
-                            data: [2, 3, 2, 4, 3],
-                            itemStyle: { color: "#FA9E00" },
-                          },
-                          {
-                            name: "Casos en trámites",
-                            type: "bar",
-                            data: [1, 2, 0, 1, 2],
-                            itemStyle: { color: "#08B714" },
-                          },
+                        legendData={[
+                          "Casos Ingresados",
+                          "Casos resueltos",
+                          "Casos en trámites",
                         ]}
+                        xAxisData={xAxisData}
+                        seriesData={seriesData}
                       />
                     </td>
-
-                    {/* Productividad fiscal (Pie) */}
-                    <td className="border-l border-gray-300 p-2" style={{ width: "30%" }}>
+                    <td
+                      className="border-l border-gray-300 p-2"
+                      style={{ width: "30%" }}
+                    >
                       <ChartGauge
                         title="Productividad fiscal"
-                        value={90}
+                        value={porcentaje}
                         progressWidth={20}
                         axisLineWidth={20}
-                        detailFontSize={50}                     
+                        detailFontSize={50}
                       />
                     </td>
                   </tr>
@@ -176,24 +211,17 @@ export default function DetailedTaxBurden() {
                       <ChartPie
                         title="Total de casos por condición"
                         seriesName="Fases"
-                        seriesData={[
-                          { value: 80, name: "Rsultado", itemStyle: { color: "#1E87F0" } },
-                          { value: 1, name: "Ejecucion de Sentencia", itemStyle: { color: "#FA9E00" } },
-                          { value: 18, name: "En tramite", itemStyle: { color: "#08B714" } },
-                          { value: 1, name: "Expediente", itemStyle: { color: "#E86868" } },
-                        ]}
+                        seriesData={pieSeriesData}
                       />
                     </td>
-                    <td className="border-l border-gray-300 p-2" style={{ width: "50%" }}>
+                    <td
+                      className="border-l border-gray-300 p-2"
+                      style={{ width: "50%" }}
+                    >
                       <ChartPie
                         title="Casos por mes actual"
                         seriesName="Fases"
-                        seriesData={[
-                          { value: 50, name: "Rsultado", itemStyle: { color: "#1E87F0" } },
-                          { value: 20, name: "Ejecucion de Sentencia", itemStyle: { color: "#FA9E00" } },
-                          { value: 20, name: "En tramite", itemStyle: { color: "#08B714" } },
-                          { value: 10, name: "Expediente", itemStyle: { color: "#E86868" } },
-                        ]}
+                        seriesData={mesActualSeriesData}
                       />
                     </td>
                   </tr>
@@ -202,7 +230,7 @@ export default function DetailedTaxBurden() {
             </td>
           </tr>
 
-          {/* Ejemplo extra de DeadlineBarChartY */}
+          {/* Ejemplo extra de DeadlineBarChartY (se puede actualizar de forma similar si se requiere) */}
           <tr>
             <td colSpan={1} className="border border-gray-300 p-0 h-96">
               <table className="w-full h-full border-collapse">
@@ -210,11 +238,25 @@ export default function DetailedTaxBurden() {
                   <tr>
                     <td className="p-2" style={{ width: "100%" }}>
                       <DeadlineBarChartY
-                        title="Casos de condición por años"
-                        legendData={["Casos Ingresados", "Casos resueltos", "Casos en trámites"]}
+                        title="Casos de condición por años (Ejemplo extra)"
+                        legendData={[
+                          "Casos Ingresados",
+                          "Casos resueltos",
+                          "Casos en trámites",
+                        ]}
                         xAxisData={[
-                          "enero", "febrero", "marzo", "abril", "mayo", "junio",
-                          "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
+                          "enero",
+                          "febrero",
+                          "marzo",
+                          "abril",
+                          "mayo",
+                          "junio",
+                          "julio",
+                          "agosto",
+                          "septiembre",
+                          "octubre",
+                          "noviembre",
+                          "diciembre",
                         ]}
                         seriesData={[
                           {

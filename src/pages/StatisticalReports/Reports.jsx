@@ -1,15 +1,10 @@
 // Reports.jsx
 import React, { useState } from "react";
-
 import { IconBuildings, IconBuildingPlus } from '@tabler/icons-react'
-
-import FileUpload from "../DocumentManager/Documents-components/components/FileUpload";
 import { TabNavigation, TabNavigationLink } from "../../pages/DocumentManager/Documents-components/TabNavigation";
 import ListSede from "./Components/ListSede";
-
 export default function Reports() {
   const [activeTab, setActiveTab] = useState("Areas fiscal");
-  
   return (
     <div className="p-2 space-y-4">
       <div>
@@ -17,7 +12,6 @@ export default function Reports() {
           REPORTES ESTADISTICOS
         </h3>
       </div>
-
       <TabNavigation>
         <TabNavigationLink
           className="inline-flex gap-2"
@@ -30,26 +24,9 @@ export default function Reports() {
         >
           <IconBuildings className="size-4" aria-hidden="true" />
           Areas fiscal
-        </TabNavigationLink>
-
-        <TabNavigationLink
-          className="inline-flex gap-2"
-          href="#"
-          active={activeTab === "Importar"}
-          onClick={(e) => {
-            e.preventDefault();
-            setActiveTab("Importar");
-          }}
-        >
-          <IconBuildingPlus className="size-4" aria-hidden="true" />
-          Importar
-        </TabNavigationLink>
+        </TabNavigationLink>       
       </TabNavigation>
-
       {activeTab === "Areas fiscal" && <ListSede />}
-      {activeTab === "Importar" && (
-        <FileUpload/>
-      )}
     </div>
   );
 }

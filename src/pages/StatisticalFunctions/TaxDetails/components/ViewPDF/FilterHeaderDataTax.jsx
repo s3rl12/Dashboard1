@@ -1,29 +1,31 @@
-// FilterHeaderCI.jsx
+// FilterHeaderDataTax.jsx
 import React, { useState } from "react";
 import { format } from "date-fns";
-import { Input } from "../../../../components/ui/Input";
-import { DateRangePicker } from "../../../../components/ui/DatePicker";
-import { Button } from "../../../../components/ui/Button";
+import { Input } from "../../../../../components/ui/Input";
+import { DateRangePicker } from "../../../../../components/ui/DatePicker";
+import { Button } from "../../../../../components/ui/Button";
 import {
     Dialog,
     DialogContent,
     DialogHeader,
     DialogTitle,
     DialogDescription,
-} from "../../../../components/ui/Dialog";
+} from "../../../../../components/ui/Dialog";
 import { IconFileUpload, IconFileTypePdf } from "@tabler/icons-react";
-import { useListDF } from "../../../../hooks/useListDF";
-import { useToast } from "../../../../lib/useToast";
-import { generatePdfFromMultipleElements } from "../../TaxDetails/components/ViewPDF/pdfUtils";
+import { useListDF } from "../../../../../hooks/useListDF";
+import { useToast } from "../../../../../lib/useToast";
+import { generatePdfFromMultipleElements } from "../../../TaxDetails/components/ViewPDF/pdfUtils";
 import {
     Select,
     SelectTrigger,
     SelectContent,
     SelectItem,
     SelectValue,
-} from "../../../../components/dashboard/Select";
+} from "../../../../../components/dashboard/Select";
 // Importar useAuth para obtener el usuario
-import { useAuth } from "../../../../context/AuthContext";
+import { useAuth } from "../../../../../context/AuthContext";
+// Importar el hook para fiscales
+import { useListTaxUser } from "../../../../../hooks/useListTaxUser";
 
 const SelectSearch = ({ placeholder, options, onChange }) => {
     const [searchText, setSearchText] = useState("");
@@ -60,21 +62,27 @@ const SelectSearch = ({ placeholder, options, onChange }) => {
     );
 };
 
-export default function FilterHeaderCI({
+export default function FilterHeaderDataTax({
     containerIds = [],
     useCargaHook,
 }) {
-    const [isPdfDialogOpen, setIsPdfDialogOpen] = useState(false); // Se puede eliminar si no se usa
-    const [pdfUrl, setPdfUrl] = useState(null); // Se puede eliminar si no se usa
+    const [isPdfDialogOpen, setIsPdfDialogOpen] = useState(false); // Opcional, si se usa PDF
+    const [pdfUrl, setPdfUrl] = useState(null); // Opcional, si se usa PDF
     const [isSearching, setIsSearching] = useState(false);
     const { toast, dismiss } = useToast();
 
-    // Obtenemos todas las sedes a través de useListDF
+    // Obtener sedes para reporte fiscal
     const { data: sedes = [] } = useListDF();
-    // Obtenemos el usuario
+    // Obtener fiscales
+    const { data: fiscalesData = [] } = useListTaxUser();
+    // Obtener usuario
     const { user } = useAuth();
 
-    // Aplicar filtrado de sedes basado en despacho_fk del usuario
+    // Filtrado de sedes basado en despacho_fk del usuario:
+    // Si el usuario tiene asignado un despacho (user.despacho_fk), se filtran
+    // para dejar únicamente la sede que contenga una dependencia cuyo id sea igual a
+    // user.despacho_fk.dependencia_fk y que, en dicha dependencia, exista un despacho
+    // cuyo id sea igual a user.despacho_fk.id.
     let filteredSedes = sedes;
     if (user && user.despacho_fk) {
         const despachoId = Number(user.despacho_fk.id);
@@ -89,7 +97,6 @@ export default function FilterHeaderCI({
         );
     }
 
-    // Generar opciones para sede usando las sedes filtradas (o todas si no hay despacho_fk)
     const sedeOptions = filteredSedes.map((sede) => ({
         label: sede.nombre,
         value: sede.nombre,
@@ -97,17 +104,15 @@ export default function FilterHeaderCI({
 
     const [selectedSedeName, setSelectedSedeName] = useState("");
     const [selectedDepValue, setSelectedDepValue] = useState("");
+    const [selectedFiscalId, setSelectedFiscalId] = useState("");
     const [dateRange, setDateRange] = useState(null);
-    const [cantidadDelitosInput, setCantidadDelitosInput] = useState("");
-    const [cantidadAnioInput, setCantidadAnioInput] = useState("");
 
     // Buscar el objeto sede seleccionado de las sedes filtradas
     const selectedSedeObj = filteredSedes.find(
         (sede) => sede.nombre === selectedSedeName
     );
 
-    // Generar opciones para dependencia a partir de la sede seleccionada.
-    // Si el usuario tiene despacho_fk, filtrar para que solo se muestre la dependencia asociada.
+    // Opciones para dependencia a partir de la sede seleccionada
     const dependenciaOptions = selectedSedeObj
         ? selectedSedeObj.dependencias
             .filter((dep) => {
@@ -129,16 +134,35 @@ export default function FilterHeaderCI({
             }))
         : [];
 
-    // Actualización del objeto de parámetros para useCargaHook
+    // Opciones para fiscales:
+    // Se filtran los fiscales para mostrar solo aquellos cuyo "dependencias_fk"
+    // coincida con el id de la dependencia seleccionada (si existe)
+    const fiscalOptions = fiscalesData
+        .filter((fiscal) => {
+            if (!selectedDepValue) return true;
+            let depIdFromFiscal = null;
+            if (fiscal.dependencia && fiscal.dependencia.id) {
+                depIdFromFiscal = Number(fiscal.dependencia.id);
+            } else if (fiscal.dependencias_fk) {
+                depIdFromFiscal = Number(fiscal.dependencias_fk);
+            }
+            return depIdFromFiscal === Number(selectedDepValue);
+        })
+        .map((fiscal) => ({
+            label: fiscal.nombres_f,
+            value: fiscal.id,
+        }));
+
+
+    // Actualización de parámetros para useCargaHook:
+    // Se envían: id_fiscal, id_dependencia, fe_inicio, fe_fin, estado (siempre null)
     const { refetch } = useCargaHook(
         {
-            id_sedes: selectedSedeObj ? selectedSedeObj.id : null,
+            id_fiscal: selectedFiscalId ? Number(selectedFiscalId) : null,
+            id_dependencia: selectedDepValue ? Number(selectedDepValue) : null,
             fe_inicio: dateRange?.from ? format(dateRange.from, "yyyy-MM-dd 00:00:00") : null,
             fe_fin: dateRange?.to ? format(dateRange.to, "yyyy-MM-dd 23:59:59") : null,
             estado: null,
-            id_dependencia: selectedDepValue ? Number(selectedDepValue) : null,
-            cantidadDelitos: cantidadDelitosInput ? Number(cantidadDelitosInput) : undefined,
-            cantidadAnio: cantidadAnioInput ? Number(cantidadAnioInput) : undefined,
         },
         { enabled: false }
     );
@@ -172,6 +196,22 @@ export default function FilterHeaderCI({
                 variant: "warning",
                 title: "Falta seleccionar sede",
                 description: "Por favor, seleccione una sede antes de buscar.",
+            });
+            return;
+        }
+        if (!selectedDepValue) {
+            toast({
+                variant: "warning",
+                title: "Falta seleccionar dependencia",
+                description: "Por favor, seleccione una dependencia antes de buscar.",
+            });
+            return;
+        }
+        if (!selectedFiscalId) {
+            toast({
+                variant: "warning",
+                title: "Falta seleccionar fiscal",
+                description: "Por favor, seleccione un fiscal antes de buscar.",
             });
             return;
         }
@@ -214,9 +254,9 @@ export default function FilterHeaderCI({
     return (
         <div className="space-y-2">
             <h3 className="text-tremor-title font-semibold text-tremor-content-strong dark:text-dark-tremor-content-strong">
-                REPORTE GENERAL
+                REPORTE GENERAL DE FISCALES
             </h3>
-            <p>Se genera el reporte general de todas las áreas</p>
+            <p>Se genera el reporte general filtrado por fiscal y dependencia.</p>
 
             <div className="block md:flex md:items-center md:justify-between">
                 <div className="flex items-center w-full gap-2">
@@ -226,12 +266,21 @@ export default function FilterHeaderCI({
                         onChange={(val) => {
                             setSelectedSedeName(val);
                             setSelectedDepValue("");
+                            setSelectedFiscalId("");
                         }}
                     />
                     <SelectSearch
                         placeholder="Seleccione dependencia..."
                         options={dependenciaOptions}
-                        onChange={(val) => setSelectedDepValue(val)}
+                        onChange={(val) => {
+                            setSelectedDepValue(val);
+                            setSelectedFiscalId("");
+                        }}
+                    />
+                    <SelectSearch
+                        placeholder="Seleccione fiscal..."
+                        options={fiscalOptions}
+                        onChange={(val) => setSelectedFiscalId(val)}
                     />
                     <div className="lg:flex lg:items-center lg:space-x-3">
                         <DateRangePicker
@@ -244,18 +293,6 @@ export default function FilterHeaderCI({
                             className="border-tremor-border dark:border-dark-tremor-border"
                         />
                     </div>
-                    <Input
-                        className="w-48"
-                        placeholder="Cantidad delitos"
-                        value={cantidadDelitosInput}
-                        onChange={(e) => setCantidadDelitosInput(e.target.value)}
-                    />
-                    <Input
-                        className="w-48"
-                        placeholder="Cantidad años"
-                        value={cantidadAnioInput}
-                        onChange={(e) => setCantidadAnioInput(e.target.value)}
-                    />
                     <Button
                         variant="secondary"
                         className="rounded-tremor-small py-1.5 px-3 font-medium"

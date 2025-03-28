@@ -22,7 +22,7 @@ import { useAuth } from "./context/AuthContext";
 import logoMP from './assets/icons/logoMP.svg';
 import fondoSVG from './assets/icons/fondo.svg';
 import { useQueryClient } from '@tanstack/react-query';
-
+import './font.css';
 
 const version = import.meta.env.VITE_VERSION || '1.1.1';
 
@@ -81,12 +81,7 @@ function App() {
       <RecoverPassword open={isRecoverDialogOpen} onClose={() => setIsRecoverDialogOpen(false)} />
       <div
         className="flex items-center justify-center h-screen"
-        style={{
-          backgroundImage: `url(${fondoSVG})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
-        }}
+        
       >
         {alertVisible && (
           <Stack sx={{ position: 'absolute', top: '1rem', right: '1rem', maxWidth: '300px' }}>

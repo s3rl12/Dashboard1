@@ -14,7 +14,6 @@ import {
 import { IconFileUpload, IconFileTypePdf } from "@tabler/icons-react";
 import { useListDF } from "../../../../hooks/useListDF";
 import { useToast } from "../../../../lib/useToast";
-// Nueva importación: PDFViewer de React-PDF
 import { PDFViewer } from "@react-pdf/renderer";
 import { generatePdfFromMultipleElements } from "../../TaxDetails/components/ViewPDF/pdfUtils";
 import {
@@ -24,6 +23,8 @@ import {
   SelectItem,
   SelectValue,
 } from "../../../../components/dashboard/Select";
+// Importamos useAuth para obtener los datos del usuario
+import { useAuth } from "../../../../context/AuthContext";
 
 const SelectSearch = ({ placeholder, options, onChange }) => {
   const [searchText, setSearchText] = useState("");
@@ -65,7 +66,6 @@ export default function FilterHeader({
   useCargaHook,
   taxPdfComponent: TaxPdfComponent,
   taxPdfData,
-  // Nuevo parámetro
   cantidadDelitos,
 }) {
   const [isPdfDialogOpen, setIsPdfDialogOpen] = useState(false);
@@ -73,40 +73,81 @@ export default function FilterHeader({
   const [isTaxPdfDialogOpen, setIsTaxPdfDialogOpen] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const { toast, dismiss } = useToast();
-
+  
+  // Obtenemos todas las sedes desde useListDF
   const { data: sedes = [] } = useListDF();
+  // Obtenemos el usuario
+  const { user } = useAuth();
 
-  const [selectedSedeName, setSelectedSedeName] = useState("");
-  const [selectedDepName, setSelectedDepName] = useState("");
-  const [dateRange, setDateRange] = useState(null);
+  // Filtrar las sedes si el usuario tiene despacho_fk
+  let filteredSedes = sedes;
+  if (user && user.despacho_fk) {
+    const despachoId = Number(user.despacho_fk.id);
+    const dependenciaId = Number(user.despacho_fk.dependencia_fk);
+    filteredSedes = sedes.filter((sede) =>
+      (sede.dependencias || []).some((depen) =>
+        Number(depen.id) === dependenciaId &&
+        (depen.despachos || []).some((desp) => Number(desp.id) === despachoId)
+      )
+    );
+  }
 
-  const sedeOptions = sedes.map((sede) => ({
+  // Generar opciones para sede usando las sedes filtradas (o todas si no hay despacho_fk)
+  const sedeOptions = filteredSedes.map((sede) => ({
     label: sede.nombre,
     value: sede.nombre,
   }));
-  const selectedSedeObj = sedes.find((sede) => sede.nombre === selectedSedeName);
+  
+  // Selección local de sede y dependencia
+  const [selectedSedeName, setSelectedSedeName] = useState("");
+  const [selectedDepValue, setSelectedDepValue] = useState("");
+  const [dateRange, setDateRange] = useState(null);
 
+  // Encontrar el objeto sede seleccionado de las sedes filtradas
+  const selectedSedeObj = filteredSedes.find(
+    (sede) => sede.nombre === selectedSedeName
+  );
+
+  // Generar opciones para dependencia a partir de la sede seleccionada
+  // Si el usuario tiene despacho_fk, filtrar para que solo se muestre la dependencia asociada.
   const dependenciaOptions = selectedSedeObj
-    ? selectedSedeObj.dependencias.map((dep) => ({
-      label: dep.fiscalia,
-      value: dep.id,
-    }))
+    ? selectedSedeObj.dependencias
+        .filter((dep) => {
+          if (user && user.despacho_fk) {
+            const dependenciaId = Number(user.despacho_fk.dependencia_fk);
+            const despachoId = Number(user.despacho_fk.id);
+            return (
+              Number(dep.id) === dependenciaId &&
+              (dep.despachos || []).some(
+                (desp) => Number(desp.id) === despachoId
+              )
+            );
+          }
+          return true;
+        })
+        .map((dep) => ({
+          label: dep.fiscalia,
+          value: dep.id,
+        }))
     : [];
 
-  // Actualización del objeto de parámetros: se renombra id_sede a id_sedes y se agrega cantidadDelitos si existe
+  // Actualización del objeto de parámetros para useCargaHook:
   const { refetch } = useCargaHook(
     {
       id_sedes: selectedSedeObj ? selectedSedeObj.id : null,
-      fe_inicio: dateRange?.from ? format(dateRange.from, "yyyy-MM-dd 00:00:00") : null,
-      fe_fin: dateRange?.to ? format(dateRange.to, "yyyy-MM-dd 23:59:59") : null,
+      fe_inicio: dateRange?.from
+        ? format(dateRange.from, "yyyy-MM-dd 00:00:00")
+        : null,
+      fe_fin: dateRange?.to
+        ? format(dateRange.to, "yyyy-MM-dd 23:59:59")
+        : null,
       estado: null,
-      id_dependencia: selectedDepName ? Number(selectedDepName) : null,
+      id_dependencia: selectedDepValue ? Number(selectedDepValue) : null,
       ...(cantidadDelitos ? { cantidadDelitos } : {}),
     },
     { enabled: false }
   );
 
-  // Función para imprimir usando html2canvas/jsPDF (ya existente)
   const handlePrintClick = async () => {
     const loadingToast = toast({
       variant: "loading",
@@ -130,7 +171,6 @@ export default function FilterHeader({
     }
   };
 
-  // Nueva función para mostrar el PDF basado en TaxBurdenSchemeD
   const handleTaxPdfClick = () => {
     if (!taxPdfData || Object.keys(taxPdfData).length === 0) {
       toast({
@@ -202,13 +242,13 @@ export default function FilterHeader({
             options={sedeOptions}
             onChange={(val) => {
               setSelectedSedeName(val);
-              setSelectedDepName("");
+              setSelectedDepValue("");
             }}
           />
           <SelectSearch
             placeholder="Seleccione dependencia..."
             options={dependenciaOptions}
-            onChange={(val) => setSelectedDepName(val)}
+            onChange={(val) => setSelectedDepValue(val)}
           />
           <div className="lg:flex lg:items-center lg:space-x-3">
             <DateRangePicker
@@ -254,6 +294,7 @@ export default function FilterHeader({
             />
             Imprimir
           </Button>
+          {/* Encabezado 
           <Button
             variant="secondary"
             className="flex items-center justify-center gap-x-1 rounded-tremor-small py-1.5 px-3 font-medium"
@@ -265,10 +306,10 @@ export default function FilterHeader({
             />
             PDF
           </Button>
+          */}
         </div>
       </div>
 
-      {/* Dialog para previsualizar PDF generado con html2canvas/jsPDF */}
       <Dialog open={isPdfDialogOpen} onOpenChange={setIsPdfDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -289,7 +330,6 @@ export default function FilterHeader({
         </DialogContent>
       </Dialog>
 
-      {/* Dialog para previsualizar PDF basado en TaxBurdenSchemeD */}
       <Dialog open={isTaxPdfDialogOpen} onOpenChange={setIsTaxPdfDialogOpen}>
         <DialogContent>
           <DialogHeader>

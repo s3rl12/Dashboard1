@@ -10,17 +10,24 @@ import { IconFolderSymlink } from "@tabler/icons-react";
 import FileContent from "./FileContent"; // Ajusta la ruta a tu FileContent.jsx
 
 export default function DocumentFolders({ carpetasData = [] }) {
+  // Si no hay datos, se muestra una carpeta por defecto
+  const defaultFolder = {
+    id: "default",
+    codigo_carp: "default",
+    nombre_carp: "Carpeta predeterminada",
+    usuarios_archivos: [],
+  };
+
+  // Se utiliza la carpeta por defecto si el arreglo está vacío
+  const folders = carpetasData.length > 0 ? carpetasData : [defaultFolder];
+
   return (
     <div className="mx-auto max-w-full">
-      <h1 className="text-md font-semibold text-gray-900 dark:text-gray-900">
-        Document Folders
-      </h1>
-
       <Accordion type="multiple" className="mt-3">
-        {carpetasData.map((folder) => (
+        {folders.map((folder) => (
           <AccordionItem
             key={folder.id}
-            value={folder.codigo_carp} // algo único
+            value={folder.codigo_carp} // valor único para cada carpeta
           >
             <AccordionTrigger>
               <span className="flex items-center gap-2">

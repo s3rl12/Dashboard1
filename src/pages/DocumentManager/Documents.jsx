@@ -1,17 +1,61 @@
 // Documents.jsx
-import React, { useState } from "react";
-
+import React, { useState, useEffect, useRef } from "react";
 import { TabNavigation, TabNavigationLink } from "./Documents-components/TabNavigation";
 import { useCarpetasArchivos } from "../../hooks/useCarpetasArchivos";
 import { IconFilePlus, IconFolderOpen } from "@tabler/icons-react";
-import FileUpload from "./Documents-components/components/FileUpload";
+import FileUploadFuctions from "./Documents-components/components/FileUploadFuctions";
 import DocumentFolders from "./Documents-components/components/DocumentFolders";
+import { useToast } from "../../lib/useToast"; // Asegúrate de ajustar la ruta según tu estructura
+
 export default function Documents() {
   // Estado local para saber cuál pestaña está activa
   const [activeTab, setActiveTab] = useState("carpetas");
-  const {
-    data: carpetasData,
-  } = useCarpetasArchivos();
+  
+  // Obtención de datos de carpetas, incluyendo isLoading y error
+  const { data: carpetasData, isLoading, error } = useCarpetasArchivos();
+  
+  // Hook para mostrar toasts
+  const { toast } = useToast();
+  
+  // Referencia para el toast actual y para controlar si ya se cargaron los datos
+  const toastRef = useRef(null);
+  const hasDataLoaded = useRef(false);
+  
+  // Efecto para mostrar y actualizar el toast durante la carga de datos
+  useEffect(() => {
+    if (isLoading && !hasDataLoaded.current && !toastRef.current) {
+      // Se crea un toast de "loading" mientras se cargan los datos
+      toastRef.current = toast({
+        variant: "loading",
+        title: "Cargando documentos...",
+        disableDismiss: true,
+      });
+    } else if (!isLoading && toastRef.current && !hasDataLoaded.current) {
+      // Actualiza el toast cuando la carga ha finalizado
+      const newToast = toastRef.current.update({
+        variant: error ? "error" : "success",
+        title: error ? "Error" : "Documentos cargados",
+        description: error
+          ? "No se pudieron cargar los documentos."
+          : "Los documentos se han cargado correctamente.",
+        disableDismiss: false,
+      });
+      toastRef.current = newToast;
+      hasDataLoaded.current = true;
+    }
+  }, [isLoading, error, toast]);
+  
+  // Efecto de limpieza para descartar el toast al desmontar el componente
+  useEffect(() => {
+    return () => {
+      if (toastRef.current) {
+        toastRef.current.dismiss();
+        toastRef.current = null;
+      }
+      hasDataLoaded.current = false;
+    };
+  }, []);
+  
   return (
     <div className="p-2 space-y-4">
       {/* 1. Título */}
@@ -21,7 +65,6 @@ export default function Documents() {
         <TabNavigationLink
           // Para la pestaña "carpetas"
           className="inline-flex gap-2"
-          // Evita la navegación real (href="#") y maneja el click
           href="#"
           active={activeTab === "carpetas"}
           onClick={(e) => {
@@ -46,20 +89,19 @@ export default function Documents() {
           <IconFilePlus className="size-4" aria-hidden="true" />
           Importar
         </TabNavigationLink>
-
       </TabNavigation>
 
       {/* Contenido condicional según la pestaña activa */}
       {activeTab === "carpetas" && (
         <div>
+          {/* DocumentFolders se muestra siempre, incluso si carpetasData aún no se ha cargado */}
           <DocumentFolders carpetasData={carpetasData} />
         </div>
       )}
 
       {activeTab === "importar" && (
         <div>
-          {/* Renderiza el FileUpload */}
-          <FileUpload />
+          <FileUploadFuctions />
         </div>
       )}
     </div>

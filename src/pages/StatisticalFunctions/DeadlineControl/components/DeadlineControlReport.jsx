@@ -4,6 +4,7 @@ import FilterHeader from "./filterHeader";
 import SideContent from "./SideContent";
 import DeadlineBarChartY from "./charts/DeadlineBarChartY";
 import DeadlineHeader from "./charts/DeadlineHeader";
+import DeadlineHeaderC from "./charts/DeadlineHeaderC";
 import { useDeadlineControl } from "../../../../hooks/useDeadlineControl";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from '../../../../context/AuthContext';
@@ -19,6 +20,7 @@ export default function DeadlineControlReport() {
         month: "long",
         year: "numeric",
     });
+    const reportType = "S";
     const { data: apiData = {} } = useQuery({
         queryKey: ["deadline-control"],
         queryFn: async () => {
@@ -29,6 +31,10 @@ export default function DeadlineControlReport() {
 
     // 1) list_dependencias => Para SideContent
     const listDependencias = apiData.list_dependencias || [];
+    const generalSede = apiData.general_sede?.[0] || {
+        Nombre: "Sin valor",
+        Total_Dependencias: "x",
+    };
     const transformedWorkspaces = listDependencias.map((dep) => ({
         name: dep.Nombre_Dep,
         code: dep.Codigo_Sede,
@@ -100,9 +106,9 @@ export default function DeadlineControlReport() {
                             </h3>
                         </div>
                         <div className="h-40 p-2">
-                            <h2 className="font-medium text-base">Sede central</h2>
+                            <h2 className="font-medium text-base">{generalSede.Nombre_Sede}</h2>
                             <p className="font-medium text-base">
-                                Código: <span className="font-normal text-sm">SC</span>
+                                Código: <span className="font-normal text-sm">{generalSede.Codigo_Sede}</span>
                             </p>
                             <p className="font-medium text-base">
                                 Cantidad dependencias:{" "}
@@ -142,7 +148,7 @@ export default function DeadlineControlReport() {
                             </span>
                         </div>
                     </div>
-                    <DeadlineHeader />
+                    <DeadlineHeaderC generalSede={generalSede} reportType={reportType} headerTitle={generalSede.Nombre_Sede} />
 
                     {/* Gráfico 1: Fiscalias por su control de plazos */}
                     <Card>
