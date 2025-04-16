@@ -1,10 +1,10 @@
 import axios from 'axios';
 
 const apiIp = import.meta.env.VITE_API;
-
+const apiVersion = import.meta.env.VITE_API_VERSION;
 // Configuración base mejorada con seguridad adicional
 const apiLogin = axios.create({
-  baseURL: `http://${apiIp}/api/login`,
+  baseURL: `http://${apiIp}/api/${apiVersion}/login`,
   timeout: 30000,  // Reducido para mejor UX
   withCredentials: true,  // Para cookies HTTP-Only
   headers: {
