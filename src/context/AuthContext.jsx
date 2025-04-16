@@ -41,10 +41,10 @@ export const AuthProvider = ({ children }) => {
     });
 
     // Login mejorado
-    const login = ({ user, token }) => {
-        localStorage.setItem(import.meta.env.VITE_AUTH_TOKEN_KEY, token);
+    const login = ({ user, access_token, refresh_token }) => {
+        localStorage.setItem(import.meta.env.VITE_AUTH_TOKEN_KEY, refresh_token);
         localStorage.setItem(import.meta.env.VITE_USER_DATA_KEY, JSON.stringify(user));
-        setAuthState({ token, user });
+        setAuthState({ token: refresh_token, user });
     };
 
     // Logout seguro

@@ -61,9 +61,9 @@ function App() {
     setAlertVisible(false);
     try {
       // 1. Hacemos login
-      const { token, data: userData, permisos } = await LoginService.login({ email, password });
+      const { token: { access_token, refresh_token }, data: userData, permisos } = await LoginService.login({ email, password });
       // 2. Guardamos token/usuario en el AuthContext
-      login({ user: { ...userData, permisos }, token });
+      login({ user: { ...userData, permisos }, access_token, refresh_token });
 
       // 4. Navegamos al Dashboard
       navigate('/dashboard');
