@@ -1,17 +1,28 @@
 # Dockerfile.dev
 FROM node:16-alpine
 
+# Directorio de trabajo dentro del contenedor
 WORKDIR /app
 
+# Copia los archivos de dependencias y realiza instalación reproducible
 COPY package*.json ./
-RUN npm install
+RUN npm ci
 
+# Copia el resto del código de la aplicación
 COPY . .
 
+# Crea la carpeta para caches de Vite y ajusta permisos para el usuario node
+RUN mkdir -p /app/node_modules/.vite \
+    && chown -R node:node /app
+
+# Cambia a un usuario no privilegiado
+USER node
+
+# Expone el puerto de desarrollo
 EXPOSE 3000
 
-# Configura la variable de entorno para que Vite escuche en todas las interfaces
+# Permite que Vite escuche en todas las interfaces
 ENV HOST=0.0.0.0
 
-# Inicia Vite en el puerto 3000 y exponiendo la interfaz externa
+# Comando para iniciar el servidor de desarrollo de Vite
 CMD ["npm", "run", "dev", "--", "--port", "3000", "--host"]
